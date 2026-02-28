@@ -1,0 +1,56 @@
+# Neologismos e palavras inéditas para avaliação G2P PT-BR
+# Curadoria: intuição fonológica + regras do PT-BR (Sudeste)
+# Formato: word\tphonemes\tcategory\tdifficulty\tnotes
+#
+# FONEMAS (espaço-separados, sem separadores silábicos):
+#   Vogais:    a e ɛ i o ɔ u ə ɪ ʊ
+#   Nasais:    ã ẽ ĩ ũ ʊ̃  (ʊ̃ = nasal arredondada de -ão)
+#   Semivogais: y w
+#   Consoantes: b d f ɡ k l ʎ m n ɲ p ɾ x s t v z ʃ ʒ
+#   Stress:    ˈ  (token SEPARADO antes da sílaba tônica — NÃO anexado ao próximo fonema)
+#   Africadas: t ʃ  e  d ʒ  (DOIS tokens separados — não existe tʃ/dʒ no vocab)
+#   [EM DICT] = palavra presente em dicts/pt-br.tsv (controle)
+#
+# PADRÕES CHAVE:
+#   - r em coda → x     (ex: -ar → a x)
+#   - l em coda → w     (ex: "viral" → v i ˈ ɾ a w)
+#   - t/d antes de i/ɪ → t ʃ / d ʒ  (palatalização)
+#   - vogal final átona: -a→ə, -e→ɪ, -o→ʊ
+#   - -ão final → ã ʊ̃
+#
+#word	phonemes	category	difficulty	notes
+selfie	ˈ s ɛ w f ɪ	anglicismo	easy	l-vocalização em coda (l→w); -ie→ɪ; stress 1ª sílaba
+drone	ˈ d ɾ o n ɪ	anglicismo	easy	-e final → ɪ como em 'cone'; 2 sílabas em PT-BR
+blog	ˈ b l ɔ ɡ	anglicismo	easy	coda -g sem epenthesis; /ɔ/ como em 'bloco'
+podcast	ˈ p ɔ d k a s t ʃ ɪ	anglicismo	medium	stress 1ª sílaba; -ast: epenthetic ɪ; t antes ɪ → t ʃ; ambiguidade de stress
+startup	s t a x ˈ t a p ɪ	anglicismo	medium	r em coda → x; -up: epenthetic ɪ final; stress 2ª sílaba
+influencer	ĩ f l u ˈ ẽ s e x	anglicismo	medium	in-→ĩ (nasal); -en-→ẽ (nasal); -er→ex (rhotic coda)
+youtuber	y u ˈ t ʃ u b e x	anglicismo	easy	you→y u (semivogal); tube→t ʃ u b (palatalização); -er→e x
+wifi	ˈ w i f i	anglicismo	easy	wi-fi: 2 sílabas; w semivogal inicial; stress 1ª
+dropar	d ɾ o ˈ p a x	verbo_emprestimo	easy	drop + -ar; padrão regular como 'postar' (p o s ˈ t a x)
+hackear	a ˈ k i a x	verbo_emprestimo	easy	hack + -ear; h mudo em PT-BR; stress na 2ª sílaba
+googlar	ɡ u ˈ ɡ l a x	verbo_emprestimo	medium	google + -r + ar; grupo -gl- na mesma sílaba; u de 'oo'
+tuitar	t u y ˈ t a x	verbo_emprestimo	medium	tweet/twit + -ar; -ui- ditongo crescente (u+y); stress última
+viralizar	v i ɾ a l i ˈ z a x	verbo_emprestimo	easy	viral + -izar; padrão regular -izar como 'modernizar'
+streamar	s t ɾ i ˈ m a x	verbo_emprestimo	medium	stream + -ar; cluster st- inicial (loanword sem epenthesis); stress última
+deletar	d e l e ˈ t a x	verbo_emprestimo	easy	[EM DICT] controle: padrão -ar regular
+videochamada	v i d ʒ i ʊ ʃ a ˈ m a d ə	neologismo_nativo	medium	vídeo (d antes de i → d ʒ) + chamada; -a final → ə; stress antepenúltima
+dessubscrever	d e s u b s k ɾ e ˈ v e x	neologismo_nativo	hard	des+sub+screver; cluster -bsk-; duplo-s simplificado; -er → e x
+burocratizar	b u ɾ o k ɾ a t ʃ i ˈ z a x	neologismo_nativo	easy	burocracia + -izar; t antes de i → t ʃ; stress última (-izar)
+cibersegurança	s i b e x s e ɡ u ˈ ɾ ã s ə	neologismo_nativo	medium	[EM DICT] controle: composto técnico
+viralização	v i ɾ a l i z a ˈ s ã ʊ̃	neologismo_nativo	easy	viral + -ização; -ção→s ã ʊ̃ (nasal diphthong); stress -ção
+cancelamento	k ã s e l a ˈ m ẽ t ʊ	neologismo_nativo	easy	[EM DICT] controle: sufixo -mento
+Kaique	k a y ˈ k ɪ	nome_proprio	easy	nome brasileiro; -ai- = a+y ditongo; -que = k ɪ; stress 2ª sílaba
+Thainá	t a y ˈ n a	nome_proprio	easy	nome Tupi-Guarani; th→t; -ai- ditongo; -á acentuado final
+Weslley	w e z ˈ l e y	nome_proprio	medium	Wesley adaptado; w inicial; s antes de l vozeada → z; -ley=l+e+y
+Kauã	k a ˈ w ã	nome_proprio	easy	nome indígena; -uã: u semivogal → w antes de ã nasal; stress 2ª
+Brayan	b ɾ a ˈ y ã	nome_proprio	medium	Bryan/Brian adaptado; -yan: y palatal + ã nasal (final -n não realizado)
+Mikael	m i k a ˈ ɛ w	nome_proprio	medium	nome nórdico/hebraico; -el: vocalização de l em coda → ɛw; stress -el
+Nayane	n a ˈ y a n ɪ	nome_proprio	easy	nome brasileiro; -ay- ditongo; -ane: y+a+n+ɪ; stress 2ª sílaba
+baluça	b a ˈ l u s ə	palavra_inventada	easy	padrão -uça (como 'maluça'); ç→s; -a final → ə
+frincar	f ɾ ĩ ˈ k a x	palavra_inventada	easy	padrão -incar (como 'brincar'); -in- → ĩ nasal; cluster fr-
+zambelão	z ã b e ˈ l ã ʊ̃	palavra_inventada	easy	padrão -ão final (ã ʊ̃); z inicial; -am-→ã nasal em coda
+trubicar	t ɾ u b i ˈ k a x	palavra_inventada	easy	padrão -icar (como 'complicar'); cluster tr- inicial; regular
+malicar	m a l i ˈ k a x	palavra_inventada	easy	padrão -icar; simples e regular; boa baseline inventada
+chuvarado	ʃ u v a ˈ ɾ a d ʊ	palavra_inventada	easy	padrão -ado (como 'nublado'); ch→ʃ; -o final → ʊ
+fressitar	f ɾ e s i ˈ t a x	palavra_inventada	easy	padrão -itar (como 'resistir'); cluster fr-; regular -ar infinitivo

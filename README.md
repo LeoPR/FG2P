@@ -1,102 +1,111 @@
-# FG2P — Conversão Grapheme-to-Phoneme para Português Brasileiro
+# FG2P — Conversão Grafema-para-Fonema para Português Brasileiro
 
-Modelo neural BiLSTM Encoder-Decoder + Attention para converter texto PT-BR em transcrição fonética IPA. 
+Modelo neural BiLSTM Encoder-Decoder + Atenção Bahdanau para converter texto PT-BR em transcrição fonética IPA, com Distance-Aware Loss customizada.
 
-**🏆 SOTA**: **PER 0.58%** (Exp9, 9.7M params) | Exp2: 0.60% (17.2M) | Exp6: 0.63% (4.3M, budget)
-
-**Breakthrough**: Exp9 (Intermediate + Distance-Aware Loss λ=0.2) alcança NOVO SOTA PT-BR G2P, superando LatPhon (0.86%) com test set 57× maior.
+**🏆 SOTA PER: 0.49%** (Exp104b, 9.7M params, 28.782 palavras de teste)
+**🏆 SOTA WER: 4.96%** (Exp9, sem separadores silábicos)
+**Teste**: 57× maior que LatPhon (0.86%) com mais confiança estatística
 
 ---
 
 ## 🚀 Quick Start
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
+# Setup
+python -m venv .venv && .venv\Scripts\activate
 pip install -r requirements.txt
 
-# Treinar (Exp9 — SOTA recomendado)
-python src\train.py --config conf/config_exp9_intermediate_distance_aware.json
+# Usar modelo SOTA (Exp104b, index=18)
+python src/inference_light.py --index 18 --word computador
+# → k õ p u t a ˈ d o x .
 
-# Avaliar (full evaluation)
-python src\inference.py
+# Modo interativo
+python src/inference_light.py --index 18 --interactive
 
-# Teste rápido com neologismos
-python src\inference_light.py --model-index 0 --test data/neologisms_test.tsv
+# Avaliar em banco de generalização
+python src/inference_light.py --index 18 --neologisms docs/generalization_test.tsv
 
-# Validar dataset saúde
-python src\dataset_health_check.py --input dicts/pt-br.tsv
+# Relatório HTML completo
+python src/reporting/report_generator.py
 
-# Relatório HTML
-python src\reporting\report_generator.py
-
-# Gestão de experimentos
-python src\manage_experiments.py --list
-python src\manage_experiments.py --prune-incomplete --dry-run
+# Gerar apresentação PPTX
+python src/reporting/presentation_generator.py --mode full      # 31 slides
+python src/reporting/presentation_generator.py --mode compact   # 20 slides (10 min)
 ```
 
 ---
 
-## 🎯 Capacidades Principais
+## 📊 Resultados Principais (Phase 6C Completa)
 
-### **1. SOTA G2P Model** (Exp9)
-- PER 0.58% | WER 4.96% | Accuracy 95.04%
-- 9.7M params (optimal ROI vs capacity)
-- BiLSTM Encoder-Decoder + Attention + Distance-Aware Loss
-- Production-ready com checkpointing automático
+| Exp | Params | Técnica | PER↓ | WER↓ | Uso recomendado |
+|-----|--------|---------|------|------|-----------------|
+| **Exp104b** | 9.7M | DA Loss + dist custom | **0.49%** | 5.43% | **SOTA PER — TTS, alinhamento** |
+| **Exp9** | 9.7M | DA Loss λ=0.2 | 0.58% | **4.96%** | **SOTA WER — NLP, busca** |
+| Exp106 | 9.7M | DA + sem hífen | 0.58% | 6.12% | **Velocidade: 30.2 w/s ⚡ (2.58×)** |
+| Exp105 | 9.7M | DA + 50% dados | 0.54% | 5.87% | Deploy com menos dados |
+| Exp102 | 9.7M | CE + separadores | 0.52% | 5.79% | Referência |
+| Exp5 | 9.7M | CrossEntropy | 0.63% | 5.38% | Baseline |
 
-### **2. Neologisms & OOV Testing** (NEW - Phase 5A) 🆕
-- `inference_light.py` — Teste rápido de palavras novas
-- Detecção de palavras inventadas vs dicionário
-- Confidence score + nearest match suggestions
-- Uso: Avaliar performance em nomes, termos técnicos, loanwords
-
-### **3. Dataset Quality Assurance** (NEW - Phase 5A) 🆕
-- `dataset_health_check.py` — Valida dicionário
-- Detecta duplicatas, typos, encoding issues
-- HTML report com sugestões de correção
-- Estatísticas de cobertura (phonemes, n-grams)
-
-### **4. Comprehensive Analysis Pipeline**
-- HTML reports com gráficos de convergência
-- Métricas graduadas PanPhon (Classes A/B/C/D)
-- Error analysis automático (confusões estruturadas)
-- Comparação multi-modelo com SOTA literatura
+**Descobertas-chave**:
+- Split 60/10/30 supera 70/10/20 em **−41% PER**
+- Distance-Aware Loss: pesa erros por distância articulatória (e→ɛ ≠ e→k)
+- Separadores silábicos criam trade-off Pareto irredutível (PER↓, WER↑)
+- 50% dados → apenas +0.05% PER — modelo robusto
+- Sem hífen → 2.58× velocidade, apenas +0.04% PER
 
 ---
 
-## 📊 Resultados Destacados
+## 📚 Documentação
 
-| Exp | Params | Técnica | PER↓ | WER↓ | Acc↑ | ROI |
-|-----|--------|---------|------|------|------|-----|
-| **Exp9** | 9.7M | Intermediate + DA Loss λ=0.2 | **0.58%** | **4.96%** | **95.04%** | ⭐⭐⭐⭐⭐ **SOTA** |
-| **Exp2** | 17.2M | Extended | 0.60% | 4.98% | 95.02% | ⭐⭐⭐ High capacity |
-| **Exp6** | 4.3M | Baseline + DA Loss λ=0.1 | 0.63% | 5.35% | 94.65% | ⭐⭐⭐⭐ Budget |
-| **Exp10** | 17.2M | Extended + DA Loss λ=0.2 | 0.61% | 5.25% | 94.75% | ⭐ Negative ROI |
-| **Exp5** | 9.7M | Intermediate | 0.63% | 5.38% | 94.62% | ⭐⭐⭐ Sweet spot |
-| **Exp1** | 4.3M | Baseline | 0.66% | 5.65% | 94.35% | ⭐⭐⭐ Simple |
+```
+docs/
+├── 01_OVERVIEW.md            ← Introdução, dataset, resultados completos
+├── 02_ARCHITECTURE.md        ← BiLSTM + Atenção Bahdanau
+├── 03_METRICS.md             ← PER, WER, métricas fonológicas
+├── 04_EXPERIMENTS.md         ← Exp0-106, design e resultados
+├── 05_THEORY.md              ← G2P, Loss functions, features articulatórias
+├── 06_PREPROCESSING.md       ← Normalização, charset, filtros
+├── 07_STRUCTURAL_ANALYSIS.md ← Problema d(.,ˈ)=0 e solução (Exp104b)
+├── 09_CONTINUOUS_PHONETIC_SPACE.md ← Espaço fonético 7D (Phase 7 — futuro)
+├── 11_CORPUS_AUDIT.md        ← Auditoria corpus: regra ɣ/x, NFD/NFC
+├── 16_SCIENTIFIC_ARTICLE.md  ← Artigo acadêmico completo
+└── 17_APRESENTACAO_MERGED.md ← Apresentação PPTX [modes: full, compact]
+```
 
-**Key Insights**: 
-- ✅ **Exp9 (9.7M) confirmado como SOTA**: Melhor PER/WER/Acc, optimal ROI
-- ❌ **DA Loss não escala para high-capacity**: Exp10 (17.2M) pior que Exp2 e Exp9
-- 💡 **Saturação em ~0.58% PER**: Limite alcançado com arquitetura atual
-- 🎯 **Próxima fronteira**: Decomposed encoding (Exp11-13) para superar 0.58%
-
-**Análise detalhada**: [docs/04_EXPERIMENTS.md](docs/04_EXPERIMENTS.md)
+**Leitura recomendada**: [docs/01_OVERVIEW.md](docs/01_OVERVIEW.md)
 
 ---
 
-## 📚 Documentação (Estrutura de Artigo Científico)
+## 🏗️ Arquitetura Resumida
 
-**Leitura recomendada em ordem**:
+```
+"c a s a" → [Embedding 192D] → [BiLSTM Encoder 2×384D] → [Atenção Bahdanau]
+                                                              ↓
+                                          [LSTM Decoder 2×384D] → k a z a
+```
 
-1. **[docs/01_OVERVIEW.md](docs/01_OVERVIEW.md)** — Introdução, dataset, discovery 60/10/30
-2. **[docs/02_ARCHITECTURE.md](docs/02_ARCHITECTURE.md)** — BiLSTM, Attention, Embeddings, tratamento sequências
-3. **[docs/03_METRICS.md](docs/03_METRICS.md)** — PER, WER, métricas graduadas PanPhon (Classes A/B/C/D)
-4. **[docs/04_EXPERIMENTS.md](docs/04_EXPERIMENTS.md)** — Exp0-9 design, resultados, RFC_EXP6, análise comparativa
-5. **[docs/05_THEORY.md](docs/05_THEORY.md)** — Fundações G2P, Loss functions, Features articulatórias
-6. **[docs/06_REFERENCES.md](docs/06_REFERENCES.md)** — Bibliography (SOTA, datasets, tools)
+**Loss**: `L = L_CE + λ · d(ŷ, y) · p(ŷ)` — CrossEntropy + penalidade articulatória
+**Dataset**: 95.937 palavras PT-BR (dicts/pt-br.tsv) | Split: 60/10/30
 
-**Status & Roadmap**: [TODO.md](TODO.md) — Fonte única de status, Phase 3 schedule
+---
 
-**Benchmarks**: [docs/performance.json](docs/performance.json) — SOTA comparisons + hyperparameters
+## 🔧 Comandos Úteis
+
+```bash
+# Treinar experimento
+python src/train.py --config conf/config_exp104b_intermediate_sep_da_custom_dist.json
+
+# Avaliação completa (WER/PER no test set)
+python src/inference.py
+
+# Listar modelos treinados
+python src/manage_experiments.py --list
+
+# Benchmark de velocidade
+python src/benchmark_inference.py
+```
+
+---
+
+**Status**: Phase 6C Completa ✅ | Phase 7 Planejada (espaço fonético 7D contínuo)
+**Documentação**: [docs/](docs/) | **Roadmap**: [TODO.md](TODO.md) | **Status**: [STATUS.md](STATUS.md)

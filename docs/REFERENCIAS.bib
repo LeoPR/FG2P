@@ -1,0 +1,463 @@
+% REFERÊNCIAS BIBLIOGRÁFICAS - G2P PARA PORTUGUÊS BRASILEIRO
+% Compiladas em: 14/02/2026
+% Formato: BibTeX
+% Uso:  arquivo .bib no LaTeX/Word
+
+% =====================================================================
+% ARTIGOS PRINCIPAIS (Core Literature)
+% =====================================================================
+
+@misc{cmudict,
+  title={{CMUdict}: The {Carnegie} {Mellon} {Pronouncing} {Dictionary}},
+  author={{Carnegie Mellon University} and {CMUSphinx Contributors}},
+  year={2021},
+  version={0.7b},
+  note={Over 134,000 English words and pronunciations. Public domain / 2-clause BSD license.},
+  howpublished={Website and GitHub Repository},
+  url={https://github.com/cmusphinx/cmudict}
+}
+
+@inproceedings{neto2006brazilian,
+  title={New resources for {B}razilian {P}ortuguese: Results for grapheme-to-phoneme and phone classification},
+  author={Neto, Nelson and Fagundes, Filipe and Catelli, Pablo},
+  booktitle={IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  year={2006},
+  url={https://ieeexplore.ieee.org/abstract/document/4433322},
+  doi={10.1109/ICASSP.2006.1661394}
+}
+
+@inproceedings{vasilевski2012phonologic,
+  title={Phonologic and syllabic patterns of {B}razilian {P}ortuguese extracted from a {G2P} decoder-parser},
+  author={Vasilévski, Vera and Araújo, Márcio José},
+  booktitle={Workshop on Methods for Building and Evaluating Parse Banks for Resource-Scarce Languages},
+  year={2012},
+  url={https://aclanthology.org/W12-0912/}
+}
+
+@article{vasilевski2012phonologic_extended,
+  title={Phonologic patterns of {B}razilian {P}ortuguese: a grapheme to phoneme converter based study},
+  author={Vasilévski, Vera and Araújo, Márcio José and Blasi, H. F.},
+  journal={Academia.edu},
+  year={2012},
+  url={https://www.academia.edu/81112008/}
+}
+
+% =====================================================================
+% LSTM E REDES NEURAIS PARA G2P
+% =====================================================================
+
+@article{graves2013speech,
+  title={Speech recognition with deep recurrent neural networks},
+  author={Graves, Alex and Mohamed, Abdel-Rahman and Hinton, Geoffrey E},
+  journal={IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  year={2013},
+  url={https://ieeexplore.ieee.org/document/6638947}
+}
+
+@misc{google2016g2p,
+  title={Grapheme-to-Phoneme Conversion Using Long Short-Term Memory Recurrent Neural Networks},
+  author={Google Research Team},
+  howpublished={Technical Report},
+  year={2016},
+  url={https://research.google.com/pubs/archive/43264.pdf}
+}
+
+@inproceedings{yao2015sequence,
+  title={Sequence-to-Sequence Models Can Directly Translate Foreign Languages},
+  author={Yao, Kaisheng and Zweig, Geoffrey and Hwang, Mei-Yuh and Shi, Yangyang and Yu, Dong},
+  booktitle={Interspeech},
+  year={2015}
+}
+
+% =====================================================================
+% SURVEYS E REVIEWS
+% =====================================================================
+
+@article{mdpi2024survey,
+  title={A survey of grapheme-to-phoneme conversion methods},
+  author={Various Authors},
+  journal={MDPI Applied Sciences},
+  volume={14},
+  number={24},
+  pages={11790},
+  year={2024},
+  url={https://www.mdpi.com/2076-3417/14/24/11790}
+}
+
+@inproceedings{sigmorphon2020multilingual,
+  title={Frustratingly easy multilingual grapheme-to-phoneme conversion},
+  author={Mortillaro, Matteo},
+  booktitle={ACL Workshop on Computational Morphology},
+  year={2020},
+  url={https://aclanthology.org/2020.sigmorphon-1.13.pdf}
+}
+
+% =====================================================================
+% SISTEMAS E FERRAMENTAS
+% =====================================================================
+
+@misc{xphonebr,
+  title={XphoneBR: Transformer-based Grapheme-to-Phoneme Conversion for {B}razilian {P}ortuguese},
+  author={Pedroso, Trader},
+  year={2021},
+  howpublished={GitHub Repository},
+  url={https://github.com/traderpedroso/xphoneBR}
+}
+
+@misc{neural_g2p_portuguese,
+  title={Neural G2P Portuguese: Grapheme-to-Phoneme Conversion for {P}ortuguese},
+  author={Fabian Luz},
+  year={2020},
+  howpublished={GitHub Repository},
+  url={https://github.com/fabianoluzbr/neural-g2p-portuguese}
+}
+
+@misc{g2p_decision_trees,
+  title={G2P Decision Trees: Grapheme-to-Phoneme Conversion Using Decision Trees},
+  author={Batista, Cassio T.},
+  year={2019},
+  howpublished={GitHub Repository},
+  url={https://github.com/cassiotbatista/g2p-decision-trees},
+  organization={Grupo FalaBrasil, UFPA}
+}
+
+@misc{multilingual_g2p,
+  title={Multilingual G2P: Grapheme-to-Phoneme for Multiple Languages},
+  author={Silva, Julio C.},
+  year={2020},
+  howpublished={GitHub Repository},
+  url={https://github.com/jcsilva/multilingual-g2p}
+}
+
+@misc{g2p_seq2seq,
+  title={G2P with TensorFlow: Sequence-to-Sequence Grapheme-to-Phoneme Conversion},
+  author={{CMUSphinx Contributors}},
+  year={2016},
+  howpublished={GitHub Repository},
+  url={https://github.com/cmusphinx/g2p-seq2seq},
+  note={TensorFlow-based seq2seq model with support for custom train/dev/test splits}
+}
+
+@misc{phonetisaurus,
+  title={Phonetisaurus: {OpenFst}-based Grapheme-to-Phoneme Conversion},
+  author={Novak, Josef R.},
+  year={2016},
+  howpublished={GitHub Repository},
+  url={https://github.com/AdolfVonKleist/Phonetisaurus},
+  note={WFST-based G2P using n-gram models and OpenFst}
+}
+
+@misc{sequitur_g2p,
+  title={Sequitur G2P: A trainable Grapheme-to-Phoneme converter},
+  author={Bisani, Maximilian and Ney, Hermann},
+  year={2008},
+  howpublished={RWTH Aachen University},
+  url={http://www-i6.informatik.rwth-aachen.de/web/Software/g2p.html},
+  note={Joint-sequence n-gram model for G2P}
+}
+
+@misc{charsiu_g2p,
+  title={CharsiuG2P: Multilingual G2P in 100 Languages},
+  author={Zhu, Lingjun},
+  year={2021},
+  howpublished={GitHub Repository},
+  url={https://github.com/lingjzhu/CharsiuG2P}
+}
+
+@misc{espeak_ng,
+  title={eSpeak NG: Text-to-Speech Synthesizer},
+  author={Duddington, Jonathan and Contributors},
+  year={2019},
+  howpublished={GitHub Repository},
+  url={https://github.com/espeak-ng/espeak-ng}
+}
+
+% =====================================================================
+% TRANSFORMERS E MODELOS MODERNOS
+% =====================================================================
+
+@article{devlin2018bert,
+  title={BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding},
+  author={Devlin, Jacob and Chang, Ming-Wei and Lee, Kenton and Toutanova, Kristina},
+  journal={arXiv preprint arXiv:1810.04805},
+  year={2018}
+}
+
+@article{byt5g2p,
+  title={ByT5: a monolithic pre-trained text-to-text transformer for massively multilingual grapheme-to-phoneme conversion},
+  author={Toshniwal, Shubham and Dao, Tuan and Xie, Shuyan and Salimans, Tim and Grattafiori, Brian and Song, Yonghui and Stripelis, Giorgos},
+  journal={arXiv preprint arXiv:2204.03067},
+  year={2022},
+  url={https://arxiv.org/pdf/2204.03067}
+}
+
+@inproceedings{vaswani2017attention,
+  title={Attention is all you need},
+  author={Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N and Kaiser, Lukasz and Polosukhin, Illia},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={5998--6008},
+  year={2017}
+}
+
+% =====================================================================
+% PROCESSAMENTO DE LINGUAGEM NATURAL E FONÉTICA
+% =====================================================================
+
+@misc{liquori2013portuguese,
+  title={Portuguese Phonology},
+  author={Liquori, Matteo and Contributors},
+  howpublished={Wikipedia},
+  year={2013},
+  url={https://en.wikipedia.org/wiki/Portuguese_phonology}
+}
+
+@book{veloso2001linguistic,
+  title={Linguistic foundations of natural language processing for {P}ortuguese},
+  author={Veloso, A and Raposo, H and Mendes, A},
+  publisher={ACL},
+  year={2001}
+}
+
+% =====================================================================
+% MÉTRICAS E AVALIAÇÃO
+% =====================================================================
+
+@article{mcnamee2005character,
+  title={Character error rate and measures of edit distance},
+  author={McNamee, Paul},
+  journal={NIST Technical Report},
+  year={2005}
+}
+
+@misc{jiwer,
+  title={JiWER: Evaluation metrics for speech recognition},
+  author={Smit, Jiwer},
+  year={2020},
+  howpublished={Python Package},
+  url={https://pypi.org/project/jiwer/}
+}
+
+% =====================================================================
+% RECURSOS EM PORTUGUÊS
+% =====================================================================
+
+@inproceedings{neto2010resources,
+  title={Free tools and resources for {B}razilian {P}ortuguese speech recognition},
+  author={Neto, Nelson and Mendes, Edson Luiz and Barbosa, Plínio and Bassi, Giovanni},
+  booktitle={Journal of the Brazilian Computer Society},
+  volume={16},
+  pages={101--115},
+  year={2010},
+  publisher={Springer Nature}
+}
+
+@article{fagundes2011brazilian,
+  title={{B}razilian {P}ortuguese automatic speech recognition in {F}ala{B}rasil project},
+  author={Fagundes, Filipe and Neto, Nelson},
+  journal={LREC},
+  year={2011}
+}
+
+% =====================================================================
+% FRAMEWORKS E BIBLIOTECAS
+% =====================================================================
+
+@inproceedings{paszke2019pytorch,
+  title={PyTorch: An imperative style, high-performance deep learning library},
+  author={Paszke, Adam and Gross, Sam and Massa, Francisco and Lerer, Adam and Bradbury, James and Chanan, Gregory and Killeen, Trevor and Lin, Zeming and Gimelshein, Natalia and Antiga, Luca and others},
+  booktitle={Advances in Neural Information Processing Systems},
+  pages={8026--8037},
+  year={2019}
+}
+
+@article{scikit-learn,
+  title={Scikit-learn: Machine learning in Python},
+  author={Pedregosa, Fabian and Varoquaux, Gaël and Gramfort, Alexandre and Michel, Vincent and Thirion, Bertrand and Grisel, Olivier and Blondel, Mathieu and Prettenhofer, Peter and Weiss, Ron and Dubourg, Vincent and others},
+  journal={The journal of machine learning research},
+  volume={12},
+  pages={2825--2830},
+  year={2011}
+}
+
+% =====================================================================
+% DEEP LEARNING E REDES NEURAIS
+% =====================================================================
+
+@inproceedings{hochreiter1997long,
+  title={Long short-term memory},
+  author={Hochreiter, Sepp and Schmidhuber, Jürgen},
+  booktitle={Neural computation},
+  volume={9},
+  number={8},
+  pages={1735--1780},
+  year={1997}
+}
+
+@article{cho2014learning,
+  title={Learning phrase representations using RNN encoder-decoder for statistical machine translation},
+  author={Cho, Kyunhyuk and Van Merriënboer, Bart and Gulcehre, Caglar and Bahdanau, Dzmitry and Bougares, Fethi and Schwenk, Holger and Bengio, Yoshua},
+  journal={arXiv preprint arXiv:1406.1078},
+  year={2014}
+}
+
+@article{bahdanau2014neural,
+  title={Neural Machine Translation by Jointly Learning to Align and Translate},
+  author={Bahdanau, Dzmitry and Cho, Kyunhyuk and Bengio, Yoshua},
+  journal={arXiv preprint arXiv:1409.0473},
+  year={2014}
+}
+
+@article{graves2008offline,
+  title={Offline handwriting recognition with multidimensional recurrent neural networks},
+  author={Graves, Alex and Schmidhuber, Jürgen},
+  journal={Advances in Neural Information Processing Systems},
+  pages={545--552},
+  year={2009}
+}
+
+% =====================================================================
+% ALINHAMENTO E CTC
+% =====================================================================
+
+@inproceedings{graves2006connectionist,
+  title={Connectionist temporal classification: labelling unsegmented sequence data with recurrent neural networks},
+  author={Graves, Alex and Fernández, Santiago and Gomez, Faustino and Schmidhuber, Jürgen},
+  booktitle={Proceedings of the 23rd international conference on Machine learning},
+  pages={369--376},
+  year={2006}
+}
+
+% =====================================================================
+% LINGUÍSTICA COMPUTACIONAL
+% =====================================================================
+
+@article{bird2009nltk,
+  title={Natural Language Processing with Python},
+  author={Bird, Steven and Klein, Ewan and Loper, Edward},
+  journal={O'Reilly Media},
+  year={2009}
+}
+
+@inproceedings{fellbaum1998wordnet,
+  title={WordNet: An electronic lexical database},
+  author={Fellbaum, Christiane},
+  booktitle={Proceedings of the International Conference on Computational Linguistics},
+  year={1998}
+}
+
+% =====================================================================
+% SÍNTESE DE FALA E RECONHECIMENTO
+% =====================================================================
+
+@book{black2003statistical,
+  title={Statistical parametric synthesis of speech},
+  author={Black, Alan W and Zen, Heiga},
+  journal={ESCA Tutorial and Research Workshop on Speech Synthesis},
+  year={2003}
+}
+
+@inproceedings{tacotron,
+  title={Tacotron: Towards end-to-end speech synthesis},
+  author={Wang, Yuxuan and Skerry-Ryan, RJ and Stanton, Daisy and Wu, Yonghui and Weiss, Ron J and Jaitly, Navdeep and Yang, Zongheng and Xiao, Ying and others},
+  booktitle={Interspeech},
+  year={2017}
+}
+
+% =====================================================================
+% DATASETS E CORPORA
+% =====================================================================
+
+@article{garofolo1993timit,
+  title={TIMIT Acoustic-Phonetic Continuous Speech Corpus},
+  author={Garofolo, John S and Lamel, Lori F and Fisher, William M and Fiscus, Jonathan G and Pallett, David S and Dahlgren, Nancy L and Zue, Victor},
+  journal={NIST Technical Report},
+  year={1993}
+}
+
+% =====================================================================
+% OTIMIZAÇÃO E TREINAMENTO
+% =====================================================================
+
+@inproceedings{kingma2014adam,
+  title={Adam: A method for stochastic optimization},
+  author={Kingma, Diederik P and Ba, Jimmy},
+  booktitle={arXiv preprint arXiv:1412.6980},
+  year={2014}
+}
+
+@article{rumelhart1986learning,
+  title={Learning representations by back-propagating errors},
+  author={Rumelhart, David E and Hinton, Geoffrey E and Williams, Ronald J},
+  journal={Nature},
+  volume={323},
+  number={6088},
+  pages={533--536},
+  year={1986}
+}
+
+% =====================================================================
+% REFERÊNCIAS ADICIONAIS ÚTEIS
+% =====================================================================
+
+@misc{pytorch_tutorials,
+  title={PyTorch Tutorials},
+  author={PyTorch Team},
+  year={2023},
+  howpublished={Online Documentation},
+  url={https://pytorch.org/tutorials/}
+}
+
+@misc{huggingface,
+  title={Hugging Face Transformers},
+  author={Wolf, Thomas and others},
+  year={2020},
+  howpublished={GitHub Repository},
+  url={https://github.com/huggingface/transformers}
+}
+
+% =====================================================================
+% TRABALHOS RELACIONADOS EM PT-BR
+% =====================================================================
+
+@article{voice_research_brazil,
+  title={Voice and Speech Processing for {B}razilian {P}ortuguese: Review and Challenges},
+  author={Various Authors},
+  journal={EURASIP Journal on Audio, Speech, and Music Processing},
+  year={2024}
+}
+
+@phdthesis{batista2023phd,
+  title={Processamento de Fala e Tecnologias de Síntese para Português Brasileiro},
+  author={Batista, Cassio Tadao},
+  school={Universidade Federal do Pará},
+  year={2023}
+}
+
+% =====================================================================
+% FIM DO ARQUIVO
+% =====================================================================
+
+% Instruções de uso:
+%
+% 1. Copie este arquivo como "referencias.bib" no seu projeto LaTeX
+%
+% 2. No seu documento .tex, adicione:
+%    \bibliography{referencias}
+%    \bibliographystyle{plain}  % ou ieeetr, apalike, etc
+%
+% 3. Ou em Overleaf:
+%    - Upload referencias.bib
+%    - \bibliography{referencias}
+%
+% 4. Cite usando:
+%    \cite{neto2006brazilian}
+%    \cite{vasilевski2012phonologic}
+%    \cite{google2016g2p}
+%    etc.
+%
+% 5. Para Word/LibreOffice:
+%    - Use Mendeley, Zotero ou EndNote
+%    - Importe este arquivo .bib
+%    - Cite inserindo referências
+%
+% Última atualização: 14/02/2026

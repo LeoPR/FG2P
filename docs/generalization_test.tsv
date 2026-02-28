@@ -1,0 +1,56 @@
+# Banco de Generalização G2P PT-BR — avaliação honesta de cobertura e limites
+# Curadoria: 2026-02-25 | 30 palavras em 6 categorias
+# Formato: word\tphonemes\tcategory\tdifficulty\tnotes
+#
+# CHARSET TREINADO: a-z (sem k w y) + ç á à â ã é ê í ó ô õ ú ü -
+# LETRAS OOV: k, w, y — não estão em dicts/pt-br.tsv
+#
+# PADRÕES CHAVE:
+#   - rr / r inicial → x     (carro, roda → x)
+#   - r em coda FINAL de palavra     → x     (computador → x)
+#   - r em coda INTERNA antes de C vozeada → ɣ  (borboleta→ɣb, acordo→ɣd, internet→ɣn)
+#     C vozeadas: b d g v z ʒ m n l ɲ ɾ (assimilação de vozeamento automática)
+#   - l em coda      → w     (pastel → ɛw)
+#   - ss             → s
+#   - nh             → ɲ
+#   - lh             → ʎ
+#   - ch             → ʃ
+#   - t/d antes i/ɪ  → t ʃ / d ʒ
+#   - -a final átona → ə, -e→ɪ, -o→ʊ
+#   - -ão            → ã ʊ̃
+#   - nasais: -an/-am→ã, -en/-em→ẽ, -in/-im→ĩ, -on/-om→õ
+#   - ˈ = token separado antes da sílaba tônica
+#
+#word	phonemes	category	difficulty	notes
+
+biscoitinhozão	b i s k o y t ʃ i ɲ ʊ ˈ z ã ʊ̃	generalizacao_pt	easy	biscoito+inho+zão; -ti→tʃ; nh→ɲ; -ão→ãʊ̃; stress em -zão; todos os chars no vocab
+fantabulástico	f ã t a b u ˈ l a s t ʃ i k ʊ	generalizacao_pt	medium	portmanteau fantástico+fabuloso; fan→fã (nasal); -ti→tʃ; stress -lás-; -o→ʊ
+chuveirada	ʃ u v e y ˈ ɾ a d ə	generalizacao_pt	easy	chuva+eiro+ada; ch→ʃ; -ei-=ey ditongo; stress -ra-; -a final→ə
+açucarzão	a s u k a ɣ ˈ z ã ʊ̃	generalizacao_pt	easy	açúcar+zão; ç→s; r coda→ɣ (antes z vozeado); -zão→ãʊ̃; stress em -zão
+enrolação	ẽ x o l a ˈ s ã ʊ̃	generalizacao_pt	easy	enrolar+ação; en-→ẽ (nasal); r→x após coda; -ção→sãʊ̃; stress -ção
+foguetão	f o ɡ e ˈ t ã ʊ̃	generalizacao_pt	easy	foguete+ão; gu+e→ɡe (u mudo); sufixo aumentativo; stress -tão
+bicicletada	b i s i k l e ˈ t a d ə	generalizacao_pt	easy	bicicleta+ada; ci→si; cl→kl; sufixo -ada; stress -ta-; -a final→ə
+computadorzinho	k õ p u t a d o ɣ ˈ z ĩ ɲ ʊ	generalizacao_pt	medium	computador+zinho; om→õ; r coda→ɣ (antes z vozeado); -zi-→zĩ nasal; nh→ɲ; stress -zi-
+pastelzinho	p a s t ɛ w ˈ z ĩ ɲ ʊ	generalizacao_pt	medium	pastel+zinho; -el coda→ɛw; -zi-→zĩ nasal; nh→ɲ; stress -zi-
+lazzaretti	l a z a ˈ ɾ ɛ t ʃ i	consoante_dupla	medium	sobrenome italiano; zz→z único em PT-BR; tt→t único; stress penúltima; -ti→tʃ
+cappuccino	k a p u ˈ t ʃ i n ʊ	consoante_dupla	medium	pp→p único; cc+i→tʃ (palatalização); stress -ci-; -o→ʊ; adaptação PT-BR
+mozzarela	m o z a ˈ ɾ ɛ l ə	consoante_dupla	medium	zz→z único (igual a pizza→piza); stress -re-; -ela→ɛlə; padrão italiano-BR
+aterrissar	a t e x i ˈ s a x	consoante_dupla	easy	aterrar+izar→aterrissar; rr→x; ss→s; -ar→ax; stress -sar-; múltiplos padrões
+arranhão	a x a ˈ ɲ ã ʊ̃	consoante_dupla	easy	arranhar+ão; rr→x; nh→ɲ; -ão→ãʊ̃; stress -nhão; todos os padrões PT-BR aplicados
+site	ˈ s a y t ʃ ɪ	anglicismo_invocab	medium	anglicismo; grafemas todos no vocab; ditongo ai em PT-BR; -te→tʃɪ; fonologia inglesa
+internet	ĩ t e ɣ ˈ n ɛ t ʃ ɪ	anglicismo_invocab	medium	anglicismo; in-→ĩ; -ter→teɣ (r coda→ɣ antes n vozeado); stress -net; t final→tʃɪ epenthetic; fonologia mista
+mouse	ˈ m a w z ɪ	anglicismo_invocab	hard	anglicismo; grafemas no vocab; ditongo inglês ou→aw; -se→zɪ (s vozeado→z); fonologia inglesa
+clube	ˈ k l u b ɪ	anglicismo_invocab	easy	anglicismo adaptado; cl-cluster; -e final→ɪ; padrão regular; possivelmente no treino
+stress	ˈ s t ɾ ɛ s ɪ	anglicismo_invocab	medium	anglicismo; cluster st-; ss coda→sɪ (epenthetic); -e→ɛ tônico; fonologia inglesa
+wifi	ˈ w i f i	char_oov	hard	[CHAR OOV: 'w' não está no vocab treinado] w→UNK; falha esperada independente do modelo
+karatê	k a ɾ a ˈ t ʃ ɪ	char_oov	hard	[CHAR OOV: 'k' não está no vocab treinado] k→UNK; falha esperada; tê→tʃɪ seria correto
+yoga	ˈ y o ɡ ə	char_oov	hard	[CHAR OOV: 'y' não está no vocab treinado] y→UNK; falha esperada; -a final→ə
+puxadinho	p u ʃ a ˈ d ʒ ĩ ɲ ʊ	real_oov	easy	puxar+adinho; x→ʃ (consoante); d+i→dʒ; -di-→dʒĩ nasal antes nh; stress -di-
+abacatada	a b a k a ˈ t a d ə	real_oov	easy	abacate+ada; c→k; sufixo -ada regular; stress -ta-; -a final→ə; padrão simples
+zunido	z u ˈ n i d ʊ	real_oov	easy	onomatopeia de zunir; z inicial; stress -ni-; -o→ʊ; regular e simples
+malcriado	m a w k ɾ i ˈ a d ʊ	real_oov	medium	mal+criado; l coda→w; cr-cluster; -ia- ditongo; stress -a-; -o→ʊ; composto
+arrombado	a x õ ˈ b a d ʊ	real_oov	medium	arrombado (de arrombar); rr→x; om→õ (nasal); stress -ba-; -o→ʊ; participio passado
+biscoito	b i s ˈ k o y t ʊ	controle	easy	[EM DICT] controle: -oi-→oy ditongo; c→k; stress -coi-; -o→ʊ
+computador	k õ p u t a ˈ d o x	controle	easy	[EM DICT] controle: com→kõ; r coda→x; stress -dor-; padrão -ador
+churrasco	ʃ u ˈ x a s k ʊ	controle	easy	[EM DICT] controle: ch→ʃ; rr→x; stress -rras-; -o→ʊ; muito comum em PT-BR
+borboleta	b o ɣ b o ˈ l e t ə	controle	easy	[EM DICT] controle: r coda→ɣ (antes b vozeado; corpus: b o ɣ . b o . ˈ l e . t ə); stress -le-; vogal e (fechada per corpus); -a final→ə
