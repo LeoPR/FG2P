@@ -1,0 +1,98 @@
+======================================================================
+G2P LSTM - Evaluation Results
+======================================================================
+Timestamp: 2026-02-25 12:32:58
+Model: exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333.pt
+Experiment: exp104b_intermediate_sep_da_custom_dist_fixed
+Training Status: Epoch 88/120 (Complete)
+Test set: 28782 words
+Inference time: 913.94s (31.5 samples/s)
+Total time: 916.28s
+
+METRICS
+----------------------------------------------------------------------
+PER (Phoneme Error Rate): 0.49%
+WER (Word Error Rate):    5.43%
+Accuracy (Word-level):    94.57%
+Correct words: 27220/28782
+
+LENGTH ANALYSIS
+----------------------------------------------------------------------
+Predictions shorter: 152 (0.5%)
+Predictions longer:  80 (0.3%)
+Predictions exact:   28550 (99.2%)
+Avg missing phonemes: 1.16
+Avg extra phonemes: 1.10
+
+ERROR ANALYSIS
+----------------------------------------------------------------------
+Substitutions: 2990
+Deletions:     177
+Insertions:    88
+
+BENCHMARK COMPARISON
+----------------------------------------------------------------------
+Model                        Lang    Dataset          PER%    WER%    Acc%   
+----------------------------------------------------------------------
+FG2P (este run)              PT-BR   28k (estratificado) 0.49    5.43    94.57  
+FG2P Exp0 (Baseline 70/10/20) PT-BR   19.2k (20% test) 1.12    9.37    90.63  
+FG2P Exp1 (Baseline 60/10/30) PT-BR   28.8k (30% test) 0.66    5.65    94.35  
+FG2P Exp2 (Extended)         PT-BR   28.8k (30%)      0.60    4.98    95.02  
+FG2P Exp3 (PanPhon)          PT-BR   28.8k (30%)      0.66    5.45    94.55  
+FG2P Exp4 (PanPhon Fixed)    PT-BR   19.2k (20% test) 0.71    6.02    93.98  
+FG2P Exp5 (Intermediate)     PT-BR   28.8k (30%)      0.63    5.38    94.62  
+FG2P Exp6 (Distance-Aware Loss) PT-BR   28.8k (30%)      0.63    5.35    94.65  
+FG2P Exp7 (Lambda Lower Bound (λ=0.05)) PT-BR   28.8k (30%)      0.62    5.36    94.64  
+FG2P Exp7 (Lambda Mid Candidate (λ=0.20)) PT-BR   28.8k (30%)      0.60    5.14    94.86  
+FG2P Exp7 (Lambda Upper Bound (λ=0.50)) PT-BR   28.8k (30%)      0.65    5.57    94.43  
+FG2P Exp8 (PanPhon + Distance-Aware) PT-BR   28.8k (30%)      0.65    5.62    94.38  
+FG2P Exp9 (Intermediate + Distance-Aware) PT-BR   28.8k (30%)      0.58    4.96    95.04  
+FG2P Exp1 (Extended + Distance-Aware) PT-BR   28.8k (30%)      0.61    5.25    94.75  
+LatPhon (SOTA 2025)          PT-BR   ~96k             0.86    n/d     n/d    
+XphoneBR (Transformer, SOTA) PT-BR   ~90k             n/d     n/d     n/d    
+Phonetisaurus (WFST Baseline) EN      CMUDict ~122k    6.50    25.60   n/d    
+DeepPhonemizer (Transformer EN CMUDict) EN      CMUDict ~120k    5.23    22.10   n/d    
+DeepPhonemizer (Transformer NetTalk EN) EN      NetTalk          n/d     n/d     n/d    
+DeepPhonemizer (Italiano)    IT      ~77k             0.40    3.50    n/d    
+ByT5 Tiny (en, 8 layers)     EN      100+ idiomas     10.70   n/d     n/d    
+ByT5 Tiny (en, 16 layers)    EN      100+ idiomas     9.60    n/d     n/d    
+ByT5 Small (100+ idiomas)    Multilíngue 100+ idiomas     8.90    n/d     n/d    
+Transformer seq2seq (Zhang et al. 2019) EN      CMUDict ~100k    1.40    9.40    90.60  
+
+Notes:
+  - FG2P dataset stratification: χ² p=0.678, Cramér V=0.004 (excellent quality split).
+  - LatPhon (SOTA 2025) uses only 500 test samples vs FG2P 28.782 (57× larger for superior statistical reliability).
+  - ByT5 metrics: 8.9% PER is MULTILINGUAL AVERAGE across 100+ languages; models shown (Tiny 8/16, Small) are Google's byte-level seq2seq.
+  - DeepPhonemizer variants: Italian 0.40% (Romance language) vs English 5.23% (irregular orthography); shows language orthographic complexity impact.
+  - Phonetisaurus (2012) is classical WFST baseline; modern methods (Transformer/ByT5) represent 10+ year improvement trajectory.
+  - PER comparison: DeepPhonemizer (IT) 0.40% trained on 70k words; FG2P Exp2 0.58% with 57k words + PanPhon features (4.3M params competitive with 299M ByT5).
+  - PanPhon embeddings (24 articulatory features) enable competitive performance with 4.3M params (Exp3) vs ByT5's 299M parameters (77× reduction).
+  - EN is more irregular than PT-BR; direct metric comparisons must account for language-specific orthographic characteristics.
+  - FG2P vowel confusions (ɛ↔e, ɔ↔o) represent 60% of WER but are linguistically justified in word-isolated inference without semantic context.
+  - Top error in FG2P Exp2: ɛ→e (214×) and e→ɛ (202×), reflecting Portuguese mid-vowel ambiguity without semantic/morphological context.
+  - Graduated metrics (PanPhon) reveal Exp3 error distribution more phonologically informed than classical metrics suggest.
+  - ByT5 is massively multilingual (299M params, 100+ languages); specialized models (LatPhon 7.5M) outperform on single languages due to parameter efficiency.
+  - For experimental methodology details and references, see docs/LITERATURE.md and source papers listed above.
+
+ERROR EXAMPLES (first 20)
+----------------------------------------------------------------------
+manuseadas      | Pred: m a . n u . z i . ˈ a . d ə s | Ref: m a . n u . z e . ˈ a . d ə s
+nietzscheana    | Pred: n i . e t s . ʃ e . ˈ ã . n ə | Ref: n i . e t z s . ʃ i . ˈ ã . n ə
+pistolas-metralhadoras | Pred: p i s . t o . l a z . m i . t ɾ a . ʎ a . ˈ d o . ɾ ə s | Ref: p i s . t ʃ ɔ . l a z . m i . t ɾ a . ʎ a . ˈ d o . ɾ ə s
+internetês      | Pred: ĩ . t ɛ ɣ . n e . ˈ t e s | Ref: ĩ . t e ɣ . n e . ˈ t e s
+olmütz          | Pred: ˈ o w m s                 | Ref: ɔ w . ˈ m k s t s
+cetinje         | Pred: s e . ˈ t ʃ ĩ . ʒ ɪ       | Ref: s ɛ . ˈ t ʃ ĩ . ʒ ɪ
+covões          | Pred: k ɔ . ˈ v õ ỹ s           | Ref: k u . ˈ v õ ỹ s
+destoante       | Pred: d e s . t o . ˈ ã . t ʃ ɪ | Ref: d e s . t u . ˈ ã . t ʃ ɪ
+acontece        | Pred: a . k õ . ˈ t ɛ . s ɪ     | Ref: a . k õ . ˈ t e . s ɪ
+proeminentemente | Pred: p ɾ o . e . m i . n ẽ . t ʃ ɛ . ˈ m ẽ . t ʃ ɪ | Ref: p ɾ o . ɛ . m i . n ẽ . t ʃ i . ˈ m ẽ . t ʃ ɪ
+lançou          | Pred: l ã . ˈ s ɔ w             | Ref: l ã . ˈ s o w
+moinhos         | Pred: m ɔ . ˈ ĩ . ɲ ʊ s         | Ref: m o . ˈ ĩ . ɲ ʊ s
+crescimentos    | Pred: k ɾ e . s i . ˈ m ẽ . t ʊ s | Ref: k ɾ e . z i . ˈ m ẽ . t ʊ s
+urros           | Pred: ˈ u . x ʊ s               | Ref: ˈ ũ . x ʊ s
+uces            | Pred: ˈ u . s ɪ s               | Ref: ˈ ũ . s ɪ s
+armadoria       | Pred: a ɣ . m a . d o . ˈ ɾ i . ə | Ref: a ɣ . m a . d ɔ . ˈ ɾ i . ə
+controlabilidade | Pred: k õ . t ɾ o . l a . b i . l i . ˈ d a . d ʒ ɪ | Ref: k õ . t ɾ ɔ . l a . b i . l i . ˈ d a . d ʒ ɪ
+posada          | Pred: p õ . ˈ z a . d ə         | Ref: p o . ˈ z a . d ə
+impresa         | Pred: ĩ . ˈ p ɾ e . z ə         | Ref: ĩ . ˈ p ɾ ɛ . z ə
+ardeu           | Pred: a ɣ . ˈ d e w             | Ref: a ɣ . ˈ d ɛ w

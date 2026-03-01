@@ -1,0 +1,144 @@
+{
+  "experiment_name": "exp104b_intermediate_sep_da_custom_dist_fixed",
+  "run_id": "20260225_045333",
+  "full_name": "exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333",
+  "timestamp": "2026-02-25 09:43:01",
+  "current_epoch": 88,
+  "total_epochs": 120,
+  "config": {
+    "description": "Exp104b — Intermediate 9.7M + Syllable Separators + DA Loss (λ=0.2) + Custom Structural Distances (FIXED: override pós-normalização)",
+    "data": {
+      "source": "dicts/pt-br.tsv",
+      "train_ratio": 0.6,
+      "val_ratio": 0.1,
+      "test_ratio": 0.3,
+      "split_seed": 42,
+      "note": "Mesmos splits de Exp9/102/103/104 para comparação direta.",
+      "grapheme_encoding": "raw",
+      "keep_syllable_separators": true
+    },
+    "model": {
+      "embedding_type": "learned",
+      "emb_dim": 192,
+      "hidden_dim": 384,
+      "num_layers": 2,
+      "dropout": 0.5,
+      "note": "Idêntico Exp103/104 em arquitetura.",
+      "total_params_estimate": "~9.7M"
+    },
+    "training": {
+      "fit_method": "adam",
+      "epochs": 120,
+      "warmup_epochs": 80,
+      "batch_size": 64,
+      "lr": 0.001,
+      "early_stopping_patience": 10,
+      "weight_decay": 1e-05,
+      "loss": {
+        "type": "distance_aware",
+        "config": {
+          "distance_lambda": 0.2,
+          "distance_metric": "euclidean",
+          "normalize_distance": true
+        },
+        "note": "λ=0.2 ótimo de Exp7. Override estrutural aplicado APÓS normalização em losses.py.__init__ (não em _build_distance_matrix). Garante d(.,ˈ)=1.0 na escala [0,1] final, não ~0.25 como em Exp104."
+      }
+    },
+    "experiment": {
+      "name": "exp104b_intermediate_sep_da_custom_dist_fixed",
+      "purpose": "Repetir Exp104 com bug corrigido: override de distâncias estruturais aplicado APÓS normalização. Exp104 tinha override pré-normalização, resultando em d(.,ˈ)≈0.25 (equivalente a ɛ↔e) em vez de 1.0 (máximo real).",
+      "hypothesis": "Com d(.,ˈ)=1.0 real (pós-normalização), o gradiente da DA Loss penaliza confusões estruturais com força máxima. Erros '.↔ˈ' devem cair de ~107 (Exp102/103/104) para <30.",
+      "bug_fixed": {
+        "description": "Override em _build_distance_matrix() é neutralizado pela divisão por max_dist (~3-5 euclidiano). d(.,ˈ)=1.0 pré-norm → ~0.25 pós-norm ≈ d(ɛ,e). Fix: mover override para __init__ após a normalização.",
+        "exp104_actual_distance": "~0.25 (não 1.0 como pretendido)",
+        "exp104b_actual_distance": "1.0 (máximo real na escala normalizada)"
+      },
+      "compared_with": [
+        "exp104: Mesmo config com bug (d estrutural≈0.25 pós-norm)  (PER 0.54%, WER 5.88%) — controle com bug",
+        "exp103: Intermediate 9.7M + sep + DA Loss λ=0.2            (PER 0.53%, WER 5.73%) — sem override",
+        "exp102: Intermediate 9.7M + sep + CE                        (PER 0.52%, WER 5.79%) — baseline com sep",
+        "exp9:   Intermediate 9.7M + DA Loss λ=0.2 (sem sep)        (PER 0.58%, WER 4.96%) — SOTA WER"
+      ],
+      "quantitative_hypothesis": {
+        "structural_errors_exp104": 119,
+        "structural_errors_target": "<30",
+        "wer_estimate": "< 5.73% (Exp103)",
+        "per_estimate": "~0.50-0.53%"
+      },
+      "expected_metrics": {
+        "per_estimate": "~0.50-0.53%",
+        "wer_estimate": "~5.1-5.5%",
+        "note": "Com override correto, cada erro '.↔ˈ' tem gradient máximo; modelo deve aprender a distingui-los muito mais efetivamente"
+      },
+      "training_time_estimate": "~6-7h GPU (idêntico ao Exp103/104)",
+      "total_params": "~9.7M",
+      "risk": "Gradiente máximo para tokens estruturais pode destabilizar treinamento nas primeiras épocas — monitorar val_loss curva no warmup (epochs 1-80).",
+      "notes": [
+        "Phase 6B: re-run de Exp104 com bug corrigido",
+        "Bug encontrado: 2026-02-25 via análise de Exp104 (PER 0.54%, WER 5.88% — pior que Exp103)",
+        "Única diferença em relação ao Exp104: posição do override no código (losses.py linha ~121 vs linha ~200)",
+        "Config criado: 2026-02-25"
+      ]
+    }
+  },
+  "best_loss": 0.012883547097444534,
+  "training_completed": true,
+  "device": "cuda",
+  "total_params": 9679340,
+  "dataset": {
+    "dict_path": "C:\\Users\\leona\\OneDrive\\Documents\\Projects\\Acadêmicos\\FG2P\\dicts\\pt-br.tsv",
+    "dict_checksum": "b8489fb29248c4bf",
+    "grapheme_encoding": "raw",
+    "keep_syllable_separators": true,
+    "total_words": 95937,
+    "train_size": 57561,
+    "val_size": 9594,
+    "test_size": 28782,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "seed": 42,
+    "char_vocab_size": 39,
+    "phoneme_vocab_size": 44,
+    "stratified": true,
+    "strata_count": 34,
+    "jsd": {
+      "stress_type": 8.699212385781257e-06,
+      "syllable_bin": 2.9213040122309385e-09,
+      "length_bin": 2.0727946563589903e-09,
+      "ratio_bin": 1.2067153411187987e-05
+    },
+    "chi2_pvalue": {
+      "stress_type": 0.9733659313544308,
+      "syllable_bin": 0.9998446073007422,
+      "length_bin": 0.9999991289300925,
+      "ratio_bin": 0.7291419932660215
+    },
+    "cramers_v": {
+      "stress_type": 0.002409752535975174,
+      "syllable_bin": 5.999756276281242e-05,
+      "length_bin": 5.054064101672567e-05,
+      "ratio_bin": 0.003880179675554137
+    },
+    "verdict": {
+      "quality": "excelente",
+      "confidence": "alta",
+      "any_chi2_significant": false,
+      "bonferroni_alpha": 0.0125,
+      "min_pvalue": 0.7291419932660215,
+      "max_cramers_v": 0.003880179675554137
+    },
+    "train_phoneme_coverage": 1.0,
+    "val_phoneme_coverage": 1.0,
+    "train_bigram_coverage": 0.9379746835443038,
+    "val_bigram_coverage": 0.7367088607594937
+  },
+  "loss_type": "distance_aware",
+  "loss_config": {
+    "distance_lambda": 0.2,
+    "distance_metric": "euclidean",
+    "normalize_distance": true
+  },
+  "final_epoch": 98,
+  "total_time_seconds": 19336.070632799994,
+  "avg_epoch_time": 197.30684319183666
+}

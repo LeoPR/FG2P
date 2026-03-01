@@ -1,0 +1,156 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-02-25 13:19:56
+Predições: predictions_exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333.tsv
+Total: 28782 palavras | Corretas: 27220 | Erros: 1562
+Tempo análise: 6.21s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.49%
+WER:      5.43%
+Accuracy: 94.57%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.62%
+PER Ponderado: 0.41%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 351656 (99.08%)
+Classe B:   1042 ( 0.29%)
+Classe C:    317 ( 0.09%)
+Classe D:   1896 ( 0.53%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  27220 palavras (94.57%)
+Classe B:   1004 palavras (3.49%)
+Classe C:    283 palavras (0.98%)
+Classe D:    275 palavras (0.96%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.11 median=+0
+Truncated: 8 palavras
+Over-generated: 2 palavras
+Hallucinations: 18 palavras
+
+Top-10 Truncadas:
+  absa            ref=12 pred= 6 (Δ-6)
+  olmütz          ref= 9 pred= 5 (Δ-4)
+  abdo            ref=10 pred= 6 (Δ-4)
+  estadunidense-colombiana ref=32 pred=29 (Δ-3)
+  interdenominacional ref=27 pred=24 (Δ-3)
+  interdisciplinariedade ref=32 pred=29 (Δ-3)
+  otorrinolaringologista ref=30 pred=27 (Δ-3)
+  algúem          ref= 9 pred= 6 (Δ-3)
+
+Top-10 Over-generated:
+  pós-aposentadoria ref=23 pred=26 (Δ+3)
+  alcântara-terra ref=18 pred=21 (Δ+3)
+
+Top-10 Alucinações:
+  pós-aposentadoria patterns=[trigram_loop:. ɾ i ×2 (palavra: ×1, ref: ×1), trigram_loop:ɾ i . ×2 (palavra: ×1, ref: ×1)]
+    pred: ˈ p ɔ s . ə . p o . z ẽ . t a . d o . ɾ i . ɾ i . ə
+    ref:  ˈ p ɔ s . a . p o . z ẽ . t a . d o . ɾ i . ə
+  cidadanias      patterns=[trigram_loop:. d a ×2 (palavra: ×1, ref: ×1), trigram_loop:d a . ×2 (palavra: ×1, ref: ×1)]
+    pred: s i . d a . d a . ˈ n i . ə s
+    ref:  s i . d a . d ə . ˈ n i . ə s
+  estadunidense-colombiana patterns=[trigram_loop:. ˈ ã ×2 (palavra: ×1, ref: ×1), trigram_loop:ˈ ã . ×2 (palavra: ×1, ref: ×1)]
+    pred: e s . t a . d u . n i . d ẽ . s e . k s . ˈ ã . ˈ ã . n ə
+    ref:  e s . t a . d u . n i . d ẽ . s e . k o . l õ . b i . ˈ ã . n ə
+  misasagi        patterns=[trigram_loop:. z a ×2 (palavra: ×1, ref: ×1), trigram_loop:z a . ×2 (palavra: ×1, ref: ×1)]
+    pred: m i . z a . z a . ˈ ʒ i
+    ref:  m i . z a . s a . ˈ ʒ i
+  tschudi         patterns=[bigram_loop:u . ×2 (palavra: ×1, ref: ×1)]
+    pred: t s ʃ u . u . ˈ d ʒ i
+    ref:  t s ʃ u . ˈ d ʒ i
+  ararapira       patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ a ×2 (palavra: ×1, ref: ×1), trigram_loop:ɾ a . ×2 (palavra: ×1, ref: ×1)]
+    pred: a . ɾ a . ɾ a . ˈ p i . ɾ ə
+    ref:  a . ɾ a . x a . ˈ p i . ɾ ə
+  tschumi         patterns=[bigram_loop:u . ×2 (palavra: ×1, ref: ×1)]
+    pred: t s ʃ u . u . ˈ m i
+    ref:  t s ʃ u . ˈ m i
+  fofoqueira      patterns=[trigram_loop:f o . ×2 (palavra: ×1, ref: ×1)]
+    pred: f o . f o . ˈ k e y . ɾ ə
+    ref:  f ɔ . f o . ˈ k e y . ɾ ə
+  freeride        patterns=[bigram_loop:e . ×2 (palavra: ×1, ref: ×1)]
+    pred: f ɾ e . e . ˈ ɾ i . d ʒ ɪ
+    ref:  f ɾ ɛ . e . ˈ ɾ i . d ʒ ɪ
+  alcântara-terra patterns=[trigram_loop:. t e ×2 (palavra: ×1, ref: ×1), trigram_loop:t e . ×2 (palavra: ×1, ref: ×1)]
+    pred: a w . ˈ k ã . t a . ɾ a . t e . t e . x ə
+    ref:  a w . ˈ k ã . t a . ɾ ə . t e . x ə
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   ɛ → e       255  0.0417      B
+   e → ɛ       197  0.0417      B
+   ɔ → o       131  0.0417      B
+   i → e       121  0.0417      B
+   o → ɔ        95  0.0417      B
+   ə → a        73  0.0833      C
+   . → ˈ        67  1.0000      D
+   a → .        62  1.0000      D
+   i → .        55  1.0000      D
+   s → <PAD>     53  0.8750      D
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  uí              score=0.938  pred=u . ˈ i  ref=ũ . ˈ i
+  mór             score=0.938  pred=ˈ m ɔ x  ref=ˈ m o x
+  hazm            score=0.938  pred=ˈ a s m  ref=ˈ a z m
+  ilha            score=0.950  pred=ˈ i . ʎ ə  ref=ˈ ĩ . ʎ ə
+  pról            score=0.950  pred=ˈ p ɾ ɔ w  ref=ˈ p ɾ o w
+  ilê             score=0.950  pred=i . ˈ l e  ref=i . ˈ l ɛ
+  iça             score=0.950  pred=ˈ i . s ə  ref=ˈ ĩ . s ə
+  hija            score=0.950  pred=ˈ i . ʒ ə  ref=ˈ ĩ . ʒ ə
+  iso             score=0.950  pred=ˈ i . z ʊ  ref=ˈ ĩ . z ʊ
+  ife             score=0.950  pred=ˈ i . f ɪ  ref=ˈ ĩ . f ɪ
+
+Classe C:
+  hu              score=0.625  pred=ˈ ũ  ref=ˈ ʊ
+  ias             score=0.800  pred=ˈ i . ə s  ref=ˈ ĩ . a s
+  hoa             score=0.812  pred=ˈ o . ə  ref=ˈ o . a
+  oa              score=0.812  pred=ˈ o . ə  ref=ˈ o . a
+  elr             score=0.812  pred=ˈ ɛ w x  ref=ˈ i w x
+  eels            score=0.833  pred=ˈ e . ɛ w s  ref=ˈ ɪ . ɪ w s
+  opô             score=0.850  pred=u . ˈ p o  ref=o . ˈ p o
+  orim            score=0.850  pred=ɔ . ˈ ɾ ĩ  ref=u . ˈ ɾ ĩ
+  cuius           score=0.875  pred=ˈ k u y ʊ s  ref=ˈ k ʊ y ʊ s
+  iacm            score=0.875  pred=ˈ i . ə k m  ref=ˈ i . a k m
+
+Classe D:
+  olmütz          score=0.000  pred=ˈ o w m s  ref=ɔ w . ˈ m k s t s
+  derülo          score=0.000  pred=ˈ d ɛ x . . l ʊ  ref=d e . ˈ ɾ k s . l ʊ
+  abos            score=0.000  pred=ˈ a . b ʊ s  ref=a . b e . ˈ ɔ s
+  deambulação     score=0.062  pred=d e . ã . b u . l a . ˈ s ã ʊ̃  ref=d ʒ e . ã . b u . l a . ˈ s ã ʊ̃
+  ad-darazi       score=0.077  pred=a d ʒ . d a . ɾ a . ˈ z i  ref=a . d a . ɾ a . ˈ z i
+  guaiuba         score=0.083  pred=ɡ w a y u . b ə  ref=ˈ ɡ w a y u . b ə
+  ex-zagueiro     score=0.096  pred=e . z a . ˈ ɡ e y . ɾ ʊ  ref=e s . z a . ˈ ɡ e y . ɾ ʊ
+  abdo            score=0.100  pred=ˈ a b . d ʊ  ref=a . b e . d e . ˈ ɔ
+  ixtapa          score=0.100  pred=i s . ˈ t a . p ə  ref=i k s . ˈ t a . p ə
+  vltavou         score=0.100  pred=v w . t a . ˈ v o w  ref=v l t a . ˈ v o w
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   ɛ → e       255
+   e → ɛ       197
+   ɔ → o       131
+   i → e       121
+   o → ɔ        95
+   ə → a        73
+   . → ˈ        67
+   a → .        62
+   i → .        55
+   e → i        47
+   a → ə        47
+   ˈ → .        39
+   e → .        32
+   . → i        32
+   . → a        31

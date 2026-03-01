@@ -1,0 +1,131 @@
+{
+  "experiment_name": "exp9_intermediate_distance_aware",
+  "run_id": "20260222_064838",
+  "full_name": "exp9_intermediate_distance_aware__20260222_064838",
+  "timestamp": "2026-02-22 10:27:44",
+  "current_epoch": 89,
+  "total_epochs": 120,
+  "config": {
+    "description": "Exp9 — Intermediate + Distance-Aware Loss (λ optimal) — CAPACITY + SMART LOSS",
+    "data": {
+      "source": "dicts/pt-br.tsv",
+      "train_ratio": 0.6,
+      "val_ratio": 0.1,
+      "test_ratio": 0.3,
+      "split_seed": 42,
+      "note": "Mesma estratificação Exp5/Exp6 para comparação direta"
+    },
+    "model": {
+      "embedding_type": "learned",
+      "emb_dim": 192,
+      "hidden_dim": 384,
+      "num_layers": 2,
+      "dropout": 0.5,
+      "note": "Intermediate capacity (Exp5: 9.7M) + Distance-Aware Loss (Exp6) → CAPACITY + SMART LOSS",
+      "total_params_estimate": "~9.7M"
+    },
+    "training": {
+      "fit_method": "adam",
+      "epochs": 120,
+      "warmup_epochs": 80,
+      "batch_size": 64,
+      "lr": 0.001,
+      "early_stopping_patience": 10,
+      "weight_decay": 1e-05,
+      "loss": {
+        "type": "distance_aware",
+        "config": {
+          "distance_lambda": 0.2,
+          "distance_metric": "euclidean",
+          "normalize_distance": true
+        },
+        "note": "λ=OPTIMAL from Exp7 (update after lambda sweep completes); default 0.10 se Exp7 confirma"
+      }
+    },
+    "experiment": {
+      "name": "exp9_intermediate_distance_aware",
+      "purpose": "Testar COMBINAÇÃO ADITIVA: Capacity intermediária (Exp5) + Loss inteligente (Exp6) → Sweet spot ROI",
+      "hypothesis": "Capacity (9.7M) + Distance-Aware Loss combinam ADITIVAMENTE → PER ~0.57-0.60% (melhor que Exp5 0.63% E Exp6 0.63%)",
+      "compared_with": [
+        "exp5: Intermediate 9.7M + CE → PER 0.63%, WER 5.38%",
+        "exp6: Baseline 4.3M + Distance → PER 0.63%, WER 5.35%",
+        "exp2: Extended 17.2M + CE → PER 0.60%, WER 4.98% (SOTA atual)",
+        "exp9 vs exp2: Se exp9 ≈ exp2: Sweet spot confirmado (56% params, mesma performance)"
+      ],
+      "expected_metrics": {
+        "per_estimate": "~0.57-0.60%",
+        "wer_estimate": "~5.0-5.2%",
+        "accuracy_estimate": "~94.8-95.0%",
+        "note": "Expected: Approach Exp2 SOTA com 56% params (melhor ROI)"
+      },
+      "training_time_estimate": "~4.8h (GPU CUDA, mesma capacity Exp5)",
+      "total_params": "~9.7M",
+      "notes": [
+        "✓ SWEET SPOT TEST: Valida se 9.7M + Distance-Aware > 17.2M CE puro",
+        "✓ Se exp9 ≈ exp2 (0.60%): NOVO BASELINE PRODUÇÃO (melhor ROI)",
+        "✓ Se exp9 < exp2: Confirma Exp2 necessário para SOTA absoluto",
+        "⚠ Expected: Resultado mais PREVISÍVEL que Exp8 (aprendizado científico médio)",
+        "📊 Trade-off: Exp9 (9.7M, ~4.8h) vs Exp2 (17.2M, ~5.2h) → 56% params, 92% treino time",
+        "🎯 Se Exp9 PER 0.58%: Novo sweet spot produção documentado"
+      ]
+    }
+  },
+  "best_loss": 0.016533731206630667,
+  "training_completed": true,
+  "device": "cuda",
+  "total_params": 9677803,
+  "dataset": {
+    "dict_path": "C:\\Users\\leona\\OneDrive\\Documents\\Projects\\Acadêmicos\\FG2P\\dicts\\pt-br.tsv",
+    "dict_checksum": "b8489fb29248c4bf",
+    "total_words": 95937,
+    "train_size": 57561,
+    "val_size": 9594,
+    "test_size": 28782,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "seed": 42,
+    "char_vocab_size": 39,
+    "phoneme_vocab_size": 43,
+    "stratified": true,
+    "strata_count": 34,
+    "jsd": {
+      "stress_type": 8.699212385781257e-06,
+      "syllable_bin": 2.9213040122298797e-09,
+      "length_bin": 2.0727946563598374e-09,
+      "ratio_bin": 1.2067153411187987e-05
+    },
+    "chi2_pvalue": {
+      "stress_type": 0.9733659313544308,
+      "syllable_bin": 0.9998446073007422,
+      "length_bin": 0.9999991289300925,
+      "ratio_bin": 0.7291419932660215
+    },
+    "cramers_v": {
+      "stress_type": 0.002409752535975174,
+      "syllable_bin": 5.999756276281242e-05,
+      "length_bin": 5.054064101672567e-05,
+      "ratio_bin": 0.003880179675554137
+    },
+    "verdict": {
+      "quality": "excelente",
+      "confidence": "alta",
+      "any_chi2_significant": false,
+      "bonferroni_alpha": 0.0125,
+      "min_pvalue": 0.7291419932660215,
+      "max_cramers_v": 0.003880179675554137
+    },
+    "train_phoneme_coverage": 1.0,
+    "val_phoneme_coverage": 1.0,
+    "train_bigram_coverage": 0.9513314967860422,
+    "val_bigram_coverage": 0.7796143250688705
+  },
+  "loss_type": "distance_aware",
+  "loss_config": {
+    "distance_lambda": 0.2,
+    "distance_metric": "euclidean",
+    "normalize_distance": true
+  },
+  "final_epoch": 99,
+  "total_time_seconds": 14653.465074800006,
+  "avg_epoch_time": 148.0147987353536
+}

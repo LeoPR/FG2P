@@ -1,0 +1,121 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-02-22 17:04:46
+Predições: predictions_exp9_intermediate_distance_aware__20260222_064838.tsv
+Total: 28782 palavras | Corretas: 27353 | Erros: 1429
+Tempo análise: 6.65s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.58%
+WER:      4.96%
+Accuracy: 95.04%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.58%
+PER Ponderado: 0.25%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 270344 (99.09%)
+Classe B:    983 ( 0.36%)
+Classe C:    307 ( 0.11%)
+Classe D:   1195 ( 0.44%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  27353 palavras (95.04%)
+Classe B:    943 palavras (3.28%)
+Classe C:    238 palavras (0.83%)
+Classe D:    248 palavras (0.86%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.08 median=+0
+Truncated: 1 palavras
+Over-generated: 0 palavras
+Hallucinations: 2 palavras
+
+Top-10 Truncadas:
+  absa            ref= 8 pred= 5 (Δ-3)
+
+Top-10 Alucinações:
+  sólido-líquido  patterns=[bigram_loop:i i ×2 (palavra: ×1, ref: ×1)]
+    pred: ˈ s ɔ l i d o z i i i i d ʊ
+    ref:  ˈ s ɔ l i d o l i k i d ʊ
+  vietnam         patterns=[bigram_loop:n ã ×2 (palavra: ×1, ref: ×1)]
+    pred: v i ˈ ɛ t ʃ n ã n ã ʊ̃
+    ref:  v i ˈ ɛ t ʃ n ã ʊ̃
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   ɛ → e       272  0.0417      B
+   ɔ → o       203  0.0417      B
+   e → ɛ       133  0.0417      B
+   i → e       106  0.0417      B
+   e → i        77  0.0417      B
+   ə → a        69  0.0833      C
+   o → ɔ        38  0.0417      B
+   s → <PAD>     36  0.8750      D
+   ĩ → i        31  0.0417      B
+   u → o        29  0.0833      C
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  eels            score=0.900  pred=ˈ i ɛ w s  ref=ˈ ɪ ɪ w s
+  uí              score=0.917  pred=u ˈ i  ref=ũ ˈ i
+  ilha            score=0.938  pred=ˈ i ʎ ə  ref=ˈ ĩ ʎ ə
+  ilê             score=0.938  pred=i ˈ l e  ref=i ˈ l ɛ
+  roz             score=0.938  pred=ˈ x ɔ s  ref=ˈ x ʊ s
+  iça             score=0.938  pred=ˈ i s ə  ref=ˈ ĩ s ə
+  neemias         score=0.938  pred=n e e ˈ m i ə s  ref=n ɛ i ˈ m i ə s
+  iso             score=0.938  pred=ˈ i z ʊ  ref=ˈ ĩ z ʊ
+  ife             score=0.938  pred=ˈ i f ɪ  ref=ˈ ĩ f ɪ
+  hazm            score=0.938  pred=ˈ a s m  ref=ˈ a z m
+
+Classe C:
+  hu              score=0.625  pred=ˈ ũ  ref=ˈ ʊ
+  oils            score=0.700  pred=ˈ ʊ y w s  ref=ˈ o ɪ w s
+  hou             score=0.750  pred=ˈ o ʊ  ref=ˈ ʊ ʊ
+  ias             score=0.750  pred=ˈ i ə s  ref=ˈ ĩ a s
+  ajs             score=0.812  pred=ˈ a s s  ref=ˈ a ʒ s
+  sou             score=0.812  pred=ˈ s o ʊ  ref=ˈ s ʊ ʊ
+  ochs            score=0.812  pred=ˈ ʊ s s  ref=ˈ ʊ ʃ s
+  refn            score=0.850  pred=ˈ x ẽ f n  ref=ˈ x i f n
+  pstu            score=0.850  pred=ˈ p s t u  ref=ˈ p s t ʊ
+  iacm            score=0.850  pred=ˈ i ə k m  ref=ˈ i a k m
+
+Classe D:
+  derülo          score=0.000  pred=ˈ d ɛ x z l ʊ  ref=d e ˈ ɾ k s l ʊ
+  absa            score=0.000  pred=ˈ a b s ə  ref=a b e ɛ s i ˈ a
+  abos            score=0.000  pred=ˈ a b ʊ s  ref=a b e ˈ ɔ s
+  olmütz          score=0.062  pred=ˈ o w k s t s  ref=ɔ w ˈ m k s t s
+  oxigenados      score=0.083  pred=o z i ʒ e ˈ n a d ʊ s  ref=o k s i ʒ e ˈ n a d ʊ s
+  oxigenação      score=0.083  pred=o z i ʒ e n a ˈ s ã ʊ̃  ref=o k s i ʒ e n a ˈ s ã ʊ̃
+  oxigenado       score=0.091  pred=o z i ʒ e ˈ n a d ʊ  ref=o k s i ʒ e ˈ n a d ʊ
+  duailibi        score=0.100  pred=d ʒ u a y l i ˈ b i  ref=d u a y l i ˈ b i
+  oxidado         score=0.111  pred=o z i ˈ d a d ʊ  ref=o k s i ˈ d a d ʊ
+  axumita         score=0.111  pred=a z u ˈ m i t ə  ref=a k s u ˈ m i t ə
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   ɛ → e       272
+   ɔ → o       203
+   e → ɛ       133
+   i → e       106
+   e → i        77
+   ə → a        69
+   o → ɔ        38
+   ĩ → i        31
+   u → o        29
+   a → ˈ        24
+   õ → o        24
+   ʃ → k        21
+   z → s        19
+   a → ə        19
+   k → z        18
