@@ -1,0 +1,70 @@
+{
+  "description": "Exp13 — Intermediate + Distance-Aware + Decomposed — CURRENT SOTA + NFD",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Mesma split Exp9 (SOTA) — adiciona decomposed encoding ao melhor modelo atual",
+    "grapheme_encoding": "decomposed",
+    "keep_syllable_separators": true
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 192,
+    "hidden_dim": 384,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Intermediate capacity (9.7M) + Distance-Aware Loss + NFD → SOTA architecture + explicit diacritics",
+    "total_params_estimate": "~9.7M"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.2,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "λ=0.2 optimal from Exp7 sweep; Distance-Aware Loss penaliza erros por similaridade fonética"
+    }
+  },
+  "experiment": {
+    "name": "exp13_intermediate_distance_aware_decomposed",
+    "purpose": "Testar se NFD encoding MELHORA SOTA atual (Exp9: PER 0.58%, WER 4.96%) → PUSH FRONTIER",
+    "hypothesis": "SOTA (capacity + smart loss) + decomposed (explicit diacritics) → PER < 0.58% → NEW ABSOLUTE SOTA",
+    "compared_with": [
+      "exp9: Intermediate + DA Loss + raw → PER 0.58%, WER 4.96%, Acc 95.04% [CURRENT SOTA]",
+      "exp11: Baseline + decomposed → [aguardando] (mede baseline NFD)",
+      "exp13 vs exp9: Adiciona NFD ao MEJOR modelo → se exp13 > exp9: NFD UNIVERSALLY beneficial"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.54-0.58%",
+      "wer_estimate": "~4.7-5.0%",
+      "accuracy_estimate": "~95.0-95.3%",
+      "note": "AGGRESSIVE TARGET: exp13 > exp9 → NEW SOTA; exp13 ≈ exp9 → decomposed neutral; exp13 < exp9 → NFD hurts SOTA"
+    },
+    "training_time_estimate": "~5h (GPU CUDA, mesma capacity Exp9)",
+    "total_params": "~9.7M",
+    "notes": [
+      "✓ SOTA PUSH TEST: Valida se NFD pode SUPERAR current best (Exp9)",
+      "✓ Combinação máxima: Capacity (9.7M) + Smart Loss (DA) + Explicit Structure (NFD)",
+      "🎯 OBJETIVO: PER < 0.58% → closer to DeepPhonemizer IT (0.40%, benchmark linguístico similar)",
+      "🔬 Controle perfeito: exp13 vs exp9 isola EXCLUSIVAMENTE efeito de NFD no SOTA",
+      "📊 RESULTADO CRÍTICO:",
+      "  → Se exp13 > exp9: NFD é UNIVERSAL improvement → aplicar em TODOS futuros experiments",
+      "  → Se exp13 ≈ exp9: NFD neutral → manter raw encoding (mais simples)",
+      "  → Se exp13 < exp9: NFD prejudica SOTA → evitar com higher capacity models",
+      "⭐ Se exp13 ≥ 0.56% PER: COMPETITIVE com LatPhon SOTA (0.86% mas apenas 500 samples)",
+      "💡 Insight esperado: Decomposed pode ajudar LOW capacity mas ser neutral/negative em HIGH capacity (overfitting risk)"
+    ]
+  }
+}

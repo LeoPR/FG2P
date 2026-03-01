@@ -1,0 +1,57 @@
+{
+  "description": "Exp12 — PanPhon + Decomposed Encoding — LINGUISTIC FEATURES + NFD",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Mesma split Exp3 — combina PanPhon features + decomposed encoding",
+    "grapheme_encoding": "decomposed",
+    "keep_syllable_separators": true
+  },
+  "model": {
+    "embedding_type": "panphon",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "PanPhon 24D articulatory features + NFD encoding → features linguísticas + diacritics explícitos"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05
+  },
+  "experiment": {
+    "name": "exp12_panphon_decomposed",
+    "purpose": "Testar SINERGIA: PanPhon features + Decomposed encoding → double linguistic bias melhor que cada um isolado",
+    "hypothesis": "PanPhon (24 articulatory features) + NFD (diacritics explícitos) combinam ADITIVAMENTE → melhor que Exp3 (PanPhon raw) E Exp11 (learned decomposed)",
+    "compared_with": [
+      "exp3: PanPhon + raw → PER 0.66%, WER 5.45%, Acc 94.55%",
+      "exp11: Learned + decomposed → [aguardando]",
+      "exp12 vs exp3: Mede se decomposed MELHORA PanPhon (features + explicit diacritics)",
+      "exp12 vs exp11: Mede se PanPhon MELHORA decomposed (features > pure learned)"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.58-0.62%",
+      "wer_estimate": "~5.0-5.3%",
+      "accuracy_estimate": "~94.7-95.0%",
+      "note": "Esperado: exp12 > exp3 SE sinergia features+decomposed; exp12 > exp11 SE PanPhon vale com NFD"
+    },
+    "training_time_estimate": "~4h (GPU CUDA, mesma capacity Exp3)",
+    "total_params": "~4.3M",
+    "notes": [
+      "✓ SYNERGY TEST: Valida se linguistic features + explicit diacritics são COMPLEMENTARES",
+      "✓ Hipótese dupla: (1) PanPhon ajuda NFD (features guiam diacritic patterns); (2) NFD ajuda PanPhon (explicit structure)",
+      "🔬 Experimento fatorial 2×2: [learned/PanPhon] × [raw/decomposed] → 4 combinações (exp1,3,11,12)",
+      "📊 RESULTADO CRÍTICO: Se exp12 > exp3 E exp12 > exp11 → COMBINAÇÃO é sweet spot",
+      "⚠ Risco: Decomposed aumenta sequence length → PanPhon features podem ser diluídas",
+      "⭐ Se exp12 ≥ exp9 (SOTA 0.58%): PanPhon+decomposed rivaliza 2× capacity (9.7M vs 4.3M) → OPTIMAL ROI"
+    ]
+  }
+}

@@ -1,4 +1,4 @@
-# FG2P: Conversão Grafema-Fonema para o Português Brasileiro com BiLSTM Encoder-Decoder
+# FG2P: Distance-Aware Loss Fonética para Conversão Grafema-Fonema no Português Brasileiro
 
 **Relatório técnico — Projeto Acadêmico FG2P**
 **Versão**: 1.0 | **Data**: 2026-02-25
@@ -58,13 +58,29 @@ O corpus de treinamento consiste em **95.937 pares (palavra, transcrição IPA)*
 
 ### 2.2 Divisão e Estratificação
 
-O corpus é dividido em três subconjuntos com estratificação por características fonológicas:
+O corpus é dividido em três subconjuntos com **estratificação por características fonológicas**, prática recomendada para assegurar representatividade proporcional em datasets heterogêneos (Kohavi, 1995; Arlot & Celisse, 2010).
 
 | Subconjunto | Proporção | Palavras |
 |-------------|-----------|---------|
 | Treino | 60% | 57.561 |
 | Validação | 10% | 9.594 |
 | Teste | 30% | 28.782 |
+
+**Variáveis de estratificação**: Cada par (palavra, transcrição) é atribuído a um estrato pela combinação hierárquica de três features fonológicas:
+
+1. **`stress_type`** — posição do acento primário (oxítona, paroxítona, proparoxítona)
+2. **`syllable_bin`** — faixa de contagem de sílabas (monossilábica, 2, 3, 4, 5+)
+3. **`length_bin`** — faixa de comprimento em grafemas (≤4, 5–7, 8–10, 11+)
+
+A combinação `stress_type × syllable_bin × length_bin` gera **~48 estratos** distintos. Estratos com menos de 2 membros são consolidados em `__rare__` para viabilizar o split. A implementação usa `sklearn.model_selection.train_test_split(stratify=strata, random_state=42)` em duas etapas: (1) extração do conjunto de teste (30%); (2) extração do conjunto de validação do restante (val_fraction ≈ 14,3% do trainval → 10% efetivo do total).
+
+**Qualidade do balanceamento**:
+
+$$\chi^2 = 0{,}95 \quad (p = 0{,}678 > 0{,}05) \qquad \text{Cramér V} = 0{,}0007$$
+
+O valor p não-significante indica ausência de diferença estatística entre as distribuições dos estratos nos três subconjuntos — o balanceamento é excelente. O Cramér V ≈ 0 confirma que a divisão não introduz viés em relação às features de estratificação.
+
+**Descoberta metodológica**: A divisão 60/10/30 supera 70/10/20 em −41% de PER (Exp0 vs. Exp1), contrariando a intuição de que "mais dados de treino = melhor performance". A explicação é dupla: (a) o conjunto de teste 50% maior fornece estimativa estatisticamente mais robusta; (b) o conjunto de treino ligeiramente menor força o modelo a aprender invariantes generalizáveis em vez de memorizar padrões específicos. Esta descoberta tem implicações diretas para o design de experimentos em datasets de porte médio.
 
 ### 2.3 Auditoria do Corpus: Alofones e Normalização Unicode
 
@@ -85,15 +101,6 @@ A descoberta foi metodologicamente importante: na avaliação qualitativa inicia
 
 ---
 
-A estratificação assegura que cada subconjunto mantenha a mesma distribuição de features fonológicas PanPhon (silábico, consonantal, vozeamento, nasalidade, etc.). A qualidade do balanceamento foi verificada com:
-
-$$\chi^2 = 0{,}95 \quad (p = 0{,}678 > 0{,}05) \qquad \text{Cramér V} = 0{,}0007$$
-
-O valor p não-significante indica ausência de diferença estatística entre as distribuições — o balanceamento é excelente.
-
-**Descoberta metodológica importante**: A divisão 60/10/30 supera 70/10/20 em -41% de PER (Exp0 vs. Exp1), contrariando a intuição de que "mais dados de treino = melhor performance". A explicação é dupla: (a) o conjunto de teste 50% maior fornece estimativa de performance estatisticamente mais precisa; (b) o conjunto de treino ligeiramente menor força o modelo a aprender invariantes mais gerais em vez de memorizar padrões específicos. Esta descoberta tem implicações práticas para o design de experimentos em datasets de porte médio.
-
----
 
 ## 3. Arquitetura
 

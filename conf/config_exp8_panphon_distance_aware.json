@@ -1,0 +1,68 @@
+{
+  "description": "Exp8 — PanPhon + Distance-Aware Loss (λ optimal) — SINERGIA FONÉTICA",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Mesma estratificação Exp1/Exp3/Exp6 para comparação direta",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "panphon",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "PanPhon 24D trainable (Exp3) + Distance-Aware Loss (Exp6) → SINERGIA FONÉTICA"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.2,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "λ=OPTIMAL from Exp7 (update after lambda sweep completes); default 0.10 se Exp7 confirma"
+    }
+  },
+  "experiment": {
+    "name": "exp8_panphon_distance_aware",
+    "purpose": "Testar SINERGIA FONÉTICA: Features articulatórias (PanPhon) + Loss fonético (Distance-Aware) AMPLIFICAM?",
+    "hypothesis": "PanPhon embeddings + Distance-Aware Loss combinam SINERGICAMENTE (não apenas aditivamente) → PER_weighted <0.25%, Classe D <0.40%",
+    "compared_with": [
+      "exp1: Baseline (learned + CE) → PER 0.66%, PER_w 0.30%, Classe D 0.52%",
+      "exp3: PanPhon + CE → PER 0.66%, PER_w 0.28%, Classe D 0.48% (qualitativo melhor)",
+      "exp6: Learned + Distance → PER 0.63%, PER_w ?, Classe D ? (quantitativo melhor)",
+      "exp1+exp3+exp6: Se exp8 >> exp3 E exp8 >> exp6 → SINERGIA CONFIRMADA ✓✓✓"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.60-0.63%",
+      "wer_estimate": "~5.2-5.4%",
+      "accuracy_estimate": "~94.6-94.8%",
+      "per_weighted_estimate": "<0.25% (MELHOR QUE QUALQUER EXP ATUAL)",
+      "class_d_estimate": "<0.40% (menos erros grotescos)",
+      "note": "Expected: PER competitivo + PER_weighted SOTA qualitativo"
+    },
+    "training_time_estimate": "~4.7h (GPU CUDA, mesma capacity Exp3/Exp6)",
+    "total_params": "~4.3M (similar Exp3/Exp6)",
+    "notes": [
+      "✓✓✓ HIGHEST SCIENTIFIC VALUE: Testa hipótese NÃO-ÓBVIA (sinergia fonética)",
+      "✓ Se funcionar: Novo SOTA QUALITATIVO (erros mais inteligentes que TODOS exp1-6)",
+      "✓ Se não funcionar: Features + loss são ADITIVOS, não amplificativos",
+      "⚠ CRITICAL TEST: Exp8 PER_weighted < 0.25% confirma sinergia",
+      "⚠ ALTERNATIVE: Exp8 PER_weighted ≈ 0.27% → features e loss independentes",
+      "📊 Métricas graduadas ESSENCIAIS: Run analyze_errors.py imediatamente após inferência",
+      "🎯 Se Exp8 melhor qualitativo: PanPhon + Distance = novo baseline produção TTS"
+    ]
+  }
+}

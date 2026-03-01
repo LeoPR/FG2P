@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FG2P - Relatório de Modelos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .model-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .model-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .model-card.selected {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+        
+        .model-card input[type="checkbox"] {
+            float: right;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .model-name {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .model-info {
+            font-size: 0.9em;
+            color: #6c757d;
+            line-height: 1.6;
+        }
+        
+        .model-info span {
+            display: block;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        
+        .status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.training {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .metric-value {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .metric-best {
+            color: #28a745;
+            font-weight: 700;
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .comparison-panel {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .comparison-panel.active {
+            display: block;
+        }
+        
+        .benchmark-table {
+            margin-top: 20px;
+        }
+        
+        .chart-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>🎯 FG2P - Relatório de Análise</h1>
+            <p>Sistema de Conversão Grapheme-to-Phoneme para Português Brasileiro</p>
+            <p>BiLSTM Encoder-Decoder com Atenção Bahdanau</p>
+        </header>
+        
+        <div class="content">
+
+    <div class="section">
+        <h2>📊 Modelos Disponíveis</h2>
+        <p>Selecione até 3 modelos para comparação detalhada:</p>
+        
+        <div class="models-grid" id="modelsGrid">
+
+            <div class="model-card" onclick="toggleModel('exp2_traditional_extended__20260217_122716')">
+                <input type="checkbox" id="select_exp2_traditional_extended__20260217_122716" onchange="updateSelection()" />
+                <div class="model-name">exp2_traditional_extended__20260217_122716</div>
+                <div style="color: #666; font-size: 0.9em; margin: 8px 0; font-style: italic;">Exp2 — Traditional LSTM com neuronios estendidos (60/10/30 split)</div>
+                <div class="model-info">
+                    <span>Embedding: learned (256D)</span>
+                    <span>Hidden: 512</span>
+                    <span>Épocas: 92/120</span>
+                    <span>Best Loss: 0.016780</span>
+                </div>
+                <span class="status completed">✓ Treinamento Completo</span>
+            </div>
+
+            <div class="model-card" onclick="toggleModel('g2p_exp3_panphon_embedding__20260217_023737')">
+                <input type="checkbox" id="select_g2p_exp3_panphon_embedding__20260217_023737" onchange="updateSelection()" />
+                <div class="model-name">g2p_exp3_panphon_embedding__20260217_023737</div>
+                <div style="color: #666; font-size: 0.9em; margin: 8px 0; font-style: italic;">Exp3 — PanPhon Feature-based Embedding (60/10/30 split)</div>
+                <div class="model-info">
+                    <span>Embedding: panphon (128D)</span>
+                    <span>Hidden: 256</span>
+                    <span>Épocas: 88/120</span>
+                    <span>Best Loss: 0.016757</span>
+                </div>
+                <span class="status completed">✓ Treinamento Completo</span>
+            </div>
+
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="button" onclick="selectAll()">
+                Selecionar Todos
+            </button>
+            <button class="button" onclick="clearSelection()">
+                Limpar Seleção
+            </button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🔬 Comparação dos Modelos</h2>
+
+        <h3>Métricas de Treino</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Modelo</th>
+                    <th>Épocas</th>
+                    <th>Best Loss</th>
+                    <th>Embedding</th>
+                    <th>Hidden Dim</th>
+                    <th>Parâmetros</th>
+                </tr>
+            </thead>
+            <tbody>
+<tr><td><strong>exp2_traditional_extended</strong></td><td>92/120</td><td>0.016780</td><td>learned (256D)</td><td>512</td><td>17.2M</td></tr><tr><td><strong>exp3_panphon_embedding</strong></td><td>88/120</td><td>0.016757</td><td>panphon (128D)</td><td>256</td><td>4.3M</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Métricas de Teste (Clássicas)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Modelo</th>
+                    <th>PER (%)</th>
+                    <th>WER (%)</th>
+                    <th>Accuracy (%)</th>
+                    <th>Palavras Teste</th>
+                    <th>Corretas</th>
+                </tr>
+            </thead>
+            <tbody>
+<tr><td><strong>exp2_traditional_extended</strong></td><td>0.58</td><td>4.89</td><td>95.11</td><td>28,782</td><td>27,374</td></tr><tr><td><strong>exp3_panphon_embedding</strong></td><td>0.60</td><td>5.19</td><td>94.81</td><td>28,782</td><td>27,287</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Métricas Graduadas (PanPhon)</h3>
+        <p style="color: #666; font-size: 0.9em;">
+            Avaliação fonética usando 24 features articulatórias — erros ponderados por distância fonológica.
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Modelo</th>
+                    <th>PER Weighted (%)</th>
+                    <th>WER Graduated (%)</th>
+                    <th>Classe A (exata)</th>
+                    <th>Classe B (leve)</th>
+                    <th>Classe C (média)</th>
+                    <th>Classe D (grave)</th>
+                </tr>
+            </thead>
+            <tbody>
+<tr><td><strong>FG2P Exp2 (Extended)</strong></td><td>0.29</td><td>0.62</td><td class="metric-best">99.04%</td><td>0.35%</td><td>0.12%</td><td>0.50%</td></tr><tr><td><strong>FG2P Exp3 (PanPhon)</strong></td><td>0.28</td><td>0.61</td><td class="metric-best">99.02%</td><td>0.37%</td><td>0.12%</td><td>0.48%</td></tr>
+            </tbody>
+        </table>
+        <div style="margin-top: 10px; padding: 12px; background: #d4edda; border-left: 4px solid #28a745; border-radius: 4px; font-size: 0.9em;">
+            <strong>Legenda:</strong>
+            <strong>A</strong> = fonema exato |
+            <strong>B</strong> = ≤1 feature diferente (ex: ɛ↔e) |
+            <strong>C</strong> = 2-3 features |
+            <strong>D</strong> = ≥4 features (erro grave)
+        </div>
+
+    </div>
+
+    <div class="section">
+        <h3>📚 Comparação com Literatura</h3>
+        
+        <div style="margin-bottom: 20px; padding: 15px; background: #e7f3ff; border-left: 4px solid #2196F3; border-radius: 4px;">
+            <strong>🔍 Contexto de Comparabilidade:</strong>
+            <p style="margin-top: 8px; font-size: 0.95em; line-height: 1.5;">
+                <strong>Modelos FG2P</strong> (≈8.5–17M params): Avaliados em dataset PT-BR estratificado (28.782 palavras teste).<br>
+                <strong>Literatura PT-BR</strong> (LatPhon, XphoneBR): Especialização em português; LatPhon usa apenas 500 palavras teste.<br>
+                <strong>Literatura Geral</strong> (DeepPhonemizer, ByT5, Phonetisaurus): Principalmente EN/IT; ByT5 é média multilíngue (100+ idiomas).
+            </p>
+            <p style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                ⚠️ <strong>Comparações diretas podem ser enganosas:</strong> Dataset, idioma, tamanho do split e complexidade ortográfica afetam PER/WER.
+                <br>Ver <a href="LITERATURE.md" style="color: #2196F3;">LITERATURE.md</a> para análise detalhada de metodologias e limitações.
+            </p>
+        </div>
+        <table class="benchmark-table">
+            <thead>
+                <tr>
+                    <th>Sistema</th>
+                    <th>PER (%)</th>
+                    <th>WER (%)</th>
+                    <th>Accuracy (%)</th>
+                    <th>Notas</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="background: #f0f3ff;">
+                    <td colspan="5" style="font-weight: bold; text-align: center;">Modelos Avaliados (FG2P)</td>
+                </tr>
+<tr><td>FG2P Exp1 (Baseline)</td><td>0.65%</td><td>5.53%</td><td>94.47%</td><td>learned emb, emb=128 hidden=256</td></tr><tr><td>FG2P Exp2 (Extended)</td><td>0.58%</td><td>4.89%</td><td>95.11%</td><td>learned emb, emb=256 hidden=512, best_loss 0.0168</td></tr><tr><td>FG2P Exp3 (PanPhon)</td><td>0.60%</td><td>5.19%</td><td>94.81%</td><td>panphon emb, emb=128 hidden=256</td></tr>
+                <tr style="background: #f0f3ff;">
+                    <td colspan="5" style="font-weight: bold; text-align: center;">Literatura PT-BR</td>
+                </tr>
+<tr><td>LatPhon (SOTA 2025)</td><td>0.86%</td><td>—</td><td>—</td><td>SOTA para línguas latinas; test set 500 palavras (vs FG2P 28.782)</td></tr><tr><td>XphoneBR (Transformer, SOTA)</td><td>—</td><td>—</td><td>—</td><td>metrics not published</td></tr>
+                <tr style="background: #f0f3ff;">
+                    <td colspan="5" style="font-weight: bold; text-align: center;">Referências Literatura Geral</td>
+                </tr>
+<tr><td>Phonetisaurus (WFST Baseline)</td><td>6.50%</td><td>25.60%</td><td>—</td><td>110k train / 12k test; probabilistic FST, era estatística</td></tr><tr><td>DeepPhonemizer (Transformer EN CMUDict)</td><td>5.23%</td><td>22.10%</td><td>—</td><td>108k train / 12k test; 4-layer encoder-decoder</td></tr><tr><td>DeepPhonemizer (Transformer NetTalk EN)</td><td>—</td><td>—</td><td>—</td><td>Alternative EN dataset; Transformer architecture</td></tr><tr><td>DeepPhonemizer (Italiano)</td><td>0.40%</td><td>3.50%</td><td>—</td><td>70k train / 7k test; Transformer 4-layer</td></tr><tr><td>ByT5 Tiny (en, 8 layers)</td><td>10.70%</td><td>—</td><td>—</td><td>Multilingual; byte-level processing; G2P média</td></tr><tr><td>ByT5 Tiny (en, 16 layers)</td><td>9.60%</td><td>—</td><td>—</td><td>Multilingual; byte-level processing; improved over 8-layer</td></tr><tr><td>ByT5 Small (100+ idiomas)</td><td>8.90%</td><td>—</td><td>—</td><td>299M params; CMUDict/multilingual; SOTA massivo</td></tr><tr><td>Transformer seq2seq (Zhang et al. 2019)</td><td>1.40%</td><td>9.40%</td><td>90.60%</td><td>convolution-based encoder-decoder variant</td></tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+            <strong>⚠️ Nota sobre comparações:</strong> <ul style="margin: 0; padding-left: 18px;"><li>FG2P dataset stratification: χ² p=0.678, Cramér V=0.004 (excellent quality split).</li><li>LatPhon (SOTA 2025) uses only 500 test samples vs FG2P 28.782 (57× larger for superior statistical reliability).</li><li>ByT5 metrics: 8.9% PER is MULTILINGUAL AVERAGE across 100+ languages; models shown (Tiny 8/16, Small) are Google's byte-level seq2seq.</li><li>DeepPhonemizer variants: Italian 0.40% (Romance language) vs English 5.23% (irregular orthography); shows language orthographic complexity impact.</li><li>Phonetisaurus (2012) is classical WFST baseline; modern methods (Transformer/ByT5) represent 10+ year improvement trajectory.</li><li>PER comparison: DeepPhonemizer (IT) 0.40% trained on 70k words; FG2P Exp2 0.58% with 57k words + PanPhon features (4.3M params competitive with 299M ByT5).</li><li>PanPhon embeddings (24 articulatory features) enable competitive performance with 4.3M params (Exp3) vs ByT5's 299M parameters (77× reduction).</li><li>EN is more irregular than PT-BR; direct metric comparisons must account for language-specific orthographic characteristics.</li><li>FG2P vowel confusions (ɛ↔e, ɔ↔o) represent 60% of WER but are linguistically justified in word-isolated inference without semantic context.</li><li>Top error in FG2P Exp2: ɛ→e (214×) and e→ɛ (202×), reflecting Portuguese mid-vowel ambiguity without semantic/morphological context.</li><li>Graduated metrics (PanPhon) reveal Exp3 error distribution more phonologically informed than classical metrics suggest.</li><li>ByT5 is massively multilingual (299M params, 100+ languages); specialized models (LatPhon 7.5M) outperform on single languages due to parameter efficiency.</li><li>For experimental methodology details and references, see docs/LITERATURE.md and source papers listed above.</li></ul>
+        </div>
+    </div>
+
+            <div class="section">
+                <h2>📊 Informações do Dataset</h2>
+                <table>
+                    <tr>
+                        <th>Parâmetro</th>
+                        <th>Valor</th>
+                    </tr>
+                    <tr>
+                        <td>Total de palavras</td>
+                        <td class="metric-value">95.937</td>
+                    </tr>
+                    <tr>
+                        <td>Split</td>
+                        <td class="metric-value">60% train / 10% val / 30% test</td>
+                    </tr>
+                    <tr>
+                        <td>Train</td>
+                        <td class="metric-value">57.561 palavras</td>
+                    </tr>
+                    <tr>
+                        <td>Validação</td>
+                        <td class="metric-value">9.594 palavras</td>
+                    </tr>
+                    <tr>
+                        <td>Teste</td>
+                        <td class="metric-value">28.782 palavras</td>
+                    </tr>
+                    <tr>
+                        <td>Fonemas únicos</td>
+                        <td class="metric-value">43</td>
+                    </tr>
+                    <tr>
+                        <td>Caracteres únicos</td>
+                        <td class="metric-value">39</td>
+                    </tr>
+                    <tr>
+                        <td>Qualidade do split</td>
+                        <td class="metric-value">χ² p=0.678, Cramér V=0.004 (excelente)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+    <script>
+        let selectedModels = new Set();
+        const MAX_SELECTION = 3;
+
+        function toggleModel(modelName) {
+            const checkbox = document.getElementById(`select_${modelName}`);
+            checkbox.checked = !checkbox.checked;
+            updateSelection();
+        }
+
+        function updateSelection() {
+            selectedModels.clear();
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="select_"]');
+
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    selectedModels.add(cb.id.replace('select_', ''));
+                }
+            });
+
+            if (selectedModels.size > MAX_SELECTION) {
+                const modelName = Array.from(selectedModels).pop();
+                document.getElementById(`select_${modelName}`).checked = false;
+                selectedModels.delete(modelName);
+                alert(`Máximo de ${MAX_SELECTION} modelos.`);
+            }
+
+            document.querySelectorAll('.model-card').forEach(card => {
+                const cb = card.querySelector('input[type="checkbox"]');
+                card.classList.toggle('selected', cb && cb.checked);
+            });
+        }
+
+        function selectAll() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="select_"]');
+            let count = 0;
+            checkboxes.forEach(cb => {
+                cb.checked = (count < MAX_SELECTION);
+                count++;
+            });
+            updateSelection();
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('input[type="checkbox"][id^="select_"]').forEach(cb => {
+                cb.checked = false;
+            });
+            updateSelection();
+        }
+    </script>
+
+    </div>
+
+    <footer>
+        <p>FG2P - Conversão Grapheme-to-Phoneme para Português Brasileiro</p>
+        <p>Relatório gerado em: 2026-02-17 23:19:06</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,221 @@
+{
+  "metadata": {
+    "benchmark_date": "2026-02-26 15:34:34",
+    "device": "cuda",
+    "test_words": 5000,
+    "warmup_words": 100,
+    "models_tested": 21
+  },
+  "results": [
+    {
+      "model_file": "exp0_baseline_70split__20260218_044620.pt",
+      "experiment": "exp0_baseline_70split__20260218_044620",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 23.89,
+      "latency_avg_ms": 41.86,
+      "total_time_s": 209.31,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp1_baseline_60split__20260218_164935.pt",
+      "experiment": "exp1_baseline_60split__20260218_164935",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 25.51,
+      "latency_avg_ms": 39.2,
+      "total_time_s": 195.99,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp2_extended_512hidden__20260218_212514.pt",
+      "experiment": "exp2_extended_512hidden__20260218_212514",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 24.83,
+      "latency_avg_ms": 40.27,
+      "total_time_s": 201.33,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp3_panphon_trainable__20260219_022322.pt",
+      "experiment": "exp3_panphon_trainable__20260219_022322",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 36.26,
+      "latency_avg_ms": 27.58,
+      "total_time_s": 137.91,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp4_panphon_fixed_24d__20260219_195619.pt",
+      "experiment": "exp4_panphon_fixed_24d__20260219_195619",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 40.77,
+      "latency_avg_ms": 24.53,
+      "total_time_s": 122.63,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp5_intermediate_60split__20260220_012824.pt",
+      "experiment": "exp5_intermediate_60split__20260220_012824",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 40.22,
+      "latency_avg_ms": 24.86,
+      "total_time_s": 124.3,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp6_distance_aware_loss__20260220_125309.pt",
+      "experiment": "exp6_distance_aware_loss__20260220_125309",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 40.28,
+      "latency_avg_ms": 24.83,
+      "total_time_s": 124.14,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp7_lambda_lower_bound_0.05__20260221_020217.pt",
+      "experiment": "exp7_lambda_lower_bound_0.05__20260221_020217",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 40.5,
+      "latency_avg_ms": 24.69,
+      "total_time_s": 123.46,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp7_lambda_upper_bound_0.50__20260221_151005.pt",
+      "experiment": "exp7_lambda_upper_bound_0.50__20260221_151005",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 40.64,
+      "latency_avg_ms": 24.61,
+      "total_time_s": 123.04,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp7_lambda_mid_candidate_0.20__20260221_194037.pt",
+      "experiment": "exp7_lambda_mid_candidate_0.20__20260221_194037",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 40.42,
+      "latency_avg_ms": 24.74,
+      "total_time_s": 123.69,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp8_panphon_distance_aware__20260222_000737.pt",
+      "experiment": "exp8_panphon_distance_aware__20260222_000737",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 38.35,
+      "latency_avg_ms": 26.07,
+      "total_time_s": 130.37,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp9_intermediate_distance_aware__20260222_064838.pt",
+      "experiment": "exp9_intermediate_distance_aware__20260222_064838",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 40.26,
+      "latency_avg_ms": 24.84,
+      "total_time_s": 124.2,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp10_extended_distance_aware__20260222_112045.pt",
+      "experiment": "exp10_extended_distance_aware__20260222_112045",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 41.64,
+      "latency_avg_ms": 24.02,
+      "total_time_s": 120.08,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp11_baseline_decomposed__20260222_201314.pt",
+      "experiment": "exp11_baseline_decomposed__20260222_201314",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 33.04,
+      "latency_avg_ms": 30.27,
+      "total_time_s": 151.34,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp101_baseline_60split_separators__20260223_021119.pt",
+      "experiment": "exp101_baseline_60split_separators__20260223_021119",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 33.33,
+      "latency_avg_ms": 30.0,
+      "total_time_s": 150.01,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp102_intermediate_60split_separators__20260223_133349.pt",
+      "experiment": "exp102_intermediate_60split_separators__20260223_133349",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 32.55,
+      "latency_avg_ms": 30.72,
+      "total_time_s": 153.6,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp103_intermediate_sep_distance_aware__20260223_220406.pt",
+      "experiment": "exp103_intermediate_sep_distance_aware__20260223_220406",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 32.44,
+      "latency_avg_ms": 30.82,
+      "total_time_s": 154.11,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp104_intermediate_sep_da_custom_dist__20260224_232007.pt",
+      "experiment": "exp104_intermediate_sep_da_custom_dist__20260224_232007",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 32.56,
+      "latency_avg_ms": 30.71,
+      "total_time_s": 153.54,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333.pt",
+      "experiment": "exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 32.42,
+      "latency_avg_ms": 30.84,
+      "total_time_s": 154.21,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp105_reduced_data_50split__20260225_232552.pt",
+      "experiment": "exp105_reduced_data_50split__20260225_232552",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 32.36,
+      "latency_avg_ms": 30.9,
+      "total_time_s": 154.5,
+      "device": "cuda"
+    },
+    {
+      "model_file": "exp106_no_hyphen_50split__20260226_034556.pt",
+      "experiment": "exp106_no_hyphen_50split__20260226_034556",
+      "index": null,
+      "status": "success",
+      "throughput_wps": 32.39,
+      "latency_avg_ms": 30.88,
+      "total_time_s": 154.39,
+      "device": "cuda"
+    }
+  ]
+}

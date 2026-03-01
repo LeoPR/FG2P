@@ -1,0 +1,93 @@
+{
+  "description": "Exp106 — Reduced Data (50%) + No Hyphen Filter | 9.7M + Sep + DA Loss λ=0.2",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.5,
+    "val_ratio": 0.1,
+    "test_ratio": 0.4,
+    "split_seed": 42,
+    "note": "Mesmo split que Exp105 (50/10/40), mas com filtro grafêmico: remove hífen (-) do pipeline de entrada. Caractere '-' presente em 2.46% das palavras (2.361 pares).",
+    "grapheme_encoding": {
+      "type": "raw",
+      "filters": ["-"]
+    },
+    "keep_syllable_separators": true
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 192,
+    "hidden_dim": 384,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Arquitetura idêntica (9.7M params). Filtro grafêmico reduz CharVocab de 39→38 caracteres (sem '-').",
+    "total_params_estimate": "~9.7M"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.2,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "Idêntico a Exp105. Loss não é afetada por filtro grafêmico (apenas entrada)."
+    }
+  },
+  "experiment": {
+    "name": "exp106_no_hyphen_50split",
+    "purpose": "Quantificar impacto computacional do caractere hífen (-). Duas variáveis controladas em Exp105: (1) dados reduzidos, (2) filtro de hífen. Isolamento: compara Exp105 vs Exp106.",
+    "hypothesis": "Remoção de hífen NÃO afeta acurácia semântica (PER similar a Exp105), pois '-' é ortográfico, não fonológico. Benefício: ~0.5-1% ganho em velocidade de treino (1 caractere a menos por 2.46% das palavras). CharVocab reduz 39→38.",
+    "ablation_structure": {
+      "control": "exp104b (60% dados, com hífen, DA loss, sep)",
+      "exp105": "50% dados, com hífen, DA loss, sep",
+      "exp106": "50% dados, SEM hífen, DA loss, sep",
+      "interpretation": "Exp105 vs Exp104b: data reduction effect. Exp106 vs Exp105: hyphen overhead effect."
+    },
+    "split_rationale": {
+      "train": "50% ≈ 47.968 palavras (após filtro: ~47.968 também, pois hífen removido)",
+      "val": "10% ≈ 9.594 palavras",
+      "test": "40% ≈ 38.375 palavras"
+    },
+    "grapheme_processing": {
+      "encoding_type": "raw",
+      "filters": ["-"],
+      "effect": "abaixo-assinado → abaixoassinado (remove hífen durante carregamento)",
+      "char_vocab_before": 39,
+      "char_vocab_after": 38,
+      "note": "Filtro aplicado durante _load_tsv() no G2PCorpus. CharVocab construído a partir de palavras sem hífens."
+    },
+    "hyphen_analysis": {
+      "total_words_with_hyphen": "2.361 (2.46%)",
+      "expected_speedup": "~0.5-1% (menos 1 char por 2.46% das palavras, negligenciável em RNN padding)",
+      "expected_memory_saving": "<1%",
+      "linguistic_impact": "Nenhum (hífen é ortográfico, não fonológico). Compostos em PT-BR perdem notação, mas transcrição fonética permanece igual.",
+      "recommendation": "Exp106 é curiosidade científica, não melhoria prática. Mantém Exp105 como baseline."
+    },
+    "compared_with": [
+      "exp104b: split 60/10/30, com hífen (PER 0.49%) — referência",
+      "exp105: split 50/10/40, com hífen (PER ~0.50-0.55%) — data reduction effect",
+      "exp106: split 50/10/40, SEM hífen (PER ~0.50-0.55%?) — hyphen overhead?"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.50-0.55% (similar a Exp105)",
+      "wer_estimate": "~5.4-5.8% (similar a Exp105)",
+      "delta_vs_exp105": "ΔPer ~0.0% ± 0.02% (esperado: nenhuma diferença significativa)",
+      "note": "Se PER(106) < PER(105) em >0.02%: hipótese de overhead de hífen pode estar ERRADA."
+    },
+    "training_time_estimate": "~5-6h GPU (similar a Exp105, overhead negligenciável)",
+    "notes": [
+      "Phase 6C: ablação de filtro grafêmico (quantidade de dados = constante)",
+      "Config criado: 2026-02-25",
+      "Experimento secundário: útil para entender limite de redução de features",
+      "Implementação via GraphemeConfig (docs/13_GRAPHEME_PIPELINE.md)",
+      "Prioridade: BAIXA (overhead é negligenciável, benefício não-existente)"
+    ]
+  }
+}

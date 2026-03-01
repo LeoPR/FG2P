@@ -1,0 +1,70 @@
+{
+  "description": "Exp10 — Extended + Distance-Aware Loss (λ optimal) — SOTA CEILING TEST",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Mesma estratificação Exp2/Exp6 para comparação direta",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 256,
+    "hidden_dim": 512,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Extended capacity (Exp2: 17.2M) + Distance-Aware Loss (Exp6) → SOTA CEILING TEST",
+    "total_params_estimate": "~17.2M"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.2,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "λ=OPTIMAL from Exp7 (update after lambda sweep completes); default 0.10 se Exp7 confirma"
+    }
+  },
+  "experiment": {
+    "name": "exp10_extended_distance_aware",
+    "purpose": "Testar SOTA CEILING: High capacity (Exp2) + Loss inteligente (Exp6) → Novo SOTA absoluto PT-BR G2P?",
+    "hypothesis": "High capacity (17.2M) + Distance-Aware Loss → PER 0.57-0.58% (novo SOTA PT-BR) OU saturação em 0.60%",
+    "compared_with": [
+      "exp2: Extended 17.2M + CE → PER 0.60%, WER 4.98% (SOTA atual)",
+      "exp6: Baseline 4.3M + Distance → PER 0.63%, WER 5.35%",
+      "exp9: Intermediate 9.7M + Distance → PER 0.58-0.60% (expected)",
+      "LatPhon (SOTA 2025): PER 0.86% (500 test samples vs 28.8k FG2P)"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.57-0.58% (otimista) OU ~0.60% (saturação)",
+      "wer_estimate": "~4.7-4.9%",
+      "accuracy_estimate": "~95.1-95.2%",
+      "note": "Expected: Novo SOTA PT-BR G2P OU confirma saturação em 0.60%"
+    },
+    "training_time_estimate": "~5.2h (GPU CUDA, mesma capacity Exp2)",
+    "total_params": "~17.2M",
+    "notes": [
+      "✓ CEILING TEST: Define limite superior de performance alcançável",
+      "✓ Se exp10 < 0.58%: NOVO SOTA PT-BR G2P (competitive LatPhon 0.86%)",
+      "✓ Se exp10 ≈ 0.60%: Saturação confirmada (Exp9 melhor ROI)",
+      "⚠ Trade-off: 4× params vs Exp6, 1.8× params vs Exp9",
+      "⚠ Se saturação: Exp6/Exp9 melhores escolha produção (ROI superior)",
+      "📊 Comparação final: Exp6 (4.3M) vs Exp9 (9.7M) vs Exp10 (17.2M) → curva ROI",
+      "🎯 Decision tree pós-Exp10:",
+      "  - Se PER <0.58%: Exp10 SOTA absoluto (custo aceitável)",
+      "  - Se PER ≈0.60%: Exp9 sweet spot (56% params, mesma perf)",
+      "  - Se PER ≈0.60%: Exp6 budget option (25% params, -5% perf)"
+    ]
+  }
+}

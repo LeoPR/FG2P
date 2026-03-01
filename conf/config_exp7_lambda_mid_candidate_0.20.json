@@ -1,0 +1,64 @@
+{
+  "description": "Exp7 — Lambda Mid Candidate 0.20 (Distance-Aware Loss refino)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Mesma estratificação Exp1/Exp6 para comparação direta",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Arquitetura IDÊNTICA Exp1/Exp6; única variação é lambda"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.2,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "λ=0.20 (HIGH) — testa se peso fonético maior melhora ainda mais"
+    }
+  },
+  "experiment": {
+    "name": "exp7_lambda_mid_candidate_0.20",
+    "purpose": "Otimizar hiperparâmetro λ — variant HIGH (dobro do baseline)",
+    "hypothesis": "λ=0.20 pode melhorar Exp6 SE 0.1 estava subdimensionado; expected PER ~0.61-0.62%",
+    "compared_with": [
+      "exp6: λ=0.1 (baseline empírico)",
+      "exp7_lower_bound: λ=0.05",
+      "exp7_anchor_baseline: λ=0.10",
+      "exp7_upper_bound: λ=0.50"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.61-0.62%",
+      "wer_estimate": "~5.2-5.3%",
+      "accuracy_estimate": "~94.7-94.8%",
+      "note": "Expected MELHOR que Exp6 SE λ=0.1 sub-optimal; pior SE overfitting"
+    },
+    "training_time_estimate": "~4.7h (GPU CUDA, mesma arquitetura Exp6)",
+    "total_params": "4,321,963 (idêntico Exp1/Exp6)",
+    "notes": [
+      "✓ CANDIDATE OPTIMAL: λ=0.2 pode ser sweet spot (2× baseline)",
+      "⚠ Risco: λ muito alto → overweights distância fonética → PER piora",
+      "⚠ Se λ=0.2 > Exp6: novo optimal documentado",
+      "⚠ Se λ=0.2 < Exp6: confirma 0.1 já era bom",
+      "📊 Expected curva: PER decreases 0.05→0.1→0.2, depois increases 0.2→0.5"
+    ]
+  }
+}

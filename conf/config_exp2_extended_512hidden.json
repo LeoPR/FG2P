@@ -1,0 +1,52 @@
+{
+  "description": "Exp2 — Extended LSTM (60/10/30 split, 2x neurons: 256 emb / 512 hidden)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Split 60/10/30 — MESMO que exp1 para comparação isolada de capacity",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 256,
+    "hidden_dim": 512,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "2x CAPACITY: emb 128→256, hidden 256→512 — testa se mais neurônios vence dados limitados"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05
+  },
+  "experiment": {
+    "name": "exp2_extended_512hidden",
+    "purpose": "Testar trade-off: mais neurônios COMPENSA menos dados treino (60% vs 70%)?",
+    "hypothesis": "Aumentar capacity (double) em modelo learned embedding permite melhor performance apesar de menos dados",
+    "compared_with": [
+      "exp1: mesma split 60/10/30, metade capacity → mede impacto de double neurons",
+      "exp0: split 70/10/20, mesma capacity → mede se 2x neurons > 2x dados treino"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.58-0.62%",
+      "wer_estimate": "~4.9-5.2%",
+      "accuracy_estimate": "~94.5-94.8%"
+    },
+    "training_time_estimate": "~18-24h (GPU CUDA, mais tempo por mais params)",
+    "total_params": "17,163,563",
+    "notes": [
+      "✓ ARCHITECTURE TEST: Determina se memorização (overfitting) é problema",
+      "⚠ Risco: 17M params vs 60% dados → pode overfitting se weak regularization",
+      "✓ Early stopping + weight_decay proteção contra overfitting",
+      "→ Resultado esperado: exp2 ≥ exp1 SE capacity importa; exp2 < exp0 SE mais dados > mais params",
+      "📊 Referência paper: DeepPhonemizer (Hasim et al. 2021) também testa 256D embeddings"
+    ]
+  }
+}

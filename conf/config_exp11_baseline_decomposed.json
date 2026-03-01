@@ -1,0 +1,55 @@
+{
+  "description": "Exp11 — Baseline + Decomposed Encoding (60/10/30) — NFD Unicode Test",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Mesma split Exp1 — muda APENAS grapheme_encoding: raw → decomposed",
+    "grapheme_encoding": "decomposed",
+    "keep_syllable_separators": true
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Baseline capacity (4.3M) mas NFD encoding → acentos como caracteres separados"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05
+  },
+  "experiment": {
+    "name": "exp11_baseline_decomposed",
+    "purpose": "Testar se NFD Unicode decomposition (á → a + ´) MELHORA aprendizado em baseline architecture",
+    "hypothesis": "Decomposed encoding → embedding aprende separadamente base letters + diacritics → melhor generalização + convergência",
+    "compared_with": [
+      "exp1: Baseline raw encoding → PER 0.66%, WER 5.65%, Acc 94.35%",
+      "exp11 vs exp1: Isola EXCLUSIVAMENTE efeito de NFD encoding (mesma capacity, split, hyperparams)"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.60-0.64%",
+      "wer_estimate": "~5.2-5.5%",
+      "accuracy_estimate": "~94.5-94.8%",
+      "note": "Esperado: exp11 ≥ exp1 SE decomposed facilita aprendizado de diacritics"
+    },
+    "training_time_estimate": "~4h (GPU CUDA, mesma capacity Exp1)",
+    "total_params": "~4.3M",
+    "notes": [
+      "✓ ENCODING TEST: Valida se NFD (á→a+´) vs NFC (á) afeta aprendizado",
+      "✓ Hipótese linguística: PT-BR diacritics são regulares → decomposed deve facilitar patterns",
+      "✓ Vocab impact: Chars aumentam (a, á, à, â → a, ´, `, ^) mas embeddings podem compartilhar conhecimento",
+      "⚠ Trade-off: Sequences ficam mais longas (decomposed) → mais steps LSTM",
+      "📊 Se exp11 > exp1: Justifica usar decomposed como NOVO PADRÃO",
+      "🔬 Controle experimental perfeito: ÚNICA variável = grapheme_encoding"
+    ]
+  }
+}

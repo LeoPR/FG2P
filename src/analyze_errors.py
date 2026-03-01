@@ -26,7 +26,6 @@ Dependências:
 
 import argparse
 import json
-import sys
 import time
 import editdistance
 from collections import Counter
@@ -527,9 +526,9 @@ Exemplos:
     logger.info("=" * 70)
     logger.info("")
     logger.info(f"  WER Graduado:  {grad['wer_graduated']:.2f}%")
-    logger.info(f"    → Ajustado por acertos parciais (classes A/B/C)")
+    logger.info("    → Ajustado por acertos parciais (classes A/B/C)")
     logger.info(f"  PER Ponderado: {grad['per_weighted']:.2f}%")
-    logger.info(f"    → Ponderado por distância articulatória")
+    logger.info("    → Ponderado por distância articulatória")
     logger.info("")
     
     # Comparação direta clássico vs graduado

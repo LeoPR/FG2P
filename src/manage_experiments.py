@@ -21,7 +21,6 @@ Uso:
 import argparse
 import json
 import re
-import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -37,7 +36,7 @@ from utils import MODELS_DIR, RESULTS_DIR, get_logger
 
 logger = get_logger("manage_experiments")
 
-PERFORMANCE_PATH = Path(__file__).resolve().parent.parent / "docs" / "performance.json"
+PERFORMANCE_PATH = Path(__file__).resolve().parent.parent / "docs" / "report" / "performance.json"
 REPORT_PATH = RESULTS_DIR / "model_report.html"
 
 _EVAL_METRICS_RE = {
@@ -430,7 +429,7 @@ class ExperimentManager:
         print(f"Artefatos: {exp.count_artifacts()}/11 arquivos")
         
         if metadata:
-            print(f"\n--- METADADOS ---")
+            print("\n--- METADADOS ---")
             print(f"Experimento: {metadata.get('experiment_name', 'N/A')}")
             print(f"Timestamp: {metadata.get('timestamp', 'N/A')}")
             print(f"Training Completed: {metadata.get('training_completed', False)}")
@@ -439,19 +438,19 @@ class ExperimentManager:
             print(f"Total Params: {metadata.get('total_params', 'N/A'):,}")
             
             if 'config' in metadata:
-                print(f"\n--- CONFIGURAÇÃO ---")
+                print("\n--- CONFIGURAÇÃO ---")
                 config = metadata['config']
                 if 'model' in config:
-                    print(f"Model:")
+                    print("Model:")
                     for key, value in config['model'].items():
                         print(f"  {key}: {value}")
                 if 'training' in config:
-                    print(f"Training:")
+                    print("Training:")
                     for key, value in config['training'].items():
                         if key not in ['note', 'notes']:
                             print(f"  {key}: {value}")
         
-        print(f"\n--- ARTEFATOS ENCONTRADOS ---")
+        print("\n--- ARTEFATOS ENCONTRADOS ---")
         for artifact_name, artifact_info in exp.artifacts.items():
             path = artifact_info["path"]
             size_kb = artifact_info["size"] / 1024
@@ -751,14 +750,14 @@ class ExperimentManager:
                         timeout=600  # 10 min timeout
                     )
                     if result.returncode == 0:
-                        print(f"  ✓ Inference completo")
+                        print("  ✓ Inference completo")
                         success_count += 1
                     else:
                         print(f"  ✗ Erro (código {result.returncode})")
                         print(f"  {result.stderr[:200]}")
                         error_count += 1
                 except subprocess.TimeoutExpired:
-                    print(f"  ✗ Timeout (>10min)")
+                    print("  ✗ Timeout (>10min)")
                     error_count += 1
                 except Exception as e:
                     print(f"  ✗ Erro: {e}")
@@ -808,14 +807,14 @@ class ExperimentManager:
                         timeout=300  # 5 min timeout
                     )
                     if result.returncode == 0:
-                        print(f"  ✓ Error analysis completo")
+                        print("  ✓ Error analysis completo")
                         success_count += 1
                     else:
                         print(f"  ✗ Erro (código {result.returncode})")
                         print(f"  {result.stderr[:200]}")
                         error_count += 1
                 except subprocess.TimeoutExpired:
-                    print(f"  ✗ Timeout (>5min)")
+                    print("  ✗ Timeout (>5min)")
                     error_count += 1
                 except Exception as e:
                     print(f"  ✗ Erro: {e}")
@@ -838,14 +837,14 @@ class ExperimentManager:
                         timeout=120  # 2 min timeout
                     )
                     if result.returncode == 0:
-                        print(f"  ✓ Plot gerado")
+                        print("  ✓ Plot gerado")
                         success_count += 1
                     else:
                         print(f"  ✗ Erro (código {result.returncode})")
                         print(f"  {result.stderr[:200]}")
                         error_count += 1
                 except subprocess.TimeoutExpired:
-                    print(f"  ✗ Timeout (>2min)")
+                    print("  ✗ Timeout (>2min)")
                     error_count += 1
                 except Exception as e:
                     print(f"  ✗ Erro: {e}")
@@ -945,7 +944,7 @@ class ExperimentManager:
                     missing_plots.append("convergence_plot")
 
             if missing_plots:
-                print(f"    → Falta grafico de convergencia")
+                print("    → Falta grafico de convergencia")
                 print(f"      Sugestao: python src/analysis.py --model-name {base_name}")
                 to_plot.append(base_name)
 
@@ -1004,7 +1003,7 @@ class ExperimentManager:
         print(f"  ⚠ Incompletos: {len(by_status[ExperimentStatus.INCOMPLETE])}")
         print(f"  ❌ Órfãos: {len(by_status[ExperimentStatus.ORPHAN])}")
         
-        print(f"\nArmazenamento:")
+        print("\nArmazenamento:")
         print(f"  Total: {total_size / (1024 * 1024):.2f} MB")
         print(f"  Artefatos: {total_artifacts} arquivo(s)")
         print(f"  Média por experimento: {total_size / len(self.experiments) / (1024 * 1024):.2f} MB")
@@ -1019,7 +1018,7 @@ class ExperimentManager:
             for exp in by_status[ExperimentStatus.ORPHAN]
         )
         
-        print(f"\nEspaço recuperável:")
+        print("\nEspaço recuperável:")
         print(f"  Incompletos: {incomplete_size / (1024 * 1024):.2f} MB")
         print(f"  Órfãos: {orphan_size / (1024 * 1024):.2f} MB")
         print(f"  Total: {(incomplete_size + orphan_size) / (1024 * 1024):.2f} MB")
@@ -1030,7 +1029,7 @@ class ExperimentManager:
             for artifact_name in exp.artifacts.keys():
                 artifact_counts[artifact_name] = artifact_counts.get(artifact_name, 0) + 1
         
-        print(f"\nDistribuição de artefatos:")
+        print("\nDistribuição de artefatos:")
         for artifact_name, count in sorted(artifact_counts.items(), key=lambda x: x[1], reverse=True):
             print(f"  {artifact_name:25s}: {count}/{len(self.experiments)} experimentos")
         

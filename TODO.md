@@ -1,8 +1,84 @@
 # TODO — FG2P
 
-**Última atualização**: 2026-02-26 — **Phase 2 CONCLUÍDA** ✅ (13 slides Markdown-driven + 3 glossários adicionados)
+**Última atualização**: 2026-02-28 — **Phase 6C COMPLETA** ✅ | Docs reorganizados | Phase 7 planejada
 
-**📖 Documentação**: [docs/14_PROJECT_STATUS.md](docs/14_PROJECT_STATUS.md) — status | [docs/00_QUICK_START.md](docs/00_QUICK_START.md) — início rápido
+**📖 Documentação**: [docs/INDEX.md](docs/INDEX.md) — índice principal | [STATUS.md](STATUS.md) — status atual
+
+---
+
+## 🚀 PRÓXIMO EXPERIMENTO — Phase 7
+
+### Exp107 — MaxData 95% treino [PENDENTE — aguardando treino]
+
+- **Config**: `conf/config_exp107_maxdata_95train.json`
+- **Split**: train=95% (~91.140), val=4% (~3.837), test=1% (~960 palavras)
+- **Base**: Exp104b (SOTA PER 0.49%) — idêntico exceto pelo split
+- **Hipótese**: Mais dados de treino → PER < 0.49%
+- **Comparação alvo**: LatPhon 2025 (PER 0.89%, N_test=500) — comparação metodológica
+- **Executar**:
+  ```bash
+  python src/train.py --config conf/config_exp107_maxdata_95train.json
+  ```
+- **Após treino**:
+  1. `python src/inference.py` → anotar PER/WER
+  2. Atualizar `docs/article/EXPERIMENTS.md` com resultado
+  3. Atualizar linha LatPhon no slide "Comparação SOTA" + `docs/article/ARTICLE.md §5`
+  4. Atualizar `docs/report/performance.json` via `python src/update_performance.py`
+
+---
+
+## 🔮 FUTURO — Scripts a Construir
+
+### Pipeline de Higienização de Corpus Multi-Idioma [PLANEJADO]
+
+**Contexto**: Para expandir o G2P a outros idiomas (além do PT-BR), cada dicionário IPA precisa passar por normalização antes de entrar em `dicts/`. O PT-BR já teve esse problema: 10.252 ocorrências de `g` (U+0067) → `ɡ` (U+0261) IPA oficial, necessárias para compatibilidade com PanPhon.
+
+**Conceito**: `scripts/corpus_hygiene.py --lang pt-BR --input raw_dict.tsv --output dicts/pt-br.tsv`
+
+**O que deve fazer**:
+1. Normalização NFC (unicodedata)
+2. Mapa de símbolos não-canônicos → IPA oficial (extensível por idioma)
+   - `g` → `ɡ` (U+0067 → U+0261) — já validado no PT-BR
+   - Adicionar outros conforme novos idiomas revelarem novos problemas
+3. Converter formatos de entrada variados → formato `palavra\tf o n e m a s` do projeto
+   - Ex: `/fonetica.compacta/` (pt_BR.txt do ipa-dict) → espaços separados
+4. Backup automático do original antes de qualquer escrita
+5. Relatório: contagem de correções por tipo, palavras rejeitadas (símbolos desconhecidos)
+
+**Referências deletadas**: `scripts/normalize_ipa.py` (mapa g→ɡ), `src/analysis/convert_backup_format.py` (conversor pt_BR.txt)
+
+---
+
+### Extração de Métricas Graduadas [PLANEJADO]
+
+**Contexto**: `update_performance.py` atualiza PER/WER clássicos. Falta extrair métricas graduadas (WER Graduado, PER Ponderado, distribuição classes A/B/C/D) dos arquivos `results/error_analysis_*.txt`.
+
+**Restrição de execução**: Deve rodar com a máquina o mais ociosa possível — o benchmark de velocidade (palavras/s) é sensível à carga do sistema. Rodar junto com outros processos distorce os resultados.
+
+**Conceito**: `python src/update_performance.py --graduated` (extensão do update_performance.py existente)
+
+**Referência deletada**: `extract_metrics.py` (hardcoded para Exp6-10, path antigo)
+
+---
+
+### Validador de Consistência Docs↔Performance [PLANEJADO]
+
+**Contexto**: Verificar que modelos mencionados na documentação existem em `docs/report/performance.json` e vice-versa. Util para detectar experimentos documentados mas não avaliados (ou avaliados mas não documentados).
+
+**Conceito**: `python src/validate_sync.py` — compara `docs/article/ARTICLE.md` + `docs/article/EXPERIMENTS.md` contra `performance.json`
+
+**Nota**: Refazer do zero — versão anterior (`validate_documentation_sync.py`) apontava para `docs/LITERATURE.md` (caminho obsoleto) e estava quebrada.
+
+---
+
+## ✅ CONCLUÍDO — Phase 6C (2026-02-28)
+
+- ✅ Exp104b: PER 0.49% SOTA (DA Loss + sep + override pós-norm)
+- ✅ Exp105: PER 0.54% com 50% dados (ablação robustez)
+- ✅ Exp106: PER 0.58%, 30.2 w/s — 2.58× speed sem hífen
+- ✅ Docs consolidados: 25 → 8 arquivos, reorganizados em subpastas
+- ✅ Apresentação atualizada: cross-refs para artigo, slides corrigidos
+- ✅ Artigo científico enriquecido: §2.3 (ɣ/x), §4.3 (override), §8.4 (ablações)
 
 ---
 

@@ -1,0 +1,50 @@
+{
+  "description": "Exp0 — Baseline LSTM (70/10/20 split, original parameters)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.7,
+    "val_ratio": 0.1,
+    "test_ratio": 0.2,
+    "split_seed": 42,
+    "note": "Original 70/10/20 split — reproduz configuração PADRÃO inicial do projeto",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Baseline simple — learned embedding random init, parâmetros mínimos funcionais",
+    "total_params_measured": "4,321,963"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05
+  },
+  "experiment": {
+    "name": "exp0_baseline_70split",
+    "purpose": "Estabelecer baseline com split 70/10/20 — referência para avaliar impacto de split diferente",
+    "hypothesis": "Mais dados de treino (70% vs 60%) → melhor generalização, menor PER/WER",
+    "compared_with": [
+      "exp1: mesmo modelo, split 60/10/30 → avaliar impacto do split size"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.60%",
+      "wer_estimate": "~5.2%",
+      "accuracy_estimate": "~94.5%"
+    },
+    "training_time_estimate": "~15-20h (GPU CUDA)",
+    "notes": [
+      "✓ BASELINE: Este é o experimento raiz — comparar aqui todas mudanças futuras",
+      "✓ Split 70/10/20 garante mais dados treino, menos teste",
+      "✓ Embedding simples (learned random) não requer dependências externas",
+      "⚠ Espera-se performance > exp1 (mais dados treino) — se não, split impacta menos do que imagamos"
+    ]
+  }
+}

@@ -20,17 +20,17 @@ Pode ser copiado e adaptado livremente.
 ═══ NEOLOGISMOS — análise rica de OOV e empréstimos ════════════════════════
     # Avalia banco de 35 neologismos com diff e notas linguísticas:
     p.evaluate_neologisms()
-    p.evaluate_neologisms("docs/neologisms_test.tsv")  # path explícito
+    p.evaluate_neologisms("docs/data/neologisms_test.tsv")  # path explícito
 
     python src/inference_light.py --neologisms
     python src/inference_light.py --index 18 --neologisms
 
 ═══ COM AVALIAÇÃO — opcional (se tiver referências) ════════════════════════
     # Carrega TSV genérico com fonemas de referência e calcula WER/PER:
-    p.evaluate_tsv("docs/neologisms_test.tsv",
+    p.evaluate_tsv("docs/data/neologisms_test.tsv",
                    cache_tag="neologismos", cache_dir="data")
 
-    python src/inference_light.py --tsv docs/neologisms_test.tsv \\
+    python src/inference_light.py --tsv docs/data/neologisms_test.tsv \\
                                   --cache-tag neologismos
 
 ═══ AVALIAÇÃO COMPLETA (dataset de treino/teste padrão) ════════════════════
@@ -467,7 +467,7 @@ class G2PPredictor:
           4. WER/PER calculados com as mesmas funções de inference.py.
 
         Args:
-            tsv_path:  Caminho do TSV (ex: "docs/neologisms_test.tsv").
+            tsv_path:  Caminho do TSV (ex: "docs/data/neologisms_test.tsv").
             cache_tag: Prefixo do cache para identificação fácil.
                        Ex: "neologismos" → "data/neologismos_test_raw_nosep_0-0-100_s42.txt"
             cache_dir: Onde salvar o cache gerado. None = sem cache.
@@ -555,13 +555,13 @@ class G2PPredictor:
         usado automaticamente independente do modelo carregado.
 
         Args:
-            tsv_path: Caminho do TSV. Padrão: docs/neologisms_test.tsv
+            tsv_path: Caminho do TSV. Padrão: docs/data/neologisms_test.tsv
 
         Returns:
             dict com 'per', 'wer', 'accuracy', 'results', 'by_category', 'by_difficulty'
         """
         if tsv_path is None:
-            tsv_path = _PROJECT_ROOT / "docs" / "neologisms_test.tsv"
+            tsv_path = _PROJECT_ROOT / "docs" / "data" / "neologisms_test.tsv"
         tsv_path = Path(tsv_path)
         if not tsv_path.exists():
             raise FileNotFoundError(f"TSV não encontrado: {tsv_path}")
@@ -699,7 +699,7 @@ class G2PPredictor:
                 diffs_seen[d]["correct"] += 1
 
         print(f"\n  {'─' * 68}")
-        print(f"  Por dificuldade:")
+        print("  Por dificuldade:")
         for d in ["easy", "medium", "hard"]:
             if d not in diffs_seen:
                 continue
@@ -740,11 +740,11 @@ Exemplos básicos (inferência):
 Avaliação de neologismos (análise rica de falhas + score fonológico):
   python src/inference_light.py --neologisms
   python src/inference_light.py --index 18 --neologisms
-  python src/inference_light.py --index 18 --neologisms docs/generalization_test.tsv
+  python src/inference_light.py --index 18 --neologisms docs/data/generalization_test.tsv
 
 Com avaliação genérica (TSV com referências):
-  python src/inference_light.py --tsv docs/neologisms_test.tsv
-  python src/inference_light.py --index 11 --tsv docs/neologisms_test.tsv \\
+  python src/inference_light.py --tsv docs/data/neologisms_test.tsv
+  python src/inference_light.py --index 11 --tsv docs/data/neologisms_test.tsv \\
       --cache-tag neologismos --cache-dir data
 
 Avaliação completa (WER/PER no test set padrão):
@@ -779,8 +779,8 @@ Avaliação completa (WER/PER no test set padrão):
                         metavar="TSV_PATH",
                         help="Avalia TSV de neologismos com análise de falhas, "
                              "score fonológico e detecção de chars OOV. "
-                             "Sem argumento: usa docs/neologisms_test.tsv. "
-                             "Com argumento: --neologisms docs/generalization_test.tsv")
+                             "Sem argumento: usa docs/data/neologisms_test.tsv. "
+                             "Com argumento: --neologisms docs/data/generalization_test.tsv")
 
     args = parser.parse_args()
 

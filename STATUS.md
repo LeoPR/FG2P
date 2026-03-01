@@ -1,10 +1,12 @@
 # STATUS — FG2P Project Overview
 
-**Data**: 2026-02-24 19:00
-**Status**: Phase 6A CONCLUÍDA ✅ | Exp103 avaliado, hipótese refutada
-**SOTA WER**: **Exp9** (PER 0.58%, WER 4.96%, Acc 95.04%, 9.7M params)
-**SOTA PER**: **Exp102** (PER 0.52%, WER 5.79%, Acc 94.21%, 9.7M params)
-**Finding Phase 6A**: DA Loss + separadores NÃO são aditivos (Exp103: PER 0.53%, WER 5.73%). Trade-off PER/WER dos separadores é fundamental.
+**Data**: 2026-02-28
+**Status**: Phase 6C COMPLETA ✅ | Docs reorganizados | Phase 7 iniciada (Exp107 planejado)
+**SOTA WER**: **Exp9** (PER 0.58%, WER **4.96%**, Acc 95.04%, 9.7M params)
+**SOTA PER**: **Exp104b** (PER **0.49%**, WER 5.43%, Acc 94.57%, 9.7M params)
+**Finding Phase 6B**: Override de distâncias APÓS normalização → PER 0.49% NOVO SOTA (Exp104b)
+**Finding Phase 6C**: 50% dados → +0.05% PER (robusto); sem hífen → +0.04% PER, 2.58× speed
+**Próximo**: Exp107 (95% treino) — comparação com LatPhon 2025 (PER 0.89%, N=500)
 
 ---
 
@@ -21,10 +23,11 @@ Desenvolver modelo G2P (Grapheme-to-Phoneme) SOTA para Português Brasileiro usa
 ## 🏆 Achievements
 
 ### **SOTA Alcançado** ✅
-- **PER: 0.58%** (Exp9) - Supera LatPhon SOTA (0.86%) em -32%
-- **Test set: 28.782 palavras** - 57× maior que LatPhon (500 samples)
-- **Estatisticamente robusto**: χ² p=0.678, Cramér V=0.004 (excellent split)
-- **Competitive internacional**: Perto de DeepPhonemizer IT (0.40%) com 42× menos params
+- **PER: 0.49%** (Exp104b) — SOTA PER final | Supera LatPhon 2025 (0.89%) em -45%
+- **WER: 4.96%** (Exp9) — SOTA WER | Test set 28.782 palavras (57× maior que LatPhon)
+- **Speed: 30.2 w/s** (Exp106) — 2.58× mais rápido sem perda fonológica significativa
+- **Robusto**: 50% dados → PER 0.54% (+0.05%) — modelo não memoriza, generaliza
+- **Generalização OOV PT-BR**: 5/5 palavras reais fora do vocabulário corretas (100%)
 
 ### **Descobertas Científicas** 🔬
 
@@ -58,13 +61,16 @@ Desenvolver modelo G2P (Grapheme-to-Phoneme) SOTA para Português Brasileiro usa
 
 ---
 
-## 📊 Experimentos Completos (15 modelos)
+## 📊 Experimentos Completos (20 modelos)
 
 | Exp | PER | WER | Acc | Params | Key Feature | Status |
 |-----|-----|-----|-----|--------|-------------|--------|
-| **Exp102** | **0.52%** | 5.79% | 94.21% | 9.7M | Intermediate + sep | ✅ **SOTA PER** |
-| **Exp103** | 0.53% | 5.73% | 94.27% | 9.7M | Intermediate + sep + DA λ=0.2 | ✅ Phase 6A (refutada) |
-| **Exp9** | 0.58% | **4.96%** | **95.04%** | 9.7M | Intermediate + DA λ=0.2 | ✅ **SOTA WER+Acc** |
+| **Exp104b** | **0.49%** | 5.43% | 94.57% | 9.7M | DA Loss + sep + override pós-norm | ✅ **SOTA PER** |
+| Exp105 | 0.54% | 5.87% | 94.13% | 9.7M | DA Loss + sep, 50% treino | ✅ Ablação dados |
+| **Exp102** | 0.52% | 5.79% | 94.21% | 9.7M | Intermediate + sep + CE | ✅ Sep baseline |
+| Exp103 | 0.53% | 5.73% | 94.27% | 9.7M | Intermediate + sep + DA λ=0.2 | ✅ Phase 6A |
+| **Exp9** | 0.58% | **4.96%** | **95.04%** | 9.7M | Intermediate + DA λ=0.2 | ✅ **SOTA WER** |
+| Exp106 | 0.58% | 6.12% | 93.88% | 9.7M | DA Loss + sep, 50% treino, sem - | ✅ **30.2 w/s ⚡** |
 | Exp101 | 0.53% | 5.99% | 94.01% | 4.3M | Baseline + sep | ✅ Sep. diagnóstico |
 | Exp2 | 0.60% | 4.98% | 95.02% | 17.2M | Extended capacity | ✅ High-cap baseline |
 | Exp10 | 0.61% | 5.25% | 94.75% | 17.2M | Extended + DA λ=0.2 | ✅ Negative ROI |
@@ -139,16 +145,58 @@ Desenvolver modelo G2P (Grapheme-to-Phoneme) SOTA para Português Brasileiro usa
 
 | Sistema | Idioma | Test Size | PER | Params | Notas |
 |---------|--------|-----------|-----|--------|-------|
-| **FG2P Exp9** | PT-BR | **28.8k** | **0.58%** | 9.7M | ✅ SOTA atual |
-| LatPhon 2025 | PT-BR | 500 | 0.86% | 7.5M | 57× menor test set |
-| DeepPhonemizer | IT | ~77k | 0.40% | 229M | Romance lingua similar |
-| DeepPhonemizer | EN | 120k | 5.23% | 229M | Ortografia irregular |
-| ByT5 Small | 100+ | varies | 8.90% | 299M | Multilingual average |
+| **FG2P Exp104b** | PT-BR | **28.8k** | **0.49%** | 9.7M | ✅ **SOTA PER** |
+| **FG2P Exp9** | PT-BR | **28.8k** | 0.58% | 9.7M | ✅ **SOTA WER 4.96%** |
+| LatPhon 2025 | PT-BR | 500 | 0.89% | ~7M | N=500 — menor comparabilidade |
+| DeepPhonemizer | IT | ~77k | 0.40% | 229M | Romance: similar ao PT-BR |
+| ByT5 Small | 100+ | varies | 8.90% | 299M | Multilingual zero-shot |
 
 **Destaques**:
-- ✅ Supera LatPhon SOTA (-32% PER)
-- ✅ Perto de DeepPhonemizer IT com 23× menos params
-- ✅ Test set mais robusto estatisticamente
+- ✅ **Supera LatPhon SOTA em -45% PER** (0.49% vs 0.89%)
+- ✅ Test set **57× maior** que LatPhon (28.8k vs 500) — mais robusto
+- ✅ Perto de DeepPhonemizer IT com **23× menos params**
+
+---
+
+## 🚀 Phase 7 — Próximos Experimentos
+
+### Exp107 — MaxData 95% treino [PENDENTE]
+- **Config**: `conf/config_exp107_maxdata_95train.json`
+- **Split**: train=95% (~91.140 palavras), val=4%, test=1% (~960 palavras)
+- **Hipótese**: Mais dados → PER < 0.49% (SOTA atual)
+- **Objetivo estratégico**: Comparação metodológica com LatPhon 2025 (test N=500)
+- **Executar**: `python src/train.py --config conf/config_exp107_maxdata_95train.json`
+- **Após treino**: Atualizar tabela SOTA + slides + ARTICLE.md §5
+
+---
+
+## 📋 Log de Decisões de Documentação (2026-02-28)
+
+Registro das decisões tomadas para não perder o raciocínio ao retomar o projeto.
+
+### Reorganização docs/ (Fase 1)
+- **Feito**: 12 arquivos movidos para subpastas `article/`, `presentation/`, `report/`, `data/`
+- **Motivo**: 8 arquivos no mesmo nível era difícil de navegar
+- **Resultado**: `docs/INDEX.md` como hub de entrada
+
+### Slides — Decisões Tomadas (2026-02-28)
+| Elemento | Decisão | Razão |
+|----------|---------|-------|
+| **Exp103 nos slides** | Removido de tabelas de ranking; aparece só como nota de rodapé | Não vence em nenhuma métrica — histórico apenas |
+| **Slide "Distâncias"** | Exp103 → "Sem override (baseline)" | Anonimiza mas preserva a narrativa do bug |
+| **"Ranking Final"** | Convertido de lista de bullets para tabela (PER/WER/Speed/Caso) | Mais informação em menos espaço |
+| **ASCII chart** | Mantido intacto | Chart está limpo e conta a história bem |
+| **Nota abaixo do chart** | Adicionada 1 linha com Phase 6C + Fase 7 hint | Contexto sem poluir o visual |
+
+### O que NÃO foi tocado (e por quê)
+- `src/reporting/presentation_generator.py` — slides hardcoded (attention, CE, DA example) não mudam sem risco
+- Modelos existentes — nunca modificar arquivos .pt
+- Configs existentes (Exp0–Exp106) — configs são imutáveis após treino
+
+### Backups disponíveis
+- `docs/presentation/PRESENTATION.md.bak_20260228` — estado dos slides antes das edições de 2026-02-28
+- **Para restaurar**: `cp docs/presentation/PRESENTATION.md.bak_20260228 docs/presentation/PRESENTATION.md`
+- **Para apagar o backup** (quando confirmar que está tudo OK): `rm docs/presentation/PRESENTATION.md.bak_20260228`
 
 ---
 

@@ -6,7 +6,6 @@ import json
 from datetime import datetime
 from pathlib import Path
 import torch
-import torch.nn as nn
 from torch.optim import Adam
 from utils import get_logger, DATA_DIR, RESULTS_DIR, get_cache_info, log_common_header
 from g2p import G2PCorpus, G2PLSTMModel
@@ -355,7 +354,7 @@ def main():
             logger.info(f"✓ Melhor modelo salvo: {model_path.name} (val_loss: {val_loss:.4f})")
             # Notifica reset do early stopping apenas quando há melhoria
             if epoch + 1 > warmup_epochs and patience_counter > 0:
-                logger.info(f"   → Early stopping: contador resetado (novo melhor modelo)")
+                logger.info("   → Early stopping: contador resetado (novo melhor modelo)")
         else:
             # Test loss não melhorou
             if epoch + 1 > warmup_epochs:

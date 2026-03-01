@@ -1,0 +1,63 @@
+{
+  "description": "Exp7 — Lambda Anchor Baseline 0.10 (Distance-Aware Loss, referência Exp6)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Mesma estratificação Exp1/Exp6 para comparação direta",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Arquitetura IDÊNTICA Exp1/Exp6; única variação é lambda"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.1,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "λ=0.10 (BASELINE Exp6) — re-treino para confirmar reprodutibilidade"
+    }
+  },
+  "experiment": {
+    "name": "exp7_lambda_anchor_baseline_0.10",
+    "purpose": "Otimizar hiperparâmetro λ — variant BASELINE (confirmação Exp6)",
+    "hypothesis": "λ=0.10 deve reproduzir Exp6 (PER 0.63%, WER 5.35%)",
+    "compared_with": [
+      "exp6: λ=0.1 (treino original)",
+      "exp7_lower_bound: λ=0.05",
+      "exp7_mid_candidate: λ=0.20",
+      "exp7_upper_bound: λ=0.50"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.63%",
+      "wer_estimate": "~5.35%",
+      "accuracy_estimate": "~94.65%",
+      "note": "Expected IDÊNTICO Exp6 (reprodutibilidade)"
+    },
+    "training_time_estimate": "~4.7h (GPU CUDA, mesma arquitetura Exp6)",
+    "total_params": "4,321,963 (idêntico Exp1/Exp6)",
+    "notes": [
+      "✓ REPRODUCIBILITY TEST: Valida que Exp6 não foi sorte (seed randomness)",
+      "✓ Se Exp7b ≈ Exp6: λ=0.1 consistente",
+      "✓ Se Exp7b ≠ Exp6: alta variância de treino (problema)",
+      "📊 Baseline para comparar outros λ values"
+    ]
+  }
+}

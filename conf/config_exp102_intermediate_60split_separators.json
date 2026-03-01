@@ -1,0 +1,55 @@
+{
+  "description": "Exp102 — Intermediate LSTM (60/10/30) + Syllable Separators (Phase 5 Opção A)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Mesmos splits de Exp5/Exp101; isola efeito de capacity sobre separadores",
+    "grapheme_encoding": "raw",
+    "keep_syllable_separators": true
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 192,
+    "hidden_dim": 384,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Intermediate capacity (9.7M) — mesma arquitetura Exp5, adiciona separadores silábicos",
+    "total_params_estimate": "~9.7M"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05
+  },
+  "experiment": {
+    "name": "exp102_intermediate_60split_separators",
+    "purpose": "Testar se capacidade maior (9.7M) supera SOTA (Exp9 0.58%/4.96%) com separadores silábicos",
+    "hypothesis": "Exp101 (4.3M+sep) melhorou PER (0.53%) mas piorou WER (5.99%); 9.7M pode resolver WER mantendo ganho de PER",
+    "compared_with": [
+      "exp5: Intermediate 9.7M sem separadores (PER 0.63%, WER 5.38%) — isola efeito de separadores",
+      "exp9: Intermediate 9.7M + DA Loss sem separadores (PER 0.58%, WER 4.96%) — SOTA atual",
+      "exp101: Baseline 4.3M + separadores (PER 0.53%, WER 5.99%) — isola efeito de capacity"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.48-0.55%",
+      "wer_estimate": "~4.7-5.2%",
+      "accuracy_estimate": "~94.8-95.3%",
+      "note": "Target otimista: superar Exp9 em ambas métricas (PER e WER)"
+    },
+    "training_time_estimate": "~6-8h (GPU CUDA, +30% vs Exp5 por sequências maiores com separadores)",
+    "notes": [
+      "Phase 5 Opção A: capacity maior para resolver trade-off PER/WER dos separadores",
+      "Se Exp102 > Exp9 em PER E WER: novo SOTA absoluto",
+      "Se Exp102 melhora PER mas não WER: separadores têm teto em WER independente de capacity",
+      "Se Exp102 ≈ Exp5: separadores não escalam com capacity (informativo para tese)",
+      "Sequências maiores com separadores (+30%): epoch pode ser ~230-240s vs ~185s do Exp101"
+    ]
+  }
+}

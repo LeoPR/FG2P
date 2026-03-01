@@ -17,7 +17,7 @@ DICT_PATH = Path("dicts/pt-br.tsv")
 logger = get_logger("inference")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-PERFORMANCE_PATH = Path(__file__).resolve().parent.parent / "docs" / "performance.json"
+PERFORMANCE_PATH = Path(__file__).resolve().parent.parent / "docs" / "report" / "performance.json"
 
 def load_model_metadata(model_path):
     """Carrega metadados do modelo se existir arquivo _metadata.json"""
@@ -877,7 +877,7 @@ Exemplos:
     
     # Top erros de substituição
     if error_analysis['substitutions']:
-        logger.info(f"Top 5 substituições mais comuns:")
+        logger.info("Top 5 substituições mais comuns:")
         for (ref_ph, pred_ph), count in error_analysis['substitutions'].most_common(5):
             logger.info(f"  {ref_ph} → {pred_ph}: {count} vezes")
         logger.info("")

@@ -1,0 +1,51 @@
+{
+  "description": "Exp1 — Baseline LSTM (60/10/30 split, original parameters)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Split 60/10/30 — menos dados treino, mais dados teste para avaliar generalização",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Baseline mesmo tamanho exp0 — isolates impacto DO SPLIT (não de arquitetura)",
+    "total_params_measured": "4,321,963"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05
+  },
+  "experiment": {
+    "name": "exp1_baseline_60split",
+    "purpose": "Avaliar impacto de split 60/10/30 vs 70/10/20 — mesma arquitetura, dados diferentes",
+    "hypothesis": "Menos dados treino (60% vs 70%) → PER/WER piores, mas teste set maior valida generalização",
+    "compared_with": [
+      "exp0: mesma arquitetura, split 70/10/20 → mede impacto direto do split",
+      "exp2: mesma split 60/10/30, mas 2x neurons → mede se capacity compensa dados"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.65%",
+      "wer_estimate": "~5.5%",
+      "accuracy_estimate": "~94.3%"
+    },
+    "training_time_estimate": "~15-20h (GPU CUDA)",
+    "notes": [
+      "✓ CONTROL: Usa split 60/10/30 (padrão para exp2-4) para comparação justa",
+      "⚠ Performance esperada PIOR que exp0 (menos dados treino)",
+      "⚠ Maior teste set (30% vs 20%) permite validação mais robusta de generalização",
+      "→ Se exp1 PER >> exp0 PER: dataset size CRUCIAL; Se similar: model architecture MAIS importante"
+    ]
+  }
+}

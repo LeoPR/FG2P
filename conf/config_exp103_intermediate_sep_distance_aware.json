@@ -1,0 +1,77 @@
+{
+  "description": "Exp103 — Intermediate 9.7M + Syllable Separators + Distance-Aware Loss (λ=0.2) — Phase 6A Best-of-Both-Worlds",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Mesmos splits de Exp9/102 para comparação direta. Isola efeito combinado sep+DA.",
+    "grapheme_encoding": "raw",
+    "keep_syllable_separators": true
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 192,
+    "hidden_dim": 384,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Idêntico Exp9 e Exp102 em arquitetura. Difere apenas em sep+loss.",
+    "total_params_estimate": "~9.7M"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.2,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "λ=0.2 ótimo de Exp7. Tokens separadores '.' terão distância neutra no distance_matrix (sem feature IPA definida)."
+    }
+  },
+  "experiment": {
+    "name": "exp103_intermediate_sep_distance_aware",
+    "purpose": "Combinar separadores silábicos (Exp102: melhor PER 0.52%) + Distance-Aware Loss (Exp9: melhor WER 4.96%) → potencial novo SOTA absoluto",
+    "hypothesis": "Efeitos de sep e DA Loss são aproximadamente aditivos; DA Loss compensa o WER cost dos separadores",
+    "compared_with": [
+      "exp9:   Intermediate 9.7M + DA Loss (PER 0.58%, WER 4.96%)  — SOTA WER",
+      "exp102: Intermediate 9.7M + sep + CE  (PER 0.52%, WER 5.79%) — melhor PER",
+      "exp5:   Intermediate 9.7M + CE        (PER 0.63%, WER 5.38%) — baseline 9.7M"
+    ],
+    "quantitative_hypothesis": {
+      "sep_effect_per":  -0.17,
+      "sep_effect_wer":  0.076,
+      "da_effect_per":   -0.08,
+      "da_effect_wer":   -0.078,
+      "combined_per_vs_exp5": "~-25% → PER ~0.47-0.52%",
+      "combined_wer_vs_exp5": "~-0% → WER ~5.30-5.40% (SE aditivo)",
+      "optimistic_scenario":  "Sinergia: WER < 4.96% (novo SOTA absoluto em ambas métricas)",
+      "pessimistic_scenario": "Sep tokens prejudicam distance_matrix; WER > Exp102"
+    },
+    "expected_metrics": {
+      "per_estimate": "~0.47-0.52%",
+      "wer_estimate": "~5.0-5.5% (depende de interação sep+DA)",
+      "accuracy_estimate": "~94.5-95.0%",
+      "note": "Intervalo amplo por incerteza sobre interação sep tokens com distance matrix"
+    },
+    "training_time_estimate": "~6-7h GPU (sequências +30% mais longas com separadores, similar ao Exp102)",
+    "total_params": "~9.7M",
+    "risk": "Tokens separadores '.' não têm features fonéticas definidas no PanPhon distance_matrix → distâncias para '.' são neutras/zero, o que pode reduzir eficácia do DA Loss",
+    "notes": [
+      "Phase 6A: combinação dos dois achados principais de Phase 5",
+      "Decisão pós-Exp103:",
+      "  SE PER < 0.52% AND WER < 4.96%: NOVO SOTA ABSOLUTO — Phase 6 encerra com sucesso",
+      "  SE apenas PER melhora: sep+DA combinam no PER, WER permanece trade-off → publicar finding",
+      "  SE pior que ambos: efeitos se prejudicam mutuamente → finding negativo publicável",
+      "Config criado: 2026-02-23 (pós Phase 5 conclusão)"
+    ]
+  }
+}

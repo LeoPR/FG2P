@@ -1,0 +1,53 @@
+{
+  "description": "Exp3 — PanPhon-initialized LSTM (60/10/30 split, same capacity as exp1)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Split 60/10/30 — EXATAMENTE igual exp1 e exp2 para isolar efeito de PanPhon features",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "panphon",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "PANPHON FEATURES: embedding inicial 24D articulatório features → 128D trainable; capacity = exp1"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05
+  },
+  "experiment": {
+    "name": "exp3_panphon_trainable",
+    "purpose": "Testar se embeddings informados por features linguísticas MELHORAM aprendizado vs learned embeddings puros",
+    "hypothesis": "Iniciar embedding com 24D PanPhon features → convergência mais rápida + melhor generalização + parâmetros reduzidos",
+    "compared_with": [
+      "exp1: mesmos parâmetros capacity/split, but learned embedding → mede IMPACTO puramente de PanPhon init",
+      "exp2: mesma split, mais capacity learned → se exp3 ≤ exp2: features linguísticas > mais params"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.60-0.62%",
+      "wer_estimate": "~5.0-5.2%",
+      "accuracy_estimate": "~94.5-94.8%"
+    },
+    "training_time_estimate": "~12-18h (GPU CUDA, menos params que exp2)",
+    "total_params": "~4.0M (vs 4.3M exp1: similar — compara features, não params)",
+    "notes": [
+      "✓ FEATURE ENGINEERING TEST: Valida se knowledge linguístico (PanPhon) melhora aprendizado",
+      "✓ Interpretable: 24 features articulatórios (vozeado, nasal, sílábico, etc)",
+      "✓ Params: ~4.0M (vs 4.3M exp1) — comparação isola efeito das features linguísticas",
+      "📊 Hipótese científica: Features informadas = better inductive bias; esperado exp3 ≥ exp1 com menos params",
+      "⭐ KEY INSIGHT: Se exp3 ≈ exp1 com params similares → PanPhon features SÃO valuable!",
+      "📝 Paper relevante: Articulatory Feature Embeddings (RapidPitch, FastPitch architecture logic)"
+    ]
+  }
+}

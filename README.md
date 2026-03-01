@@ -1,6 +1,8 @@
-# FG2P — Conversão Grafema-para-Fonema para Português Brasileiro
+# FG2P — G2P para Português Brasileiro com Distance-Aware Loss Fonética
 
-Modelo neural BiLSTM Encoder-Decoder + Atenção Bahdanau para converter texto PT-BR em transcrição fonética IPA, com Distance-Aware Loss customizada.
+> **Inovação técnica**: função de perda `L = L_CE + λ·d·p` que penaliza erros proporcionalmente à distância articulatória (PanPhon) **e** à confiança do modelo — o sistema aprende a distinguir "errar por pouco" de "errar por muito" na escala fonológica real.
+
+Modelo neural BiLSTM Encoder-Decoder + Atenção Bahdanau para converter texto PT-BR em transcrição fonética IPA.
 
 **🏆 SOTA PER: 0.49%** (Exp104b, 9.7M params, 28.782 palavras de teste)
 **🏆 SOTA WER: 4.96%** (Exp9, sem separadores silábicos)
@@ -23,7 +25,7 @@ python src/inference_light.py --index 18 --word computador
 python src/inference_light.py --index 18 --interactive
 
 # Avaliar em banco de generalização
-python src/inference_light.py --index 18 --neologisms docs/generalization_test.tsv
+python src/inference_light.py --index 18 --neologisms docs/data/generalization_test.tsv
 
 # Relatório HTML completo
 python src/reporting/report_generator.py
@@ -59,20 +61,24 @@ python src/reporting/presentation_generator.py --mode compact   # 20 slides (10 
 
 ```
 docs/
-├── 01_OVERVIEW.md            ← Introdução, dataset, resultados completos
-├── 02_ARCHITECTURE.md        ← BiLSTM + Atenção Bahdanau
-├── 03_METRICS.md             ← PER, WER, métricas fonológicas
-├── 04_EXPERIMENTS.md         ← Exp0-106, design e resultados
-├── 05_THEORY.md              ← G2P, Loss functions, features articulatórias
-├── 06_PREPROCESSING.md       ← Normalização, charset, filtros
-├── 07_STRUCTURAL_ANALYSIS.md ← Problema d(.,ˈ)=0 e solução (Exp104b)
-├── 09_CONTINUOUS_PHONETIC_SPACE.md ← Espaço fonético 7D (Phase 7 — futuro)
-├── 11_CORPUS_AUDIT.md        ← Auditoria corpus: regra ɣ/x, NFD/NFC
-├── 16_SCIENTIFIC_ARTICLE.md  ← Artigo acadêmico completo
-└── 17_APRESENTACAO_MERGED.md ← Apresentação PPTX [modes: full, compact]
+├── INDEX.md                      ← Índice de navegação
+├── article/
+│   ├── ARTICLE.md                ← Artigo científico completo
+│   ├── EXPERIMENTS.md            ← Log Exp0–106
+│   ├── PIPELINE.md               ← Pipeline de dados
+│   ├── GLOSSARY.md               ← Glossário
+│   └── REFERENCES.bib            ← Bibliografia completa — fonte única (BibTeX)
+├── presentation/
+│   ├── PRESENTATION.md           ← Fonte slides PPTX
+│   └── GENERATOR.md              ← Docs do gerador
+├── report/
+│   └── performance.json          ← Benchmarks SOTA
+└── data/
+    ├── generalization_test.tsv   ← 31 palavras OOV
+    └── neologisms_test.tsv       ← 35 neologismos
 ```
 
-**Leitura recomendada**: [docs/01_OVERVIEW.md](docs/01_OVERVIEW.md)
+**Leitura recomendada**: [docs/INDEX.md](docs/INDEX.md)
 
 ---
 

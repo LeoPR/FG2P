@@ -1,0 +1,60 @@
+{
+  "description": "Exp6 — Distance-Aware Loss (Exp1 baseline + penalização por distância PanPhon)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Mesma estratificação do Exp1 (60/10/30) para isolar efeito da loss",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Arquitetura idêntica ao Exp1; única mudança é a função de loss"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.1,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "L = CE + λ·d_panphon; mantém backward compatibility com Exp0-5"
+    }
+  },
+  "experiment": {
+    "name": "exp6_distance_aware_loss",
+    "purpose": "Testar se loss sensível à distância articulatória reduz erros severos (Classe D)",
+    "hypothesis": "Mantém/ganha PER vs Exp1 com menor proporção de erros foneticamente distantes",
+    "compared_with": [
+      "exp1: mesma arquitetura e split, cross-entropy padrão",
+      "exp3: PanPhon no embedding (trainable), sem distance-aware loss",
+      "exp5: capacity intermediária para comparar ganho de loss vs ganho de parâmetros"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.60-0.64%",
+      "wer_estimate": "~5.1-5.5%",
+      "accuracy_estimate": "~94.4-94.8%",
+      "class_d_estimate": "<=0.45%"
+    },
+    "training_time_estimate": "~14-18h (GPU CUDA)",
+    "notes": [
+      "Apenas a loss muda; arquitetura e split permanecem fixos para comparação causal",
+      "distance_lambda=0.1 prioriza CE e adiciona penalização fonética suave",
+      "Métricas graduadas (PanPhon) são essenciais para avaliar impacto real da loss"
+    ]
+  }
+}

@@ -30,7 +30,7 @@ import re
 sys.path.insert(0, str(Path(__file__).parent))
 
 from utils import get_logger, RESULTS_DIR, MODELS_DIR
-from file_registry import FileRegistry, get_base_name_from_path
+from file_registry import FileRegistry
 
 logger = get_logger("analysis")
 
@@ -440,7 +440,7 @@ def mode_all(models_info: list):
             # Carregar config
             metadata = load_metadata(model_name)
             if not metadata or 'config' not in metadata:
-                logger.error(f"  [X] Config nao encontrada")
+                logger.error("  [X] Config nao encontrada")
                 error_count += 1
                 continue
             
@@ -453,7 +453,7 @@ def mode_all(models_info: list):
             csv_rows = load_history_csv(history_path) if history_path.exists() else []
             
             if not csv_rows:
-                logger.warning(f"  ⚠ Histórico não encontrado ou vazio")
+                logger.warning("  ⚠ Histórico não encontrado ou vazio")
                 error_count += 1
                 continue
             
@@ -470,7 +470,7 @@ def mode_all(models_info: list):
             # Salvar resultados
             save_results(model_name, config, training_metrics, test_metrics, metadata, registry)
             
-            logger.info(f"  [OK] Processado com sucesso")
+            logger.info("  [OK] Processado com sucesso")
             success_count += 1
             
         except Exception as e:
@@ -515,7 +515,7 @@ def mode_default(args, models_info: list):
     csv_rows = load_history_csv(history_path) if history_path.exists() else []
     
     if not csv_rows:
-        logger.warning(f"Histórico não encontrado ou vazio")
+        logger.warning("Histórico não encontrado ou vazio")
         return
     
     # Calcular metricas de treino
