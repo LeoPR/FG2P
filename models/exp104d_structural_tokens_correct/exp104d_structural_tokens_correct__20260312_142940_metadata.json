@@ -2,8 +2,8 @@
   "experiment_name": "exp104d_structural_tokens_correct",
   "run_id": "20260312_142940",
   "full_name": "exp104d_structural_tokens_correct__20260312_142940",
-  "timestamp": "2026-03-12 15:37:26",
-  "current_epoch": 28,
+  "timestamp": "2026-03-12 16:51:27",
+  "current_epoch": 60,
   "total_epochs": 120,
   "config": {
     "description": "Exp104d: Experimento original de tokens estruturais com config correto — 17M params + sep silábico + DA Loss λ=0.2. Corrige os dois bugs do exp104c.",
@@ -74,7 +74,7 @@
       "note": "λ=0.2 pode não ser ótimo para o regime sep+DA+17M. Ver TODO no README: revisão de λ com sep silábico habilitado."
     }
   },
-  "best_loss": 0.01601950356271118,
+  "best_loss": 0.013778467669617385,
   "training_completed": false,
   "device": "cuda",
   "total_params": 17165612,
