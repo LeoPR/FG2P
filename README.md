@@ -42,6 +42,8 @@ FG2P compared against both classical (WFST) and modern neural baselines on Portu
 
 **Key insight**: FG2P outperforms LatPhon (modern Transformer) and WFST (classical baseline) on the same language, using an older architecture (BiLSTM). Demonstrates that **loss function design** beats architectural complexity.
 
+![Baseline comparison: FG2P vs LatPhon, WFST, ByT5-Small](results/baseline_comparison.png)
+
 ---
 
 ## How It Works: Three Technical Foundations
@@ -305,7 +307,7 @@ print(predictor.predict("computador"))
 | **Exp1** | **0.64%** | **5.48%** | 28.8k | Random split, no stratification | ⚠️ Potential bias | INFLATED |
 | **Exp104b** | 0.49% | 5.43% | 28.8k | **Stratified split (χ² p=0.678)** | ✓ Validated | ROBUST |
 
-**Empirical confirmation** (Tier 2 control experiment): Running the Exp0 training regime (batch=36, no early stopping) with `stratify=True` produced **0.78% PER** — 2× worse than the original 0.38%. The 0.38% was a test set sampling artifact, not algorithmic superiority. See [docs/TIER2_RESULTS.md](docs/TIER2_RESULTS.md).
+**Empirical confirmation** (Tier 2 control experiment): Running the Exp0 training regime (batch=36, no early stopping) with `stratify=True` produced **0.78% PER** — 2× worse than the original 0.38%. The 0.38% was a test set sampling artifact, not algorithmic superiority. Details in [docs/article/EXPERIMENTS.md](docs/article/EXPERIMENTS.md).
 
 ### Systematic Ablation Study
 
@@ -463,7 +465,6 @@ FG2P learns *rules*, not memorized mappings. Evidence:
 |----------|------|-------------|
 | High | **Exp104c** | Increased LSTM capacity for structural token disambiguation (. ↔ ˈ) |
 | Medium | **Class E errors** | Fifth error class for structural token confusions (post-publication) |
-| Medium | **Chart: broken y-axis** | `class_distribution_top5.png` — Class A dominates (>94%); needs broken axis for B/C/D visibility |
 | Medium | **Chart: convergence grid** | Show Exp1 / Exp9 / Exp104b convergence side-by-side (currently only Exp104b in README) |
 | Medium | **Chart: da_loss_gain layout** | Annotation boxes can overlap bars; move gain labels below chart area |
 | Low | **PanPhon embedding analysis** | Spearman correlation: do DA Loss embeddings develop articulatory structure? |

@@ -4,11 +4,12 @@ Gerar visualizações comparativas: FG2P vs LatPhon + distribuição de classes 
 
 Saída:
   - class_distribution_all_experiments.png: Distribuição A/B/C/D para todos os experimentos
-  - latphon_comparison.png: Comparação FG2P vs LatPhon (PER, WER, CI)
+  - baseline_comparison.png: FG2P vs LatPhon, WFST, ByT5-Small (PER com CI)
   - top_5_models_metrics.png: Top 5 modelos com métricas detalhadasver
   - class_distribution_top5.png: Distribuição A/B/C/D para top 5 modelos
 """
 
+import re
 import sys
 from pathlib import Path
 
@@ -33,17 +34,51 @@ COLORS_CLASSES = {
     "D": "#e74c3c",  # vermelho (muito distante)
 }
 
-# LatPhon dados (de STATUS.md)
-LATPHON_PER = 0.86
-LATPHON_CI_LOW = 0.57
-LATPHON_CI_HIGH = 1.22
-LATPHON_TEST_SIZE = 500
+# Dados dos baselines para comparação (ver docs/article/ARTICLE.md §6 e README.md)
+BASELINES = [
+    {
+        "label": "FG2P\n(28.8k words)",
+        "per": 0.49,
+        "ci_low": 0.47,
+        "ci_high": 0.51,
+        "color": "#2ecc71",   # verde
+        "note": "0.49% [0.47–0.51%]",
+    },
+    {
+        "label": "LatPhon 2025\n(~500 words)",
+        "per": 0.86,
+        "ci_low": 0.56,
+        "ci_high": 1.16,
+        "color": "#f39c12",   # laranja
+        "note": "0.86% [0.56–1.16%]",
+    },
+    {
+        "label": "WFST / Phonetisaurus\n(~500 words)",
+        "per": 2.70,
+        "ci_low": 2.20,
+        "ci_high": 3.20,
+        "color": "#e67e22",   # laranja escuro
+        "note": "2.70% ±0.50",
+    },
+    {
+        "label": "ByT5-Small\n(~500 words)",
+        "per": 9.10,
+        "ci_low": None,
+        "ci_high": None,
+        "color": "#e74c3c",   # vermelho
+        "note": "9.10% (sem CI)",
+    },
+]
 
-# FG2P dados (de STATUS.md)
-FG2P_PER = 0.49
-FG2P_CI_LOW = 0.46
-FG2P_CI_HIGH = 0.52
+# Compat aliases usados no restante do script
+FG2P_PER      = BASELINES[0]["per"]
+FG2P_CI_LOW   = BASELINES[0]["ci_low"]
+FG2P_CI_HIGH  = BASELINES[0]["ci_high"]
 FG2P_TEST_SIZE = 28782
+LATPHON_PER    = BASELINES[1]["per"]
+LATPHON_CI_LOW = BASELINES[1]["ci_low"]
+LATPHON_CI_HIGH = BASELINES[1]["ci_high"]
+LATPHON_TEST_SIZE = 500
 
 
 def load_data():
@@ -63,122 +98,52 @@ def safe_print(msg):
         print(msg.encode('utf-8', errors='replace').decode('utf-8'))
 
 
-def plot_class_distribution_all_experiments(all_metrics):
+def plot_baseline_comparison():
     """
-    Gráfico 1: Distribuição A/B/C/D para todos os experimentos.
-    Usa dois subplots: escala completa (0-100%) e detalhe (0-5% para B/C/D).
+    Gráfico 2: FG2P vs todos os baselines — LatPhon, WFST, ByT5-Small.
+    PER com barras de erro (95% CI onde disponível).
     """
-    safe_print("[1/4] Plotando distribuicao de classes para todos os experimentos...")
+    safe_print("[2/3] Plotando comparacao com baselines...")
 
-    experiments = sorted(all_metrics.keys())
-    n_exp = len(experiments)
+    fig, ax = plt.subplots(figsize=(12, 7), dpi=FIGURE_DPI)
 
-    # Extrair dados
-    labels_exp = []
-    class_a = []
-    class_b = []
-    class_c = []
-    class_d = []
+    x_pos = np.arange(len(BASELINES))
 
-    for exp_name in experiments:
-        metrics = all_metrics[exp_name]
-        labels_exp.append(exp_name.replace("exp", "E"))
-        class_a.append(metrics.class_a_pct)
-        class_b.append(metrics.class_b_pct)
-        class_c.append(metrics.class_c_pct)
-        class_d.append(metrics.class_d_pct)
+    for i, b in enumerate(BASELINES):
+        ax.bar(i, b["per"], color=b["color"], alpha=0.75, width=0.55,
+               edgecolor="black", linewidth=1.5, zorder=2)
 
-    # Figura com 2 subplots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 6), dpi=FIGURE_DPI)
+        if b["ci_low"] is not None:
+            yerr = [[b["per"] - b["ci_low"]], [b["ci_high"] - b["per"]]]
+            ax.errorbar(i, b["per"], yerr=yerr, fmt="none",
+                        color="black", capsize=9, capthick=2, linewidth=2, zorder=3)
 
-    x = np.arange(len(labels_exp))
-    width = 0.8
+        offset = b["per"] * 0.06 + 0.15
+        ax.text(i, b["per"] + offset, b["note"],
+                ha="center", va="bottom", fontsize=10, fontweight="bold")
 
-    # ===== Subplot 1: Escala completa (0-100%) =====
-    p1 = ax1.bar(x, class_a, width, label="Classe A (Correto/Imperceptível)", color=COLORS_CLASSES["A"])
-    p2 = ax1.bar(x, class_b, width, bottom=class_a, label="Classe B (Próximo)", color=COLORS_CLASSES["B"])
-    p3 = ax1.bar(x, class_c, width, bottom=np.array(class_a) + np.array(class_b), label="Classe C (Distante)", color=COLORS_CLASSES["C"])
-    p4 = ax1.bar(x, class_d, width, bottom=np.array(class_a) + np.array(class_b) + np.array(class_c), label="Classe D (Muito Distante)", color=COLORS_CLASSES["D"])
-
-    ax1.set_xlabel("Experimento", fontsize=11, fontweight="bold")
-    ax1.set_ylabel("Distribuição (% de palavras)", fontsize=11, fontweight="bold")
-    ax1.set_title("Escala Completa (0-100%)", fontsize=12, fontweight="bold")
-    ax1.set_xticks(x)
-    ax1.set_xticklabels(labels_exp, rotation=45, ha="right", fontsize=8)
-    ax1.set_ylim([0, 100])
-    ax1.legend(loc="upper right", fontsize=9)
-    ax1.grid(axis="y", alpha=0.3)
-
-    # ===== Subplot 2: Zoom B/C/D (0-5%) =====
-    p1b = ax2.bar(x, class_b, width, label="Classe B (Próximo)", color=COLORS_CLASSES["B"])
-    p2b = ax2.bar(x, class_c, width, bottom=class_b, label="Classe C (Distante)", color=COLORS_CLASSES["C"])
-    p3b = ax2.bar(x, class_d, width, bottom=np.array(class_b) + np.array(class_c), label="Classe D (Muito Distante)", color=COLORS_CLASSES["D"])
-
-    ax2.set_xlabel("Experimento", fontsize=11, fontweight="bold")
-    ax2.set_ylabel("Distribuição B+C+D (% de palavras)", fontsize=11, fontweight="bold")
-    ax2.set_title("Detalhe: Erros Apenas (0-5%)", fontsize=12, fontweight="bold")
-    ax2.set_xticks(x)
-    ax2.set_xticklabels(labels_exp, rotation=45, ha="right", fontsize=8)
-    ax2.set_ylim([0, 5])
-    ax2.legend(loc="upper right", fontsize=9)
-    ax2.grid(axis="y", alpha=0.3)
-
-    fig.suptitle("Distribuição de Classes Fonológicas por Experimento (Todos os 24)", fontsize=14, fontweight="bold", y=1.02)
-    plt.tight_layout()
-    plt.savefig("results/class_distribution_all_experiments.png", dpi=FIGURE_DPI, bbox_inches="tight")
-    safe_print("   [OK] Salvo: results/class_distribution_all_experiments.png (2 subplots)")
-    plt.close()
-
-
-def plot_latphon_comparison():
-    """
-    Gráfico 2: Comparação FG2P vs LatPhon.
-    PER com barras de CI.
-    """
-    safe_print("[2/4] Plotando comparacao com LatPhon...")
-
-    fig, ax = plt.subplots(figsize=(10, 7), dpi=FIGURE_DPI)
-
-    models = ["FG2P\n(28.8k words)", "LatPhon\n(~500 words)"]
-    pers = [FG2P_PER, LATPHON_PER]
-    ci_errors = [
-        [FG2P_PER - FG2P_CI_LOW, FG2P_CI_HIGH - FG2P_PER],
-        [LATPHON_PER - LATPHON_CI_LOW, LATPHON_CI_HIGH - LATPHON_PER],
-    ]
-
-    colors = ["#2ecc71", "#e74c3c"]
-    x_pos = np.arange(len(models))
-
-    # Barras com CI
-    bars = ax.bar(x_pos, pers, color=colors, alpha=0.7, width=0.5, edgecolor="black", linewidth=2)
-
-    # Error bars (95% CI)
-    ci_errors_array = np.array(ci_errors).T
-    ax.errorbar(x_pos, pers, yerr=ci_errors_array, fmt="none", color="black", capsize=10, capthick=2, linewidth=2)
-
-    # Anotações
-    for i, (per, model) in enumerate(zip(pers, models)):
-        if i == 0:
-            ci_text = f"[{FG2P_CI_LOW:.2f}%, {FG2P_CI_HIGH:.2f}%]"
-        else:
-            ci_text = f"[{LATPHON_CI_LOW:.2f}%, {LATPHON_CI_HIGH:.2f}%]"
-
-        ax.text(i, per + 0.15, f"{per:.2f}%\nIC={ci_text}", ha="center", fontsize=11, fontweight="bold")
+    # Destaque: IC não sobrepostos entre FG2P e LatPhon
+    ax.annotate(
+        "ICs não se sobrepõem\n(FG2P upper 0.51% < LatPhon lower 0.56%)",
+        xy=(0.5, 0.86), xycoords=("data", "data"),
+        xytext=(1.5, 2.2), textcoords="data",
+        fontsize=9, style="italic", ha="center",
+        arrowprops=dict(arrowstyle="-", color="gray", lw=1),
+        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.6),
+    )
 
     ax.set_ylabel("PER (%)", fontsize=12, fontweight="bold")
-    ax.set_title("FG2P vs LatPhon: Phoneme Error Rate\n(Wilson 95% Confidence Interval)", fontsize=14, fontweight="bold")
+    ax.set_title("Comparação de Baselines — Phoneme Error Rate (PER)\n"
+                 "FG2P vs LatPhon 2025, WFST/Phonetisaurus, ByT5-Small",
+                 fontsize=13, fontweight="bold")
     ax.set_xticks(x_pos)
-    ax.set_xticklabels(models, fontsize=11)
-    ax.set_ylim([0, 1.5])
-    ax.grid(axis="y", alpha=0.3)
-
-    # Anotação: "Non-overlapping CIs"
-    ax.text(0.5, 1.35, "ICs não se sobrepõem\n→ Diferença estatisticamente significativa",
-            ha="center", fontsize=10, style="italic", bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5))
+    ax.set_xticklabels([b["label"] for b in BASELINES], fontsize=11)
+    ax.set_ylim([0, 11.5])
+    ax.grid(axis="y", alpha=0.3, zorder=1)
 
     plt.tight_layout()
-    plt.savefig("results/latphon_comparison.png", dpi=FIGURE_DPI, bbox_inches="tight")
-    safe_print("   [OK] Salvo: results/latphon_comparison.png")
+    plt.savefig("results/baseline_comparison.png", dpi=FIGURE_DPI, bbox_inches="tight")
+    safe_print("   [OK] Salvo: results/baseline_comparison.png")
     plt.close()
 
 
@@ -246,73 +211,145 @@ def plot_top_5_models(all_metrics, all_metadata):
     plt.close()
 
 
+def _short_label(exp_name):
+    """Extrai label curto: exp104b_... -> Exp104b, exp9_... -> Exp9"""
+    m = re.match(r"exp(\d+\w?)_", exp_name)
+    return f"Exp{m.group(1)}" if m else exp_name.replace("exp", "Exp")
+
+
+# Experimentos com vantagem artificial: split viciado (legacy/exp0) ou 95% de treino (exp107)
+_BIASED_PATTERNS = ("legacy", "107")
+
+# Sempre incluídos: baseline CE (exp1) + melhor WER (exp9)
+_FORCED_PREFIXES = ("exp1_", "exp9_")
+
+# Modelos com destaque: prefixo -> (badge no label, cor de fundo na tabela)
+_HIGHLIGHTS = {
+    "exp104b_": ("★ Best PER", "#c8e6c9"),   # verde claro
+    "exp9_":    ("★ Best WER", "#bbdefb"),   # azul claro
+}
+
+
+def _highlight_info(exp_name):
+    for prefix, info in _HIGHLIGHTS.items():
+        if exp_name.startswith(prefix):
+            return info
+    return None, None
+
+
 def plot_class_distribution_top5(all_metrics):
     """
-    Gráfico 4: Distribuição A/B/C/D para top 5 modelos.
-    Usa 2 subplots: escala completa e zoom em B/C/D.
+    Gráfico: Top 5 modelos validados por PER + Exp1 e Exp9 forçados.
+    Exp104b (★ Best PER) e Exp9 (★ Best WER) são destacados na tabela e no gráfico.
+    Esquerda: tabela A/B/C/D. Direita: barras B/C/D com escala ajustada.
     """
-    safe_print("[4/4] Plotando distribuicao de classes para top 5...")
+    safe_print("[3/3] Plotando distribuicao de classes para top 5 validados...")
 
-    # Top 5 por PER
-    sorted_by_per = sorted(all_metrics.items(), key=lambda x: x[1].per)
-    top_5 = dict(sorted_by_per[:5])
+    valid = {k: v for k, v in all_metrics.items()
+             if not any(p in k for p in _BIASED_PATTERNS)}
 
-    experiments = list(top_5.keys())
-    labels_exp = [e.replace("exp", "E") for e in experiments]
+    top_5_keys = {e for e, _ in sorted(valid.items(), key=lambda x: x[1].per)[:5]}
+    forced = {k for k in valid if any(k.startswith(p) for p in _FORCED_PREFIXES)}
+    selected_keys = top_5_keys | forced
+
+    experiments = [e for e, _ in sorted(valid.items(), key=lambda x: x[1].per)
+                   if e in selected_keys]
+
+    labels_short = [_short_label(e) for e in experiments]
+    highlights = [_highlight_info(e) for e in experiments]  # list of (badge, color) or (None, None)
+
+    # Labels com badge em segunda linha para modelos destacados
+    labels_display = [
+        f"{lbl}\n{badge}" if badge else lbl
+        for lbl, (badge, _) in zip(labels_short, highlights)
+    ]
 
     class_a = [all_metrics[e].class_a_pct for e in experiments]
     class_b = [all_metrics[e].class_b_pct for e in experiments]
     class_c = [all_metrics[e].class_c_pct for e in experiments]
     class_d = [all_metrics[e].class_d_pct for e in experiments]
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6), dpi=FIGURE_DPI)
+    fig, (ax_table, ax_chart) = plt.subplots(1, 2, figsize=(14, 6), dpi=FIGURE_DPI,
+                                              gridspec_kw={"width_ratios": [1, 1.6]})
 
-    x = np.arange(len(labels_exp))
-    width = 0.2
+    # ===== Esquerda: Tabela A/B/C/D =====
+    ax_table.axis("off")
+    col_labels = ["Modelo", "A (%)", "B (%)", "C (%)", "D (%)"]
+    table_data = [
+        [lbl, f"{a:.2f}", f"{b:.2f}", f"{c:.2f}", f"{d:.2f}"]
+        for lbl, a, b, c, d in zip(labels_short, class_a, class_b, class_c, class_d)
+    ]
+    tbl = ax_table.table(
+        cellText=table_data,
+        colLabels=col_labels,
+        loc="center",
+        cellLoc="center",
+    )
+    tbl.auto_set_font_size(False)
+    tbl.set_fontsize(11)
+    tbl.scale(1.0, 2.2)
 
-    # ===== Subplot 1: Escala completa (0-100%) =====
-    bars_a1 = ax1.bar(x - 1.5*width, class_a, width, label="Classe A", color=COLORS_CLASSES["A"])
-    bars_b1 = ax1.bar(x - 0.5*width, class_b, width, label="Classe B", color=COLORS_CLASSES["B"])
-    bars_c1 = ax1.bar(x + 0.5*width, class_c, width, label="Classe C", color=COLORS_CLASSES["C"])
-    bars_d1 = ax1.bar(x + 1.5*width, class_d, width, label="Classe D", color=COLORS_CLASSES["D"])
+    header_color = "#2c3e50"
+    for (row, col), cell in tbl.get_celld().items():
+        if row == 0:
+            cell.set_facecolor(header_color)
+            cell.set_text_props(color="white", fontweight="bold")
+            continue
+        exp_idx = row - 1
+        _, hl_color = highlights[exp_idx] if exp_idx < len(highlights) else (None, None)
+        if col == 0:
+            # Destaca linha do modelo com cor de highlight ou neutro
+            cell.set_facecolor(hl_color if hl_color else "#f5f5f5")
+            if hl_color:
+                cell.set_text_props(fontweight="bold")
+        elif col == 1:
+            cell.set_facecolor(COLORS_CLASSES["A"])
+        elif col == 2:
+            cell.set_facecolor(COLORS_CLASSES["B"])
+        elif col == 3:
+            cell.set_facecolor(COLORS_CLASSES["C"])
+        elif col == 4:
+            cell.set_facecolor(COLORS_CLASSES["D"])
 
-    ax1.set_xlabel("Modelo", fontsize=11, fontweight="bold")
-    ax1.set_ylabel("Distribuição (% de palavras)", fontsize=11, fontweight="bold")
-    ax1.set_title("Escala Completa (0-100%)", fontsize=12, fontweight="bold")
-    ax1.set_xticks(x)
-    ax1.set_xticklabels(labels_exp, fontsize=10)
-    ax1.legend(fontsize=10, loc="upper right")
-    ax1.grid(axis="y", alpha=0.3)
-    ax1.set_ylim([0, 100])
+    ax_table.set_title("Distribuição completa A/B/C/D", fontsize=12, fontweight="bold", pad=12)
 
-    # Valores em A
-    for i, v in enumerate(class_a):
-        ax1.text(i - 1.5*width, v + 0.5, f"{v:.1f}", ha="center", fontsize=7)
+    # ===== Direita: Barras agrupadas B/C/D =====
+    x = np.arange(len(labels_display))
+    width = 0.22
 
-    # ===== Subplot 2: Zoom em B/C/D (0-5%) =====
-    bars_b2 = ax2.bar(x - width, class_b, width, label="Classe B", color=COLORS_CLASSES["B"])
-    bars_c2 = ax2.bar(x, class_c, width, label="Classe C", color=COLORS_CLASSES["C"])
-    bars_d2 = ax2.bar(x + width, class_d, width, label="Classe D", color=COLORS_CLASSES["D"])
+    # Banda de fundo para modelos destacados
+    for i, (badge, hl_color) in enumerate(highlights):
+        if hl_color:
+            ax_chart.axvspan(i - 0.45, i + 0.45, color=hl_color, alpha=0.35, zorder=0)
 
-    ax2.set_xlabel("Modelo", fontsize=11, fontweight="bold")
-    ax2.set_ylabel("Distribuição B+C+D (% de palavras)", fontsize=11, fontweight="bold")
-    ax2.set_title("Detalhe: Erros Apenas (0-5%)", fontsize=12, fontweight="bold")
-    ax2.set_xticks(x)
-    ax2.set_xticklabels(labels_exp, fontsize=10)
-    ax2.legend(fontsize=10, loc="upper right")
-    ax2.grid(axis="y", alpha=0.3)
-    ax2.set_ylim([0, 5])
+    ax_chart.bar(x - width, class_b, width, label="B — próximo (~1 feat)",
+                 color=COLORS_CLASSES["B"], zorder=2)
+    ax_chart.bar(x,          class_c, width, label="C — distante (2–3 feat)",
+                 color=COLORS_CLASSES["C"], zorder=2)
+    ax_chart.bar(x + width,  class_d, width, label="D — catastrófico (4+ feat)",
+                 color=COLORS_CLASSES["D"], zorder=2)
 
-    # Valores em B/C/D
+    max_val = max(max(class_b), max(class_c), max(class_d))
+    label_offset = max_val * 0.04
     for i, (b, c, d) in enumerate(zip(class_b, class_c, class_d)):
-        ax2.text(i - width, b + 0.1, f"{b:.2f}", ha="center", fontsize=7)
-        ax2.text(i, c + 0.1, f"{c:.2f}", ha="center", fontsize=7)
-        ax2.text(i + width, d + 0.1, f"{d:.2f}", ha="center", fontsize=7)
+        ax_chart.text(i - width, b + label_offset, f"{b:.2f}", ha="center", va="bottom", fontsize=9)
+        ax_chart.text(i,          c + label_offset, f"{c:.2f}", ha="center", va="bottom", fontsize=9)
+        ax_chart.text(i + width,  d + label_offset, f"{d:.2f}", ha="center", va="bottom", fontsize=9)
 
-    fig.suptitle("Distribuição de Classes Fonológicas — Top 5 Modelos por PER", fontsize=14, fontweight="bold", y=1.00)
+    ax_chart.set_xlabel("Modelo", fontsize=11, fontweight="bold")
+    ax_chart.set_ylabel("Erros B+C+D (% de palavras)", fontsize=11, fontweight="bold")
+    ax_chart.set_title("Erros por Classe — Modelos Validados por PER", fontsize=12, fontweight="bold")
+    ax_chart.set_xticks(x)
+    ax_chart.set_xticklabels(labels_display, fontsize=10)
+    ax_chart.legend(fontsize=9, loc="upper right")
+    ax_chart.grid(axis="y", alpha=0.3, zorder=1)
+    ax_chart.set_ylim([0, max_val * 1.45])
+
+    fig.suptitle("Distribuição de Classes Fonológicas — Modelos Validados por PER",
+                 fontsize=13, fontweight="bold")
     plt.tight_layout()
     plt.savefig("results/class_distribution_top5.png", dpi=FIGURE_DPI, bbox_inches="tight")
-    safe_print("   [OK] Salvo: results/class_distribution_top5.png (2 subplots)")
+    safe_print("   [OK] Salvo: results/class_distribution_top5.png")
     plt.close()
 
 
@@ -325,8 +362,7 @@ def main():
         extractor, all_metrics, all_metadata = load_data()
         safe_print(f"[OK] Carregados {len(all_metrics)} experimentos com metricas\n")
 
-        plot_class_distribution_all_experiments(all_metrics)
-        plot_latphon_comparison()
+        plot_baseline_comparison()
         plot_top_5_models(all_metrics, all_metadata)
         plot_class_distribution_top5(all_metrics)
 
@@ -334,10 +370,9 @@ def main():
         safe_print("[OK] TODAS AS VISUALIZACOES GERADAS COM SUCESSO")
         safe_print("="*70)
         safe_print("\nArquivos gerados em results/:")
-        safe_print("  1. class_distribution_all_experiments.png")
-        safe_print("  2. latphon_comparison.png")
-        safe_print("  3. top_5_models_metrics.png")
-        safe_print("  4. class_distribution_top5.png")
+        safe_print("  1. baseline_comparison.png")
+        safe_print("  2. top_5_models_metrics.png")
+        safe_print("  3. class_distribution_top5.png")
         safe_print("")
 
     except Exception as e:
