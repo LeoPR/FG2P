@@ -90,6 +90,18 @@ class ExperimentManager:
                     print(f"    Epoch: {ep}/{meta.get('total_epochs', '?')} | "
                           f"Loss: {meta.get('best_loss', 0):.4f} | "
                           f"Params: {meta.get('total_params', 0):,}")
+                    cfg = meta.get("config", {})
+                    data_cfg  = cfg.get("data", {})
+                    loss_cfg  = cfg.get("training", {}).get("loss", {})
+                    has_sep   = data_cfg.get("keep_syllable_separators", False)
+                    sep_tag   = ". sep silábico" if has_sep else "— sem sep"
+                    loss_type = loss_cfg.get("type", "cross_entropy")
+                    if loss_type in ("distance_aware", "da"):
+                        lam      = loss_cfg.get("config", {}).get("distance_lambda", "?")
+                        loss_tag = f"DA λ={lam}"
+                    else:
+                        loss_tag = "CE"
+                    print(f"    Saída IPA:  ˈ estresse | {sep_tag} | Loss: {loss_tag}")
                 idx += 1
         print("\n" + "=" * 100)
         print(f"Total: {len(self.experiments)} | "

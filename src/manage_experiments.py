@@ -387,6 +387,25 @@ class ExperimentManager:
                         print(f"    Arquitetura: emb={config.get('emb_dim', '?')} " +
                               f"hidden={config.get('hidden_dim', '?')} " +
                               f"layers={config.get('num_layers', '?')}")
+
+                    if 'config' in metadata:
+                        data_cfg = metadata['config'].get('data', {})
+                        train_cfg = metadata['config'].get('training', {})
+                        loss_cfg = train_cfg.get('loss', {})
+
+                        has_sep = data_cfg.get('keep_syllable_separators', False)
+                        sep_tag = ". sílaba" if has_sep else "— sem sep"
+                        # stress marker ˈ é sempre produzido (parte do corpus IPA)
+                        ipa_tokens = f"ˈ estresse + {sep_tag}"
+
+                        loss_type = loss_cfg.get('type', 'cross_entropy')
+                        if loss_type in ('distance_aware', 'da'):
+                            lam = loss_cfg.get('config', {}).get('distance_lambda', '?')
+                            loss_tag = f"DA Loss λ={lam}"
+                        else:
+                            loss_tag = "CE Loss"
+
+                        print(f"    Saída IPA:   {ipa_tokens} | Loss: {loss_tag}")
                 
                 # Mostrar artefatos presentes
                 artifact_symbols = {

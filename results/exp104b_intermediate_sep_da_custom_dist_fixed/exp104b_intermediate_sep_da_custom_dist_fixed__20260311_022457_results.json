@@ -1,0 +1,25 @@
+{
+  "experiment": "exp104b_intermediate_sep_da_custom_dist_fixed__20260311_022457",
+  "timestamp": "2026-03-12T04:47:26.552431",
+  "training": {
+    "num_epochs": 98,
+    "throughput": {
+      "avg_samples_per_sec": 345.4189925279134,
+      "min_samples_per_sec": 345.4189925279134,
+      "max_samples_per_sec": 345.4189925279134
+    },
+    "best_epoch": 88,
+    "best_val_loss": 0.013833,
+    "best_train_loss": 0.016777,
+    "initial_train_loss": 0.449525,
+    "initial_val_loss": 0.065074,
+    "final_train_loss": 0.01896,
+    "final_val_loss": 0.0142,
+    "convergence_epoch_95percent": 27,
+    "gap_at_best": -0.0029440000000000004,
+    "gap_at_final": -0.00476,
+    "overfitting": "[OK] Nenhum",
+    "last5_std": 0.0004019999999999996
+  },
+  "test_metrics": {}
+}

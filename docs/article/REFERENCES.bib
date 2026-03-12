@@ -569,4 +569,155 @@
   doi={10.1214/09-SS054}
 }
 
-% Última atualização: 2026-03-01
+% =====================================================================
+% BENCHMARK DE VELOCIDADE E METODOLOGIA DE MEDIÇÃO
+% =====================================================================
+
+@inproceedings{reddi2020mlperf,
+  title={{MLPerf} Inference Benchmark},
+  author={Reddi, Vijay Janapa and Cheng, Christine and Kanter, David and Mattson, Peter and Schmuelling, Guenther and Wu, Carole-Jean and others},
+  booktitle={2020 ACM/IEEE 47th Annual International Symposium on Computer Architecture (ISCA)},
+  pages={446--459},
+  year={2020},
+  organization={IEEE},
+  doi={10.1109/ISCA45697.2020.00045},
+  archivePrefix={arXiv},
+  eprint={1911.02549},
+  note={Defines standardized methodology for inference benchmarking: minimum latency, server, offline, and mobile scenarios with statistical validity criteria}
+}
+
+@inproceedings{mattson2020mlperf,
+  title={{MLPerf} Training Benchmark},
+  author={Mattson, Peter and Cheng, Christine and Diamos, Gregory and Coleman, Cody and Micikevicius, Paulius and Patterson, David and Tang, Hanlin and Wei, Gu-Yeon and others},
+  booktitle={Proceedings of Machine Learning and Systems (MLSys)},
+  volume={2},
+  pages={336--349},
+  year={2020},
+  archivePrefix={arXiv},
+  eprint={1910.01500},
+  note={Establishes reproducibility and convergence criteria for DL training benchmarks}
+}
+
+@misc{pochelu2022dlbenchmark,
+  author        = {Pierrick Pochelu},
+  title         = {Deep Learning Inference Frameworks Benchmark},
+  year          = {2022},
+  eprint        = {2210.04323},
+  archivePrefix = {arXiv},
+  url           = {https://arxiv.org/abs/2210.04323},
+  note          = {Analyzes warmup, variance, and thermal effects in DL inference benchmarking across frameworks}
+}
+
+% =====================================================================
+% AMOSTRAGEM ESTRATIFICADA — FONTES CLÁSSICAS
+% =====================================================================
+
+@article{neyman1934two,
+  title={On the Two Different Aspects of the Representative Method: The Method of Stratified Sampling and the Method of Purposive Selection},
+  author={Neyman, Jerzy},
+  journal={Journal of the Royal Statistical Society},
+  volume={97},
+  number={4},
+  pages={558--625},
+  year={1934},
+  publisher={Royal Statistical Society},
+  note={Foundational paper establishing stratified sampling theory and optimal allocation (Neyman allocation)}
+}
+
+@book{cochran1977sampling,
+  title={Sampling Techniques},
+  author={Cochran, William G.},
+  edition={3rd},
+  year={1977},
+  publisher={John Wiley \& Sons},
+  address={New York},
+  isbn={978-0-471-16240-7},
+  note={Standard reference for stratified random sampling, allocation, and variance estimation}
+}
+
+@misc{farias2020similarity,
+  title={Similarity Based Stratified Splitting: An Approach to Train Better Classifiers},
+  author={Farias, Felipe and Ludermir, Tiago and Bastos-Filho, Clodoaldo},
+  year={2020},
+  archivePrefix={arXiv},
+  eprint={2010.06099},
+  note={Proposes similarity-based stratification for ML splits; illustrates risks of purely random splits in heterogeneous datasets}
+}
+
+@misc{tan2021critical,
+  title={A Critical Look at the Current Train/Test Split in Machine Learning},
+  author={Tan, Jimin and Yang, Jianan and Wu, Sai and Chen, Gang and Zhao, Jake},
+  year={2021},
+  archivePrefix={arXiv},
+  eprint={2106.04525},
+  note={Analyzes bias introduced by non-stratified splits across multiple ML benchmarks}
+}
+
+% =====================================================================
+% SGD COM EMBARALHAMENTO ALEATÓRIO — CONVERGÊNCIA
+% =====================================================================
+
+@inproceedings{bottou2010large,
+  title={Large-Scale Machine Learning with Stochastic Gradient Descent},
+  author={Bottou, L{\'e}on},
+  booktitle={Proceedings of COMPSTAT 2010},
+  pages={177--186},
+  year={2010},
+  publisher={Physica-Verlag HD / Springer},
+  doi={10.1007/978-3-7908-2604-3_16},
+  note={Establishes convergence conditions for SGD; random shuffling is a sufficient condition for convergence guarantees}
+}
+
+@incollection{bottou2012tricks,
+  title={Stochastic Gradient Descent Tricks},
+  author={Bottou, L{\'e}on},
+  booktitle={Neural Networks: Tricks of the Trade},
+  series={Lecture Notes in Computer Science},
+  volume={7700},
+  pages={421--436},
+  year={2012},
+  publisher={Springer},
+  doi={10.1007/978-3-642-35289-8_25},
+  note={Practical guide to SGD; recommends shuffling training data at each epoch}
+}
+
+@inproceedings{haochenSra2019shuffling,
+  title={Random Shuffling Beats {SGD} after Finite Epochs},
+  author={HaoChen, Jeff and Sra, Suvrit},
+  booktitle={Proceedings of the 36th International Conference on Machine Learning (ICML)},
+  series={PMLR},
+  volume={97},
+  pages={2624--2633},
+  year={2019},
+  archivePrefix={arXiv},
+  eprint={1806.10077},
+  note={Proves theoretically that random reshuffling (without replacement) converges faster than SGD with replacement under standard assumptions}
+}
+
+@inproceedings{mishchenko2020reshuffling,
+  title={Random Reshuffling: Simple Analysis with Vast Improvements},
+  author={Mishchenko, Konstantin and Khaled, Ahmed and Richt{\'a}rik, Peter},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)},
+  volume={33},
+  pages={17309--17320},
+  year={2020},
+  archivePrefix={arXiv},
+  eprint={2006.05988},
+  note={Provides tight convergence bounds for random reshuffling, confirming it as the preferred SGD variant over i.i.d. sampling}
+}
+
+@inproceedings{safran2020sgd,
+  title={How Good is {SGD} with Random Shuffling?},
+  author={Safran, Itay and Shamir, Ohad},
+  booktitle={Proceedings of the 33rd Conference on Learning Theory (COLT)},
+  series={Proceedings of Machine Learning Research},
+  volume={125},
+  pages={3250--3284},
+  year={2020},
+  archivePrefix={arXiv},
+  eprint={1908.00045},
+  url={https://proceedings.mlr.press/v125/safran20a.html},
+  note={Lower and upper bounds for random shuffling SGD; shows when reshuffling is provably better than i.i.d. sampling}
+}
+
+% Última atualização: 2026-03-12

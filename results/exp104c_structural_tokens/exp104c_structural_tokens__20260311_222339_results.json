@@ -1,0 +1,25 @@
+{
+  "experiment": "exp104c_structural_tokens__20260311_222339",
+  "timestamp": "2026-03-12T04:48:22.641422",
+  "training": {
+    "num_epochs": 99,
+    "throughput": {
+      "avg_samples_per_sec": 595.8519456547082,
+      "min_samples_per_sec": 595.8519456547082,
+      "max_samples_per_sec": 595.8519456547082
+    },
+    "best_epoch": 89,
+    "best_val_loss": 0.016269,
+    "best_train_loss": 0.016936,
+    "initial_train_loss": 0.514139,
+    "initial_val_loss": 0.063749,
+    "final_train_loss": 0.01569,
+    "final_val_loss": 0.019405,
+    "convergence_epoch_95percent": 29,
+    "gap_at_best": -0.0006670000000000009,
+    "gap_at_final": 0.0037149999999999996,
+    "overfitting": "[OK] Nenhum",
+    "last5_std": 0.0018419999999999999
+  },
+  "test_metrics": {}
+}

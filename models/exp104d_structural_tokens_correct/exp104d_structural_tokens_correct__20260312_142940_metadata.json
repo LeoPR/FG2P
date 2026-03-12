@@ -1,0 +1,134 @@
+{
+  "experiment_name": "exp104d_structural_tokens_correct",
+  "run_id": "20260312_142940",
+  "full_name": "exp104d_structural_tokens_correct__20260312_142940",
+  "timestamp": "2026-03-12 15:37:26",
+  "current_epoch": 28,
+  "total_epochs": 120,
+  "config": {
+    "description": "Exp104d: Experimento original de tokens estruturais com config correto — 17M params + sep silábico + DA Loss λ=0.2. Corrige os dois bugs do exp104c.",
+    "data": {
+      "source": "dicts/pt-br.tsv",
+      "train_ratio": 0.6,
+      "val_ratio": 0.1,
+      "test_ratio": 0.3,
+      "split_seed": 42,
+      "stratify": true,
+      "grapheme_encoding": "raw",
+      "keep_syllable_separators": true,
+      "note": "Idêntico ao split de exp104b para comparação direta."
+    },
+    "model": {
+      "embedding_type": "learned",
+      "emb_dim": 256,
+      "hidden_dim": 512,
+      "num_layers": 2,
+      "dropout": 0.5,
+      "note": "17M params (emb 192→256, hidden 384→512 vs exp104b). Mesma arquitetura BiLSTM 2 camadas."
+    },
+    "training": {
+      "fit_method": "adam",
+      "epochs": 120,
+      "warmup_epochs": 80,
+      "batch_size": 96,
+      "lr": 0.001,
+      "early_stopping_patience": 10,
+      "weight_decay": 1e-05,
+      "loss": {
+        "type": "distance_aware",
+        "config": {
+          "distance_lambda": 0.2,
+          "distance_metric": "euclidean",
+          "normalize_distance": true
+        },
+        "note": "λ=0.2 ótimo de Exp7. Mesmo override estrutural pós-normalização de exp104b: d(.,ˈ)=1.0 na escala final."
+      }
+    },
+    "experiment": {
+      "name": "exp104d_structural_tokens_correct",
+      "purpose": "Testar se maior capacidade (17M) + sep silábico + DA Loss resolve confusões . ↔ ˈ ↔ <PAD> melhor que exp104b (9.7M). Config correto do que exp104c pretendia ser.",
+      "hypothesis": "Maior hidden state (512 vs 384) permite melhor disambiguação contextual dos tokens estruturais (ˈ como modificador prosódico, . como fronteira silábica). DA Loss com d(.,ˈ)=1.0 penaliza maximamente a confusão entre eles.",
+      "fixes_from_104c": [
+        "CORRIGIDO: keep_syllable_separators=true adicionado — modelo agora aprende '.' explicitamente",
+        "CORRIGIDO: DA Loss λ=0.2 adicionado — penalização fonológica ativa durante treino"
+      ],
+      "key_changes_vs_104b": [
+        "emb_dim: 192 → 256 (+33%)",
+        "hidden_dim: 384 → 512 (+33%)",
+        "batch_size: 64 → 96 (gradiente mais estável para tokens raros)",
+        "params: ~9.7M → ~17M (+75%)"
+      ],
+      "compared_with": [
+        "exp104b: PER 0.51%, WER 5.43% — 9.7M + sep + DA λ=0.2 (linha de base correta)",
+        "exp104c: PER 0.57%, WER 4.92% — 17M + CE sem sep (ablação de capacidade com bugs)",
+        "exp9:    PER 0.61%, WER 4.96% — 9.7M + DA sem sep (SOTA WER anterior)"
+      ],
+      "predictions": {
+        "per_estimate": "~0.47-0.51% — espera-se melhora sobre exp104b pela capacidade",
+        "wer_estimate": "~5.0-5.4% — com sep, WER tende a ser maior que sem sep",
+        "class_d_estimate": "<0.43% — DA Loss + maior capacidade deve reduzir erros catastróficos",
+        "structural_confusions": "ˈ ↔ a esperado <15 (vs 21× em exp104c sem DA Loss)"
+      },
+      "ablation_value": "Isola o efeito de capacidade DENTRO do regime sep+DA. Comparação limpa: exp104b (9.7M) vs exp104d (17M), tudo mais igual.",
+      "risk": "17M params com batch=96 pode ter gradiente instável nas primeiras épocas — monitorar warmup (epochs 1-80). Se val_loss não convergir em 30 épocas, considerar lr=0.0005.",
+      "note": "λ=0.2 pode não ser ótimo para o regime sep+DA+17M. Ver TODO no README: revisão de λ com sep silábico habilitado."
+    }
+  },
+  "best_loss": 0.01601950356271118,
+  "training_completed": false,
+  "device": "cuda",
+  "total_params": 17165612,
+  "dataset": {
+    "dict_path": "C:\\Users\\leona\\OneDrive\\Documents\\Projects\\Acadêmicos\\FG2P\\dicts\\pt-br.tsv",
+    "dict_checksum": "26e824a30f373673",
+    "grapheme_encoding": "raw",
+    "keep_syllable_separators": true,
+    "total_words": 95937,
+    "train_size": 57561,
+    "val_size": 9594,
+    "test_size": 28782,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "seed": 42,
+    "char_vocab_size": 39,
+    "phoneme_vocab_size": 44,
+    "stratified": true,
+    "strata_count": 34,
+    "jsd": {
+      "stress_type": 8.699212385781255e-06,
+      "syllable_bin": 2.9213040122309385e-09,
+      "length_bin": 2.0727946563589903e-09,
+      "ratio_bin": 1.2067153411187987e-05
+    },
+    "chi2_pvalue": {
+      "stress_type": 0.9733659313544308,
+      "syllable_bin": 0.9998446073007422,
+      "length_bin": 0.9999991289300925,
+      "ratio_bin": 0.7291419932660215
+    },
+    "cramers_v": {
+      "stress_type": 0.002409752535975174,
+      "syllable_bin": 5.999756276281242e-05,
+      "length_bin": 5.054064101672567e-05,
+      "ratio_bin": 0.003880179675554137
+    },
+    "verdict": {
+      "quality": "excelente",
+      "confidence": "alta",
+      "any_chi2_significant": false,
+      "bonferroni_alpha": 0.0125,
+      "min_pvalue": 0.7291419932660215,
+      "max_cramers_v": 0.003880179675554137
+    },
+    "train_phoneme_coverage": 1.0,
+    "val_phoneme_coverage": 1.0,
+    "train_bigram_coverage": 0.9379746835443038,
+    "val_bigram_coverage": 0.7367088607594937
+  },
+  "loss_type": "distance_aware",
+  "loss_config": {
+    "distance_lambda": 0.2,
+    "distance_metric": "euclidean",
+    "normalize_distance": true
+  }
+}
