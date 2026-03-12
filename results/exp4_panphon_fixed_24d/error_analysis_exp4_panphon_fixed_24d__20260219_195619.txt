@@ -1,0 +1,118 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-03-10 20:17:58
+Predições: predictions_exp4_panphon_fixed_24d__20260219_195619.tsv
+Total: 19188 palavras | Corretas: 18032 | Erros: 1156
+Tempo análise: 5.88s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.71%
+WER:      6.02%
+Accuracy: 93.98%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.63%
+PER Ponderado: 0.28%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 180150 (98.97%)
+Classe B:    805 ( 0.44%)
+Classe C:    239 ( 0.13%)
+Classe D:    838 ( 0.46%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  18032 palavras (93.98%)
+Classe B:    780 palavras (4.07%)
+Classe C:    186 palavras (0.97%)
+Classe D:    190 palavras (0.99%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.08 median=+0
+Truncated: 0 palavras
+Over-generated: 0 palavras
+Hallucinations: 2 palavras
+
+Top-10 Alucinações:
+  político-administrativas patterns=[trigram_loop:i i t ×2 (palavra: ×1, ref: ×1)]
+    pred: p o ˈ l i t ʃ i k o a d ʒ m i n i i t i i t ʃ i v i s
+    ref:  p o ˈ l i t ʃ i k o a d ʒ m i n i s t ɾ a t ʃ i v ə s
+  não-determinísticas patterns=[bigram_loop:ə s ×2 (palavra: ×1, ref: ×1)]
+    pred: ˈ n ã ʊ̃ d e t e ɣ m i n i k k ə s ə s
+    ref:  ˈ n ã ʊ̃ d e t e ɣ m i n i ʃ t ʃ i k ə s
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   ɛ → e       185  0.0417      B
+   e → ɛ       153  0.0417      B
+   i → e       133  0.0417      B
+   ɔ → o       104  0.0417      B
+   o → ɔ        71  0.0417      B
+   ə → a        54  0.0833      C
+   ĩ → i        32  0.0417      B
+<PAD> → s        24  0.8750      D
+   ʃ → k        23  0.2500      D
+   a → ə        21  0.0833      C
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  mór             score=0.938  pred=ˈ m ɔ x  ref=ˈ m o x
+  hifa            score=0.938  pred=ˈ i f ə  ref=ˈ ĩ f ə
+  sól             score=0.938  pred=ˈ s ɔ w  ref=ˈ s o w
+  jacareí         score=0.938  pred=ʒ a k a ɾ e ˈ ĩ  ref=ʒ a k a ɾ i ˈ i
+  ile             score=0.938  pred=ˈ i l ɪ  ref=ˈ ĩ l ɪ
+  iso             score=0.938  pred=ˈ i z ʊ  ref=ˈ ĩ z ʊ
+  uaz             score=0.938  pred=u ˈ a s  ref=ũ ˈ a s
+  ilo             score=0.938  pred=ˈ i l ʊ  ref=ˈ ĩ l ʊ
+  codeína         score=0.938  pred=k o d e ˈ i n ə  ref=k o d i ˈ ĩ n ə
+  ilha            score=0.938  pred=ˈ i ʎ ə  ref=ˈ ĩ ʎ ə
+
+Classe C:
+  oils            score=0.700  pred=ˈ ʊ y w s  ref=ˈ o ɪ w s
+  gus             score=0.812  pred=ˈ ɡ u s  ref=ˈ ɡ ʊ s
+  uádi            score=0.833  pred=u ˈ a d ʒ ɪ  ref=ũ ˈ ə d ʒ ɪ
+  rímur           score=0.833  pred=ˈ x i m u x  ref=ˈ x ĩ m ʊ x
+  árabe-israelense score=0.850  pred=ˈ a ɾ a b e y s x a ɛ l ẽ s ɪ  ref=ˈ a ɾ a b ɪ i s x a ẽ l ẽ s ɪ
+  fáil            score=0.850  pred=ˈ f a y w  ref=ˈ f a ɪ w
+  toei            score=0.850  pred=t o ˈ e y  ref=t u ˈ e y
+  havaí           score=0.850  pred=a v a ˈ i  ref=a v ə ˈ i
+  efx             score=0.850  pred=ˈ ɛ f k s  ref=ˈ i f k s
+  iacm            score=0.850  pred=ˈ i ə k m  ref=ˈ i a k m
+
+Classe D:
+  abos            score=0.000  pred=ˈ a b ʊ s  ref=a b e ˈ ɔ s
+  aba             score=0.000  pred=a b e b a  ref=ˈ a b ə
+  enxadrismo      score=0.083  pred=ẽ ʃ a ˈ d ɾ ɾ i z m ʊ  ref=ẽ k s a ˈ d ʒ ɾ i z m ʊ
+  oxigenados      score=0.083  pred=o ʃ i ʒ e ˈ n a d ʊ s  ref=o k s i ʒ e ˈ n a d ʊ s
+  oxigenado       score=0.091  pred=o ʃ i ʒ e ˈ n a d ʊ  ref=o k s i ʒ e ˈ n a d ʊ
+  hidraulicamente score=0.125  pred=i d ɾ a w l i k a ˈ m ẽ t ʃ ɪ  ref=i d ʒ ɾ a w l i k a ˈ m ẽ t ʃ ɪ
+  taxidermizados  score=0.125  pred=t a k s i d e ɣ m i ˈ z a d ʊ s  ref=t a ʃ i d e ɣ m i ˈ z a d ʊ s
+  ideográfica     score=0.173  pred=i d ɛ o ˈ ɡ ɾ a f i k ə  ref=i d ʒ ɛ o ˈ ɡ ɾ a f i k ə
+  toxidade        score=0.182  pred=t o k s i ˈ d a d ʒ ɪ  ref=t o ʃ i ˈ d a d ʒ ɪ
+  lixiviado       score=0.182  pred=l i ʃ i v i ˈ a d ʊ  ref=l i k s i v i ˈ a d ʊ
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   ɛ → e       185
+   e → ɛ       153
+   i → e       133
+   ɔ → o       104
+   o → ɔ        71
+   ə → a        54
+   ĩ → i        32
+   ʃ → k        23
+   a → ə        21
+   u → o        19
+   i → ĩ        19
+   e → i        18
+   ẽ → e        15
+   a → ˈ        14
+   i → s        14

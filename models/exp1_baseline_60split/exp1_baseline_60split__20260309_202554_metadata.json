@@ -1,0 +1,115 @@
+{
+  "experiment_name": "exp1_baseline_60split",
+  "run_id": "20260309_202554",
+  "full_name": "exp1_baseline_60split__20260309_202554",
+  "timestamp": "2026-03-09 23:36:14",
+  "current_epoch": 74,
+  "total_epochs": 120,
+  "config": {
+    "description": "Exp1 — Baseline LSTM (60/10/30 split, original parameters)",
+    "data": {
+      "source": "dicts/pt-br.tsv",
+      "train_ratio": 0.6,
+      "val_ratio": 0.1,
+      "test_ratio": 0.3,
+      "split_seed": 42,
+      "note": "Split 60/10/30 — menos dados treino, mais dados teste para avaliar generalização",
+      "grapheme_encoding": "raw"
+    },
+    "model": {
+      "embedding_type": "learned",
+      "emb_dim": 128,
+      "hidden_dim": 256,
+      "num_layers": 2,
+      "dropout": 0.5,
+      "note": "Baseline mesmo tamanho exp0 — isolates impacto DO SPLIT (não de arquitetura)",
+      "total_params_measured": "4,321,963"
+    },
+    "training": {
+      "fit_method": "adam",
+      "epochs": 120,
+      "warmup_epochs": 80,
+      "batch_size": 64,
+      "lr": 0.001,
+      "early_stopping_patience": 10,
+      "weight_decay": 1e-05
+    },
+    "experiment": {
+      "name": "exp1_baseline_60split",
+      "purpose": "Avaliar impacto de split 60/10/30 vs 70/10/20 — mesma arquitetura, dados diferentes",
+      "hypothesis": "Menos dados treino (60% vs 70%) → PER/WER piores, mas teste set maior valida generalização",
+      "compared_with": [
+        "exp0: mesma arquitetura, split 70/10/20 → mede impacto direto do split",
+        "exp2: mesma split 60/10/30, mas 2x neurons → mede se capacity compensa dados"
+      ],
+      "expected_metrics": {
+        "per_estimate": "~0.65%",
+        "wer_estimate": "~5.5%",
+        "accuracy_estimate": "~94.3%"
+      },
+      "training_time_estimate": "~15-20h (GPU CUDA)",
+      "notes": [
+        "✓ CONTROL: Usa split 60/10/30 (padrão para exp2-4) para comparação justa",
+        "⚠ Performance esperada PIOR que exp0 (menos dados treino)",
+        "⚠ Maior teste set (30% vs 20%) permite validação mais robusta de generalização",
+        "→ Se exp1 PER >> exp0 PER: dataset size CRUCIAL; Se similar: model architecture MAIS importante"
+      ]
+    }
+  },
+  "best_loss": 0.017081892220303416,
+  "training_completed": true,
+  "device": "cuda",
+  "total_params": 4321963,
+  "dataset": {
+    "dict_path": "C:\\Users\\leona\\OneDrive\\Documents\\Projects\\Acadêmicos\\FG2P\\dicts\\pt-br.tsv",
+    "dict_checksum": "26e824a30f373673",
+    "grapheme_encoding": "raw",
+    "keep_syllable_separators": false,
+    "total_words": 95937,
+    "train_size": 57561,
+    "val_size": 9594,
+    "test_size": 28782,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "seed": 42,
+    "char_vocab_size": 39,
+    "phoneme_vocab_size": 43,
+    "stratified": true,
+    "strata_count": 34,
+    "jsd": {
+      "stress_type": 8.699212385781257e-06,
+      "syllable_bin": 2.9213040122309385e-09,
+      "length_bin": 2.0727946563598374e-09,
+      "ratio_bin": 1.2067153411187987e-05
+    },
+    "chi2_pvalue": {
+      "stress_type": 0.9733659313544308,
+      "syllable_bin": 0.9998446073007422,
+      "length_bin": 0.9999991289300925,
+      "ratio_bin": 0.7291419932660215
+    },
+    "cramers_v": {
+      "stress_type": 0.002409752535975174,
+      "syllable_bin": 5.999756276281242e-05,
+      "length_bin": 5.054064101672567e-05,
+      "ratio_bin": 0.003880179675554137
+    },
+    "verdict": {
+      "quality": "excelente",
+      "confidence": "alta",
+      "any_chi2_significant": false,
+      "bonferroni_alpha": 0.0125,
+      "min_pvalue": 0.7291419932660215,
+      "max_cramers_v": 0.003880179675554137
+    },
+    "train_phoneme_coverage": 1.0,
+    "val_phoneme_coverage": 1.0,
+    "train_bigram_coverage": 0.9513314967860422,
+    "val_bigram_coverage": 0.7796143250688705
+  },
+  "loss_type": "cross_entropy",
+  "loss_config": {},
+  "final_epoch": 90,
+  "total_time_seconds": 13882.24155570002,
+  "avg_epoch_time": 154.24712839666688
+}

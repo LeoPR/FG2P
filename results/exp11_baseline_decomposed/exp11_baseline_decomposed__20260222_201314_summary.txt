@@ -1,0 +1,34 @@
+G2P LSTM Training Summary
+============================================================
+Experiment: exp11_baseline_decomposed
+Run ID: 20260222_201314
+Full Name: exp11_baseline_decomposed__20260222_201314
+Timestamp: 2026-02-23 00:48:04
+------------------------------------------------------------
+Device: cuda
+Embedding: learned
+Optimizer: adam
+Train/Val/Test Split: 60% / 10% / 30%
+------------------------------------------------------------
+Model: G2PLSTMModel | BiLSTM | emb=128 hidden=256 layers=2 dropout=0.50
+Total params: 4,321,964
+------------------------------------------------------------
+Train samples: 57,561
+Val samples: 9,594
+Test samples (held-out): 28,782
+Batch size: 64
+Learning rate: 0.001
+Epochs trained: 90
+------------------------------------------------------------
+Best val loss: 0.019048 (epoch 62)
+------------------------------------------------------------
+Total time: 16490.1s (274.8m)
+Avg epoch time: 183.2s
+Training speed (avg): 314 samples/s
+============================================================
+Generated files:
+  Model:    models/exp11_baseline_decomposed.pt
+  History:  results/exp11_baseline_decomposed_history.csv
+  Summary:  results/exp11_baseline_decomposed_summary.txt
+
+Use 'python src/analyze.py' para gerar gráficos de convergência.

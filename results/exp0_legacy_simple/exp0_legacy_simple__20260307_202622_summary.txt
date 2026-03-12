@@ -1,0 +1,34 @@
+G2P LSTM Training Summary
+============================================================
+Experiment: exp0_legacy_simple
+Run ID: 20260307_202622
+Full Name: exp0_legacy_simple__20260307_202622
+Timestamp: 2026-03-08 05:58:15
+------------------------------------------------------------
+Device: cuda
+Embedding: learned
+Optimizer: adam
+Train/Val/Test Split: 70% / 10% / 20%
+------------------------------------------------------------
+Model: G2PLSTMModel | BiLSTM | emb=128 hidden=256 layers=2 dropout=0.50
+Total params: 4,321,963
+------------------------------------------------------------
+Train samples: 67,155
+Val samples: 9,594
+Test samples (held-out): 19,188
+Batch size: 36
+Learning rate: 0.001
+Epochs trained: 120
+------------------------------------------------------------
+Best val loss: 0.018417 (epoch 115)
+------------------------------------------------------------
+Total time: 34312.9s (571.9m)
+Avg epoch time: 285.9s
+Training speed (avg): 235 samples/s
+============================================================
+Generated files:
+  Model:    models/exp0_legacy_simple.pt
+  History:  results/exp0_legacy_simple_history.csv
+  Summary:  results/exp0_legacy_simple_summary.txt
+
+Use 'python src/analyze.py' para gerar gráficos de convergência.

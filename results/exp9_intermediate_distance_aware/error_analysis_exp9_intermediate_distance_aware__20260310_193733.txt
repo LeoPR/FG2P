@@ -1,0 +1,114 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-03-11 00:07:46
+Predições: predictions_exp9_intermediate_distance_aware__20260310_193733.tsv
+Total: 28782 palavras | Corretas: 27274 | Erros: 1508
+Tempo análise: 6.21s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.61%
+WER:      5.24%
+Accuracy: 94.76%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.62%
+PER Ponderado: 0.29%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 270161 (99.02%)
+Classe B:    977 ( 0.36%)
+Classe C:    384 ( 0.14%)
+Classe D:   1302 ( 0.48%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  27274 palavras (94.76%)
+Classe B:    937 palavras (3.26%)
+Classe C:    305 palavras (1.06%)
+Classe D:    266 palavras (0.92%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.09 median=+0
+Truncated: 2 palavras
+Over-generated: 0 palavras
+Hallucinations: 0 palavras
+
+Top-10 Truncadas:
+  estadunidense-colombiana ref=22 pred=18 (Δ-4)
+  absa            ref= 8 pred= 5 (Δ-3)
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   ɛ → e       246  0.0417      B
+   ɔ → o       159  0.0417      B
+   e → ɛ       150  0.0417      B
+   i → e       122  0.0417      B
+   ə → a       108  0.0833      C
+   o → ɔ        78  0.0417      B
+   e → i        55  0.0417      B
+   s → <PAD>     42  0.8750      D
+   a → ə        32  0.0833      C
+   ɔ → õ        31  0.0833      C
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  eels            score=0.900  pred=ˈ i ɛ w s  ref=ˈ ɪ ɪ w s
+  eear            score=0.900  pred=e i ˈ a x  ref=ɛ e ˈ a x
+  uí              score=0.917  pred=u ˈ i  ref=ũ ˈ i
+  desde           score=0.929  pred=ˈ d ɛ ʃ d ʒ ɪ  ref=ˈ d e ʒ d ʒ ɪ
+  ilha            score=0.938  pred=ˈ i ʎ ə  ref=ˈ ĩ ʎ ə
+  ilê             score=0.938  pred=i ˈ l e  ref=i ˈ l ɛ
+  iça             score=0.938  pred=ˈ i s ə  ref=ˈ ĩ s ə
+  ife             score=0.938  pred=ˈ i f ɪ  ref=ˈ ĩ f ɪ
+  mór             score=0.938  pred=ˈ m ɔ x  ref=ˈ m o x
+  olhe            score=0.938  pred=ˈ ɔ ʎ ɪ  ref=ˈ o ʎ ɪ
+
+Classe C:
+  hoa             score=0.750  pred=ˈ o ə  ref=ˈ o a
+  ásgeir          score=0.786  pred=ˈ a z ʒ e y x  ref=ˈ a z ʒ ɪ ɪ x
+  oils            score=0.800  pred=ˈ ʊ i w s  ref=ˈ o ɪ w s
+  bandslam        score=0.812  pred=ˈ b ã d ʒ z ã ʊ̃  ref=ˈ b ã d z l ã ʊ̃
+  tea             score=0.812  pred=ˈ t ɪ a  ref=ˈ t ɪ ə
+  cea             score=0.812  pred=ˈ s ɪ a  ref=ˈ s ɪ ə
+  ias             score=0.812  pred=ˈ ĩ ə s  ref=ˈ ĩ a s
+  orim            score=0.812  pred=ɔ ˈ ɾ ĩ  ref=u ˈ ɾ ĩ
+  mea             score=0.812  pred=ˈ m ɪ a  ref=ˈ m ɪ ə
+  havaí           score=0.850  pred=a v a ˈ i  ref=a v ə ˈ i
+
+Classe D:
+  derülo          score=0.000  pred=ˈ d ɛ x s l ʊ  ref=d e ˈ ɾ k s l ʊ
+  absa            score=0.000  pred=ˈ a b s ə  ref=a b e ɛ s i ˈ a
+  abos            score=0.000  pred=ˈ a b ʊ s  ref=a b e ˈ ɔ s
+  aba             score=0.000  pred=a b e ˈ b a  ref=ˈ a b ə
+  oxigenados      score=0.083  pred=o ʃ i ʒ e ˈ n a d ʊ s  ref=o k s i ʒ e ˈ n a d ʊ s
+  oxigenado       score=0.091  pred=o ʃ i ʒ e ˈ n a d ʊ  ref=o k s i ʒ e ˈ n a d ʊ
+  deambulação     score=0.104  pred=d e ã b u l a ˈ s ã ʊ̃  ref=d ʒ e ã b u l a ˈ s ã ʊ̃
+  axumita         score=0.111  pred=a ʃ u ˈ m i t ə  ref=a k s u ˈ m i t ə
+  axonal          score=0.125  pred=a ʃ o ˈ n a w  ref=a k s o ˈ n a w
+  ixtapa          score=0.125  pred=i s ˈ t a p ə  ref=i k s ˈ t a p ə
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   ɛ → e       246
+   ɔ → o       159
+   e → ɛ       150
+   i → e       122
+   ə → a       108
+   o → ɔ        78
+   e → i        55
+   a → ə        32
+   ɔ → õ        31
+   u → o        27
+   o → õ        27
+   ʃ → k        26
+   z → s        24
+   ẽ → e        23
+   ĩ → i        22

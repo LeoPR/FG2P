@@ -1,0 +1,51 @@
+# === LARGE BINARIES & ARCHIVES ===
+# Model checkpoints — only published aliases tracked (best_per, best_wer)
+# All others ignored to keep repo small
+models/*/*.pt
+!models/exp104b_intermediate_sep_da_custom_dist_fixed/*.pt
+!models/exp9_intermediate_distance_aware/*.pt
+FG2P.7z
+docs/*.pdf
+
+# === LARGE GENERATED RESULT FILES ===
+# Prediction TSVs: ~28k words per experiment, not useful without code to analyze
+results/predictions_*.tsv
+results/*/predictions_*.tsv
+# Binary presentation (generated from presentation_generator.py)
+results/*.pptx
+
+# === GENERATED OUTPUTS (not source) ===
+model_report.html
+docs/FG2P_Consolidated_Report.html
+docs/FG2P_Report.docx
+docs/*.docx
+docs/*.html
+
+# === DEVELOPMENT ARTIFACTS (not for public release) ===
+IACgen.md
+TODO.md
+docs/CODEBASE_AUDIT.md
+docs/BATCH_SIZE_RECOMMENDATIONS.md
+# Arquivo de aula não relacionado ao projeto
+src/aula01_p1_3.py
+# VSCode workspace file (local config)
+*.code-workspace
+
+# === WORKING DIRS (local only) ===
+/backups
+/.claude
+/cache
+/data
+/logs
+/results/_reports
+
+# === HISTORICAL ARTIFACTS ===
+CONSOLIDACAO_DOCUMENTACAO.md
+
+# === PYTHON STANDARD ===
+*.pyc
+__pycache__/
+.venv/
+.ruff_cache/
+*.egg-info/
+dist/

@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-03-11 10:36:00",
+  "experiment_name": "exp104b_intermediate_sep_da_custom_dist_fixed",
+  "inference_time_s": 907.953,
+  "samples_per_sec": 31.7,
+  "total_words": 28782,
+  "predictions_file": "predictions_exp104b_intermediate_sep_da_custom_dist_fixed__20260311_022457.tsv"
+}

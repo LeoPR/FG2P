@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-03-10 13:47:52",
+  "experiment_name": "exp0_legacy_simple",
+  "inference_time_s": 553.261,
+  "samples_per_sec": 34.7,
+  "total_words": 19188,
+  "predictions_file": "predictions_exp0_legacy_simple__20260310_030321.tsv"
+}

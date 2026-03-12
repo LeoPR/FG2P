@@ -1,0 +1,34 @@
+G2P LSTM Training Summary
+============================================================
+Experiment: exp101_baseline_60split_separators
+Run ID: 20260223_021119
+Full Name: exp101_baseline_60split_separators__20260223_021119
+Timestamp: 2026-02-23 06:50:57
+------------------------------------------------------------
+Device: cuda
+Embedding: learned
+Optimizer: adam
+Train/Val/Test Split: 60% / 10% / 30%
+------------------------------------------------------------
+Model: G2PLSTMModel | BiLSTM | emb=128 hidden=256 layers=2 dropout=0.50
+Total params: 4,322,988
+------------------------------------------------------------
+Train samples: 57,561
+Val samples: 9,594
+Test samples (held-out): 28,782
+Batch size: 64
+Learning rate: 0.001
+Epochs trained: 90
+------------------------------------------------------------
+Best val loss: 0.013607 (epoch 63)
+------------------------------------------------------------
+Total time: 16778.2s (279.6m)
+Avg epoch time: 186.4s
+Training speed (avg): 309 samples/s
+============================================================
+Generated files:
+  Model:    models/exp101_baseline_60split_separators.pt
+  History:  results/exp101_baseline_60split_separators_history.csv
+  Summary:  results/exp101_baseline_60split_separators_summary.txt
+
+Use 'python src/analyze.py' para gerar gráficos de convergência.

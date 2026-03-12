@@ -1,0 +1,25 @@
+{
+  "experiment": "exp7_lambda_mid_candidate_0.20__20260221_194037",
+  "timestamp": "2026-02-26T23:50:56.161926",
+  "training": {
+    "num_epochs": 95,
+    "throughput": {
+      "avg_samples_per_sec": 453.5449047992262,
+      "min_samples_per_sec": 453.5449047992262,
+      "max_samples_per_sec": 453.5449047992262
+    },
+    "best_epoch": 85,
+    "best_val_loss": 0.016927,
+    "best_train_loss": 0.019114,
+    "initial_train_loss": 0.671095,
+    "initial_val_loss": 0.098191,
+    "final_train_loss": 0.017746,
+    "final_val_loss": 0.01853,
+    "convergence_epoch_95percent": 27,
+    "gap_at_best": -0.002186999999999998,
+    "gap_at_final": 0.000784,
+    "overfitting": "[OK] Nenhum",
+    "last5_std": 0.001901
+  },
+  "test_metrics": {}
+}

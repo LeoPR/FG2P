@@ -1,0 +1,34 @@
+G2P LSTM Training Summary
+============================================================
+Experiment: exp0_training_regime
+Run ID: 20260311_125626
+Full Name: exp0_training_regime__20260311_125626
+Timestamp: 2026-03-11 22:48:06
+------------------------------------------------------------
+Device: cuda
+Embedding: learned
+Optimizer: adam
+Train/Val/Test Split: 70% / 10% / 20%
+------------------------------------------------------------
+Model: G2PLSTMModel | BiLSTM | emb=128 hidden=256 layers=2 dropout=0.50
+Total params: 4,321,963
+------------------------------------------------------------
+Train samples: 67,155
+Val samples: 9,594
+Test samples (held-out): 19,188
+Batch size: 36
+Learning rate: 0.001
+Epochs trained: 120
+------------------------------------------------------------
+Best val loss: 0.018412 (epoch 83)
+------------------------------------------------------------
+Total time: 35397.3s (590.0m)
+Avg epoch time: 295.0s
+Training speed (avg): 228 samples/s
+============================================================
+Generated files:
+  Model:    models/exp0_training_regime.pt
+  History:  results/exp0_training_regime_history.csv
+  Summary:  results/exp0_training_regime_summary.txt
+
+Use 'python src/inference.py' para avaliacao final no test set.

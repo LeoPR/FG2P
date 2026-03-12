@@ -1,0 +1,25 @@
+{
+  "experiment": "exp10_extended_distance_aware__20260222_112045",
+  "timestamp": "2026-02-26T23:50:57.605861",
+  "training": {
+    "num_epochs": 92,
+    "throughput": {
+      "avg_samples_per_sec": 433.5839518142217,
+      "min_samples_per_sec": 433.5839518142217,
+      "max_samples_per_sec": 433.5839518142217
+    },
+    "best_epoch": 82,
+    "best_val_loss": 0.017299,
+    "best_train_loss": 0.019129,
+    "initial_train_loss": 0.451407,
+    "initial_val_loss": 0.063828,
+    "final_train_loss": 0.019924,
+    "final_val_loss": 0.022165,
+    "convergence_epoch_95percent": 31,
+    "gap_at_best": -0.0018300000000000018,
+    "gap_at_final": 0.002241,
+    "overfitting": "[OK] Nenhum",
+    "last5_std": 0.0021989999999999996
+  },
+  "test_metrics": {}
+}

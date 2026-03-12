@@ -1,0 +1,124 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-03-10 20:17:29
+Predições: predictions_exp1_baseline_60split__20260309_202554.tsv
+Total: 28782 palavras | Corretas: 27204 | Erros: 1578
+Tempo análise: 6.15s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.64%
+WER:      5.48%
+Accuracy: 94.52%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.69%
+PER Ponderado: 0.34%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 269987 (98.94%)
+Classe B:   1057 ( 0.39%)
+Classe C:    358 ( 0.13%)
+Classe D:   1478 ( 0.54%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  27204 palavras (94.52%)
+Classe B:   1017 palavras (3.53%)
+Classe C:    267 palavras (0.93%)
+Classe D:    294 palavras (1.02%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.10 median=+0
+Truncated: 1 palavras
+Over-generated: 0 palavras
+Hallucinations: 3 palavras
+
+Top-10 Truncadas:
+  estadunidense-colombiana ref=22 pred=19 (Δ-3)
+
+Top-10 Alucinações:
+  pós-aposentadoria patterns=[bigram_loop:ɾ i ×2 (palavra: ×1, ref: ×1)]
+    pred: ˈ p ɔ s a p o z ẽ t a d o ɾ i ɾ i ə
+    ref:  ˈ p ɔ s a p o z ẽ t a d o ɾ i ə
+  expériences     patterns=[bigram_loop:ɪ s ×2 (palavra: ×1, ref: ×1)]
+    pred: e s ˈ p ɛ ɾ i ɪ s ɪ s
+    ref:  e s ˈ p ɛ ɾ i ẽ s ɪ s
+  dígito          patterns=[bigram_loop:ʒ i ×2 (palavra: ×1, ref: ×1)]
+    pred: ˈ d ʒ i ʒ i t ʊ
+    ref:  ˈ d i ʒ i t ʊ
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   e → ɛ       268  0.0417      B
+   ɛ → e       181  0.0417      B
+   ɔ → o       136  0.0417      B
+   i → e       116  0.0417      B
+   o → ɔ       114  0.0417      B
+   e → i        79  0.0417      B
+   ə → a        71  0.0833      C
+   a → ə        43  0.0833      C
+   s → <PAD>     33  0.8750      D
+<PAD> → s        32  0.8750      D
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  oroz            score=0.900  pred=o ˈ ɾ ɔ s  ref=ɔ ˈ ɾ o s
+  leonel          score=0.929  pred=l ɛ o ˈ n ɛ w  ref=l e o ˈ n e w
+  beecham         score=0.929  pred=b ɛ ˈ e ʃ ã ʊ̃  ref=b e ˈ ẽ ʃ ã ʊ̃
+  ilha            score=0.938  pred=ˈ i ʎ ə  ref=ˈ ĩ ʎ ə
+  ilê             score=0.938  pred=i ˈ l e  ref=i ˈ l ɛ
+  hijo            score=0.938  pred=ˈ i ʒ ʊ  ref=ˈ ĩ ʒ ʊ
+  iça             score=0.938  pred=ˈ i s ə  ref=ˈ ĩ s ə
+  hija            score=0.938  pred=ˈ i ʒ ə  ref=ˈ ĩ ʒ ə
+  guel            score=0.938  pred=ˈ ɡ ɛ w  ref=ˈ ɡ e w
+  olo             score=0.938  pred=ˈ ɔ l ʊ  ref=ˈ o l ʊ
+
+Classe C:
+  ias             score=0.750  pred=ˈ i ə s  ref=ˈ ĩ a s
+  nús             score=0.812  pred=ˈ n ʊ s  ref=ˈ n u s
+  oils            score=0.850  pred=ˈ ʊ ɪ w s  ref=ˈ o ɪ w s
+  iaque           score=0.850  pred=i ˈ a k ɪ  ref=i ˈ ə k ɪ
+  quba            score=0.850  pred=ˈ k u b ə  ref=ˈ k w b ə
+  toei            score=0.850  pred=t o ˈ e y  ref=t u ˈ e y
+  qubi            score=0.850  pred=k u ˈ b i  ref=k w ˈ b i
+  cotrim          score=0.875  pred=k u ˈ t ɾ ĩ  ref=k o ˈ t ɾ ĩ
+  iaundé          score=0.875  pred=i ə ũ ˈ d ɛ  ref=i a ũ ˈ d ɛ
+  iate            score=0.875  pred=i ˈ a t ʃ ɪ  ref=i ˈ ə t ʃ ɪ
+
+Classe D:
+  derülo          score=0.000  pred=ˈ d ɛ x z l ʊ  ref=d e ˈ ɾ k s l ʊ
+  hu              score=0.000  pred=ũ  ref=ˈ ʊ
+  abos            score=0.000  pred=ˈ a b ʊ s  ref=a b e ˈ ɔ s
+  unhcr           score=0.050  pred=ũ ũ k ɾ  ref=ˈ ʊ ɲ k ɾ
+  oxigenados      score=0.083  pred=o z i ʒ e ˈ n a d ʊ s  ref=o k s i ʒ e ˈ n a d ʊ s
+  oxigenado       score=0.091  pred=o z i ʒ e ˈ n a d ʊ  ref=o k s i ʒ e ˈ n a d ʊ
+  duailibi        score=0.100  pred=d ʒ u a y l i ˈ b i  ref=d u a y l i ˈ b i
+  duelaram        score=0.100  pred=d ʒ u e ˈ l a ɾ ã ʊ̃  ref=d u e ˈ l a ɾ ã ʊ̃
+  oxidado         score=0.111  pred=o ʃ i ˈ d a d ʊ  ref=o k s i ˈ d a d ʊ
+  ixtapa          score=0.125  pred=i s ˈ t a p ə  ref=i k s ˈ t a p ə
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   e → ɛ       268
+   ɛ → e       181
+   ɔ → o       136
+   i → e       116
+   o → ɔ       114
+   e → i        79
+   ə → a        71
+   a → ə        43
+   ˈ → e        28
+   e → ʃ        28
+   z → s        24
+   ĩ → i        24
+   a → ˈ        22
+   ẽ → e        21
+   ʃ → k        21

@@ -1,0 +1,124 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-03-10 20:18:56
+Predições: predictions_exp8_panphon_distance_aware__20260222_000737.tsv
+Total: 28782 palavras | Corretas: 27164 | Erros: 1618
+Tempo análise: 6.21s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.65%
+WER:      5.62%
+Accuracy: 94.38%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.63%
+PER Ponderado: 0.30%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 270105 (98.99%)
+Classe B:   1135 ( 0.42%)
+Classe C:    324 ( 0.12%)
+Classe D:   1302 ( 0.48%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  27164 palavras (94.38%)
+Classe B:   1094 palavras (3.80%)
+Classe C:    252 palavras (0.88%)
+Classe D:    272 palavras (0.95%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.09 median=+0
+Truncated: 1 palavras
+Over-generated: 0 palavras
+Hallucinations: 3 palavras
+
+Top-10 Truncadas:
+  absa            ref= 8 pred= 5 (Δ-3)
+
+Top-10 Alucinações:
+  am              patterns=[bigram_loop:ã ʊ̃ ×2 (palavra: ×1, ref: ×1)]
+    pred: ã ʊ̃ ã ʊ̃
+    ref:  ˈ ã ʊ̃
+  intíma          patterns=[bigram_loop:m ə ×2 (palavra: ×1, ref: ×1)]
+    pred: ĩ ˈ t i m ə m ə
+    ref:  ĩ ˈ t ĩ m ə
+  inter-étnicos   patterns=[bigram_loop:t ʃ ×2 (palavra: ×1, ref: ×1)]
+    pred: ĩ t e x ˈ t ʃ t ʃ i k ʊ s
+    ref:  ĩ t e x ˈ ɛ t ʃ n i k ʊ s
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   e → ɛ       252  0.0417      B
+   ɛ → e       209  0.0417      B
+   ɔ → o       147  0.0417      B
+   i → e       128  0.0417      B
+   o → ɔ       111  0.0417      B
+   e → i        79  0.0417      B
+   ə → a        74  0.0833      C
+   ĩ → i        70  0.0417      B
+<PAD> → s        36  0.8750      D
+   a → ə        34  0.0833      C
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  uíma            score=0.900  pred=u ˈ i m ə  ref=ũ ˈ ĩ m ə
+  uí              score=0.917  pred=u ˈ i  ref=ũ ˈ i
+  ilo             score=0.938  pred=ˈ i l ʊ  ref=ˈ ĩ l ʊ
+  ilha            score=0.938  pred=ˈ i ʎ ə  ref=ˈ ĩ ʎ ə
+  ilê             score=0.938  pred=i ˈ l e  ref=i ˈ l ɛ
+  hijo            score=0.938  pred=ˈ i ʒ ʊ  ref=ˈ ĩ ʒ ʊ
+  iça             score=0.938  pred=ˈ i s ə  ref=ˈ ĩ s ə
+  hiro            score=0.938  pred=ˈ i ɾ ʊ  ref=ˈ ĩ ɾ ʊ
+  neemias         score=0.938  pred=n e e ˈ m i ə s  ref=n ɛ i ˈ m i ə s
+  hija            score=0.938  pred=ˈ i ʒ ə  ref=ˈ ĩ ʒ ə
+
+Classe C:
+  oils            score=0.700  pred=ˈ ʊ y w s  ref=ˈ o ɪ w s
+  ias             score=0.750  pred=ˈ i ə s  ref=ˈ ĩ a s
+  hoa             score=0.750  pred=ˈ o ə  ref=ˈ o a
+  oa              score=0.750  pred=ˈ o ə  ref=ˈ o a
+  nús             score=0.812  pred=ˈ n ʊ s  ref=ˈ n u s
+  eas             score=0.812  pred=ˈ ɪ ə s  ref=ˈ ɪ a s
+  opõe            score=0.850  pred=o ˈ p õ ỹ  ref=u ˈ p õ ỹ
+  solá            score=0.850  pred=s o ˈ l a  ref=s u ˈ l a
+  quba            score=0.850  pred=ˈ k u b ə  ref=ˈ k w b ə
+  unhcr           score=0.850  pred=ˈ ũ ɲ k ɾ  ref=ˈ ʊ ɲ k ɾ
+
+Classe D:
+  absa            score=0.000  pred=ˈ a b s ə  ref=a b e ɛ s i ˈ a
+  abos            score=0.000  pred=ˈ a b ʊ s  ref=a b e ˈ ɔ s
+  am              score=0.000  pred=ã ʊ̃ ã ʊ̃  ref=ˈ ã ʊ̃
+  oxigenados      score=0.083  pred=o ʃ i ʒ e ˈ n a d ʊ s  ref=o k s i ʒ e ˈ n a d ʊ s
+  oxigenado       score=0.091  pred=o ʃ i ʒ e ˈ n a d ʊ  ref=o k s i ʒ e ˈ n a d ʊ
+  duailibi        score=0.100  pred=d ʒ u a y l i ˈ b i  ref=d u a y l i ˈ b i
+  duelaram        score=0.100  pred=d ʒ u e ˈ l a ɾ ã ʊ̃  ref=d u e ˈ l a ɾ ã ʊ̃
+  axumita         score=0.111  pred=a ʃ u ˈ m i t ə  ref=a k s u ˈ m i t ə
+  axonal          score=0.125  pred=a ʃ o ˈ n a w  ref=a k s o ˈ n a w
+  ixtapa          score=0.125  pred=i s ˈ t a p ə  ref=i k s ˈ t a p ə
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   e → ɛ       252
+   ɛ → e       209
+   ɔ → o       147
+   i → e       128
+   o → ɔ       111
+   e → i        79
+   ə → a        74
+   ĩ → i        70
+   a → ə        34
+   u → o        25
+   ʃ → k        25
+   z → s        24
+   o → õ        22
+   a → ˈ        21
+   ẽ → e        18

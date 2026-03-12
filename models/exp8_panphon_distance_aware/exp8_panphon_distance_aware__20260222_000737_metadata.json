@@ -1,0 +1,133 @@
+{
+  "experiment_name": "exp8_panphon_distance_aware",
+  "run_id": "20260222_000737",
+  "full_name": "exp8_panphon_distance_aware__20260222_000737",
+  "timestamp": "2026-02-22 02:47:03",
+  "current_epoch": 65,
+  "total_epochs": 120,
+  "config": {
+    "description": "Exp8 — PanPhon + Distance-Aware Loss (λ optimal) — SINERGIA FONÉTICA",
+    "data": {
+      "source": "dicts/pt-br.tsv",
+      "train_ratio": 0.6,
+      "val_ratio": 0.1,
+      "test_ratio": 0.3,
+      "split_seed": 42,
+      "note": "Mesma estratificação Exp1/Exp3/Exp6 para comparação direta"
+    },
+    "model": {
+      "embedding_type": "panphon",
+      "emb_dim": 128,
+      "hidden_dim": 256,
+      "num_layers": 2,
+      "dropout": 0.5,
+      "note": "PanPhon 24D trainable (Exp3) + Distance-Aware Loss (Exp6) → SINERGIA FONÉTICA"
+    },
+    "training": {
+      "fit_method": "adam",
+      "epochs": 120,
+      "warmup_epochs": 80,
+      "batch_size": 64,
+      "lr": 0.001,
+      "early_stopping_patience": 10,
+      "weight_decay": 1e-05,
+      "loss": {
+        "type": "distance_aware",
+        "config": {
+          "distance_lambda": 0.1,
+          "distance_metric": "euclidean",
+          "normalize_distance": true
+        },
+        "note": "λ=OPTIMAL from Exp7 (update after lambda sweep completes); default 0.10 se Exp7 confirma"
+      }
+    },
+    "experiment": {
+      "name": "exp8_panphon_distance_aware",
+      "purpose": "Testar SINERGIA FONÉTICA: Features articulatórias (PanPhon) + Loss fonético (Distance-Aware) AMPLIFICAM?",
+      "hypothesis": "PanPhon embeddings + Distance-Aware Loss combinam SINERGICAMENTE (não apenas aditivamente) → PER_weighted <0.25%, Classe D <0.40%",
+      "compared_with": [
+        "exp1: Baseline (learned + CE) → PER 0.66%, PER_w 0.30%, Classe D 0.52%",
+        "exp3: PanPhon + CE → PER 0.66%, PER_w 0.28%, Classe D 0.48% (qualitativo melhor)",
+        "exp6: Learned + Distance → PER 0.63%, PER_w ?, Classe D ? (quantitativo melhor)",
+        "exp1+exp3+exp6: Se exp8 >> exp3 E exp8 >> exp6 → SINERGIA CONFIRMADA ✓✓✓"
+      ],
+      "expected_metrics": {
+        "per_estimate": "~0.60-0.63%",
+        "wer_estimate": "~5.2-5.4%",
+        "accuracy_estimate": "~94.6-94.8%",
+        "per_weighted_estimate": "<0.25% (MELHOR QUE QUALQUER EXP ATUAL)",
+        "class_d_estimate": "<0.40% (menos erros grotescos)",
+        "note": "Expected: PER competitivo + PER_weighted SOTA qualitativo"
+      },
+      "training_time_estimate": "~4.7h (GPU CUDA, mesma capacity Exp3/Exp6)",
+      "total_params": "~4.3M (similar Exp3/Exp6)",
+      "notes": [
+        "✓✓✓ HIGHEST SCIENTIFIC VALUE: Testa hipótese NÃO-ÓBVIA (sinergia fonética)",
+        "✓ Se funcionar: Novo SOTA QUALITATIVO (erros mais inteligentes que TODOS exp1-6)",
+        "✓ Se não funcionar: Features + loss são ADITIVOS, não amplificativos",
+        "⚠ CRITICAL TEST: Exp8 PER_weighted < 0.25% confirma sinergia",
+        "⚠ ALTERNATIVE: Exp8 PER_weighted ≈ 0.27% → features e loss independentes",
+        "📊 Métricas graduadas ESSENCIAIS: Run analyze_errors.py imediatamente após inferência",
+        "🎯 Se Exp8 melhor qualitativo: PanPhon + Distance = novo baseline produção TTS"
+      ]
+    }
+  },
+  "best_loss": 0.01816859269204239,
+  "training_completed": true,
+  "device": "cuda",
+  "total_params": 4319659,
+  "dataset": {
+    "dict_path": "C:\\Users\\leona\\OneDrive\\Documents\\Projects\\Acadêmicos\\FG2P\\dicts\\pt-br.tsv",
+    "dict_checksum": "b8489fb29248c4bf",
+    "total_words": 95937,
+    "train_size": 57561,
+    "val_size": 9594,
+    "test_size": 28782,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "seed": 42,
+    "char_vocab_size": 39,
+    "phoneme_vocab_size": 43,
+    "stratified": true,
+    "strata_count": 34,
+    "jsd": {
+      "stress_type": 8.699212385781255e-06,
+      "syllable_bin": 2.9213040122309385e-09,
+      "length_bin": 2.0727946563596256e-09,
+      "ratio_bin": 1.2067153411187987e-05
+    },
+    "chi2_pvalue": {
+      "stress_type": 0.9733659313544308,
+      "syllable_bin": 0.9998446073007422,
+      "length_bin": 0.9999991289300925,
+      "ratio_bin": 0.7291419932660215
+    },
+    "cramers_v": {
+      "stress_type": 0.002409752535975174,
+      "syllable_bin": 5.999756276281242e-05,
+      "length_bin": 5.054064101672567e-05,
+      "ratio_bin": 0.003880179675554137
+    },
+    "verdict": {
+      "quality": "excelente",
+      "confidence": "alta",
+      "any_chi2_significant": false,
+      "bonferroni_alpha": 0.0125,
+      "min_pvalue": 0.7291419932660215,
+      "max_cramers_v": 0.003880179675554137
+    },
+    "train_phoneme_coverage": 1.0,
+    "val_phoneme_coverage": 1.0,
+    "train_bigram_coverage": 0.9513314967860422,
+    "val_bigram_coverage": 0.7796143250688705
+  },
+  "loss_type": "distance_aware",
+  "loss_config": {
+    "distance_lambda": 0.1,
+    "distance_metric": "euclidean",
+    "normalize_distance": true
+  },
+  "final_epoch": 90,
+  "total_time_seconds": 13196.513411299995,
+  "avg_epoch_time": 146.62792679222215
+}

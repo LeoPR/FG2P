@@ -1,0 +1,51 @@
+{
+  "description": "Exp104c: Better handling of structural tokens (. and ') with increased model capacity",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "stratify": true,
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 256,
+    "hidden_dim": 512,
+    "num_layers": 2,
+    "dropout": 0.50,
+    "note": "Increased capacity vs exp104b (emb 192→256, hidden 384→512) for better contextual disambiguation of structural tokens"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 96,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "note": "Larger batch size (64→96) for better gradient stability with rare tokens"
+  },
+  "experiment": {
+    "name": "exp104c_structural_tokens",
+    "purpose": "Handle . ↔ ˈ ↔ <PAD> confusions with increased model capacity + better gradient flow",
+    "compared_with": [
+      "exp104b: 0.51% PER (0.90% Class D) - baseline with structural token issues",
+      "exp1: 0.64% PER (1.02% Class D) - pure baseline without DA Loss"
+    ],
+    "hypothesis": "Larger LSTM hidden state allows better contextual understanding of structural tokens (syllable markers, stress markers), reducing confusions. Target: 0.48-0.50% PER with 0.75-0.80% Class D.",
+    "expected_improvements": [
+      "Reduce . ↔ ˈ confusions from 59→30-40",
+      "Reduce a ↔ . confusions from 57→30-40",
+      "Reduce s ↔ <PAD> confusions from 52→20-30",
+      "Overall PER: 0.51% → ~0.48-0.50%"
+    ],
+    "key_changes": [
+      "emb_dim: 192 → 256",
+      "hidden_dim: 384 → 512",
+      "batch_size: 64 → 96",
+      "Same DA Loss (λ=0.20), same architecture (BiLSTM 2 layers)"
+    ]
+  }
+}

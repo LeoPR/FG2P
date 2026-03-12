@@ -1,0 +1,54 @@
+{
+  "description": "Controle Tier 2: mesmo regime legacy (batch=36, sem early stop) com split ESTRATIFICADO",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.7,
+    "val_ratio": 0.1,
+    "test_ratio": 0.2,
+    "split_seed": 42,
+    "stratify": true,
+    "note": "MUDA vs legacy (stratify=false): agora estratificado. Tudo mais igual.",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Identico ao exp0_legacy_simple e exp0_baseline_70split (4.3M params)"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 36,
+    "lr": 0.001,
+    "early_stopping_patience": 999,
+    "weight_decay": 1e-05,
+    "note": "IGUAL ao legacy: batch=36, patience=999 (sem early stop efetivo)"
+  },
+  "experiment": {
+    "name": "exp0_training_regime",
+    "purpose": "Isolar efeito do regime de treino: batch=36 + sem early stop COM split estratificado",
+    "hypothesis": "Se PER ~0.38%: regime de treino explica o resultado do legacy (split nao importa). Se PER ~0.55-0.60%: fatores adicionais em jogo.",
+    "compared_with": [
+      "exp0_legacy_simple: mesmo regime, mas stratify=false (split nao estratificado)",
+      "exp0_baseline_70split: mesmo split estratificado, mas batch=96 e early_stop=10"
+    ],
+    "prediction": {
+      "if_per_lt_0.45": "CONFIRMA hipotese: regime de treino e a causa do 0.38%. Split bias descartado.",
+      "if_per_gt_0.50": "INCONCLUSIVO: regime nao basta. Considerar Tier 3 (multi-seed) ou outros fatores."
+    },
+    "expected_metrics": {
+      "per_estimate": "~0.38-0.45% (se regime e causa) ou ~0.55-0.60% (se split bias)",
+      "wer_estimate": "~3.5-5.5%"
+    },
+    "training_time_estimate": "~20-25h (GPU CUDA, mais que exp0_baseline por mais updates/epoch)",
+    "notes": [
+      "Este e o experimento CRITICO do Tier 2 do plano de validacao cientifica",
+      "total_updates esperado: floor(67155/36) * 120 = 223,800 (identico ao legacy)",
+      "Se este exp igualar o legacy, prova que stratify=false nao foi o fator decisivo"
+    ]
+  }
+}

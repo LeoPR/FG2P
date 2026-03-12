@@ -1,0 +1,55 @@
+{
+  "description": "Exp5 — Intermediate LSTM (60/10/30 split, 1.5x neurons: 192 emb / 384 hidden)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Split 60/10/30 — MESMO que exp1/exp2 para comparação isolada de capacity",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 192,
+    "hidden_dim": 384,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "1.5x CAPACITY: emb 128→192, hidden 256→384 — intermediário entre exp1 (baseline) e exp2 (2x)",
+    "total_params_estimate": "~9.7M"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05
+  },
+  "experiment": {
+    "name": "exp5_intermediate_60split",
+    "purpose": "Testar se capacity intermediária (1.5x) compensa dados limitados (60%) — sweet spot entre exp1 e exp2",
+    "hypothesis": "Aumentar moderadamente capacity (50%) pode dar melhor ROI que doubling (exp2) com menos risco de overfitting",
+    "compared_with": [
+      "exp1: mesma split 60/10/30, metade capacity (4.3M) → baseline de referência",
+      "exp2: mesma split 60/10/30, double capacity (17M) → limite superior",
+      "exp0: split 70/10/20, mesma capacity exp1 → efeito de split vs capacity"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.60-0.64%",
+      "wer_estimate": "~5.1-5.4%",
+      "accuracy_estimate": "~94.4-94.6%"
+    },
+    "training_time_estimate": "~16-22h (GPU CUDA, intermediário entre exp1 e exp2)",
+    "notes": [
+      "✓ CAPACITY SWEEP: Preenche gap entre exp1 (4.3M) e exp2 (17M) params",
+      "⚠ Expectativa: exp1 < exp5 < exp2 em performance SE capacity é fator limitante",
+      "⚠ Alternativa: exp5 ≈ exp1 SE 60% dados já saturam modelo baseline",
+      "→ Resultado esperado: se exp5 >> exp1 e exp5 ≈ exp2 → 192D embeddings são suficientes",
+      "→ Se exp5 ≈ exp1 < exp2 → mais dados (exp0) importa mais que capacity moderada",
+      "📊 Análise de scaling: determina se curva params vs PER é linear ou saturada",
+      "🎯 Trade-off prático: exp5 treina 20% mais rápido que exp2 com performance similar"
+    ]
+  }
+}

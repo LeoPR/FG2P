@@ -1,0 +1,65 @@
+{
+  "description": "Exp7 — Lambda Lower Bound 0.05 (Distance-Aware Loss)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Mesma estratificação Exp1/Exp6 para comparação direta",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Arquitetura IDÊNTICA Exp1/Exp6; única variação é lambda"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.05,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "λ=0.05 (BAIXO) — testa se loss fonético precisa ser agressivo"
+    }
+  },
+  "experiment": {
+    "name": "exp7_lambda_lower_bound_0.05",
+    "purpose": "Otimizar hiperparâmetro λ (distância fonética weight) — variant LOW",
+    "hypothesis": "λ=0.05 pode ser insuficiente; esperado PER ~0.64-0.65% (pior que Exp6 0.63%)",
+    "compared_with": [
+      "exp6: λ=0.1 (baseline empírico)",
+      "exp7_anchor_baseline: λ=0.10",
+      "exp7_mid_candidate: λ=0.20",
+      "exp7_upper_bound: λ=0.50"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.64-0.65%",
+      "wer_estimate": "~5.4-5.6%",
+      "accuracy_estimate": "~94.4-94.5%",
+      "note": "Expected PIOR que Exp6 (λ muito baixo = pouco peso fonético)"
+    },
+    "training_time_estimate": "~4.7h (GPU CUDA, mesma arquitetura Exp6)",
+    "total_params": "4,321,963 (idêntico Exp1/Exp6)",
+    "notes": [
+      "✓ HYPERPARAMETER OPTIMIZATION: Sweep λ para encontrar optimal weight",
+      "✓ Busca adaptativa: extremos primeiro, refino condicional",
+      "✓ Exp7 adaptativo = 2-3 runs × 4.7h = ~9.4h a ~14.1h GPU",
+      "⚠ Se λ=0.05 < Exp6: confirma que 0.1 melhor",
+      "⚠ Se λ=0.05 ≈ Exp6: loss fonético saturado cedo",
+      "📊 Análise: Curva λ vs PER/WER/Classe D → optimal λ documentado"
+    ]
+  }
+}

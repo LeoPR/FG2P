@@ -1,0 +1,25 @@
+{
+  "experiment": "exp11_baseline_decomposed__20260222_201314",
+  "timestamp": "2026-02-26T23:50:58.046258",
+  "training": {
+    "num_epochs": 90,
+    "throughput": {
+      "avg_samples_per_sec": 366.52137890934466,
+      "min_samples_per_sec": 366.52137890934466,
+      "max_samples_per_sec": 366.52137890934466
+    },
+    "best_epoch": 62,
+    "best_val_loss": 0.019048,
+    "best_train_loss": 0.026553,
+    "initial_train_loss": 0.571558,
+    "initial_val_loss": 0.086136,
+    "final_train_loss": 0.026605,
+    "final_val_loss": 0.019602,
+    "convergence_epoch_95percent": 24,
+    "gap_at_best": -0.007505000000000001,
+    "gap_at_final": -0.007002999999999999,
+    "overfitting": "[OK] Nenhum",
+    "last5_std": 0.005933999999999998
+  },
+  "test_metrics": {}
+}

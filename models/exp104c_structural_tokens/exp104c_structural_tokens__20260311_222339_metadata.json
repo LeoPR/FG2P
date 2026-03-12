@@ -1,0 +1,115 @@
+{
+  "experiment_name": "exp104c_structural_tokens",
+  "run_id": "20260311_222339",
+  "full_name": "exp104c_structural_tokens__20260311_222339",
+  "timestamp": "2026-03-12 01:11:56",
+  "current_epoch": 89,
+  "total_epochs": 120,
+  "config": {
+    "description": "Exp104c: Better handling of structural tokens (. and ') with increased model capacity",
+    "data": {
+      "source": "dicts/pt-br.tsv",
+      "train_ratio": 0.6,
+      "val_ratio": 0.1,
+      "test_ratio": 0.3,
+      "split_seed": 42,
+      "stratify": true,
+      "grapheme_encoding": "raw"
+    },
+    "model": {
+      "embedding_type": "learned",
+      "emb_dim": 256,
+      "hidden_dim": 512,
+      "num_layers": 2,
+      "dropout": 0.5,
+      "note": "Increased capacity vs exp104b (emb 192→256, hidden 384→512) for better contextual disambiguation of structural tokens"
+    },
+    "training": {
+      "fit_method": "adam",
+      "epochs": 120,
+      "warmup_epochs": 80,
+      "batch_size": 96,
+      "lr": 0.001,
+      "early_stopping_patience": 10,
+      "weight_decay": 1e-05,
+      "note": "Larger batch size (64→96) for better gradient stability with rare tokens"
+    },
+    "experiment": {
+      "name": "exp104c_structural_tokens",
+      "purpose": "Handle . ↔ ˈ ↔ <PAD> confusions with increased model capacity + better gradient flow",
+      "compared_with": [
+        "exp104b: 0.51% PER (0.90% Class D) - baseline with structural token issues",
+        "exp1: 0.64% PER (1.02% Class D) - pure baseline without DA Loss"
+      ],
+      "hypothesis": "Larger LSTM hidden state allows better contextual understanding of structural tokens (syllable markers, stress markers), reducing confusions. Target: 0.48-0.50% PER with 0.75-0.80% Class D.",
+      "expected_improvements": [
+        "Reduce . ↔ ˈ confusions from 59→30-40",
+        "Reduce a ↔ . confusions from 57→30-40",
+        "Reduce s ↔ <PAD> confusions from 52→20-30",
+        "Overall PER: 0.51% → ~0.48-0.50%"
+      ],
+      "key_changes": [
+        "emb_dim: 192 → 256",
+        "hidden_dim: 384 → 512",
+        "batch_size: 64 → 96",
+        "Same DA Loss (λ=0.20), same architecture (BiLSTM 2 layers)"
+      ]
+    }
+  },
+  "best_loss": 0.016269193054176866,
+  "training_completed": true,
+  "device": "cuda",
+  "total_params": 17163563,
+  "dataset": {
+    "dict_path": "C:\\Users\\leona\\OneDrive\\Documents\\Projects\\Acadêmicos\\FG2P\\dicts\\pt-br.tsv",
+    "dict_checksum": "26e824a30f373673",
+    "grapheme_encoding": "raw",
+    "keep_syllable_separators": false,
+    "total_words": 95937,
+    "train_size": 57561,
+    "val_size": 9594,
+    "test_size": 28782,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "seed": 42,
+    "char_vocab_size": 39,
+    "phoneme_vocab_size": 43,
+    "stratified": true,
+    "strata_count": 34,
+    "jsd": {
+      "stress_type": 8.699212385781257e-06,
+      "syllable_bin": 2.9213040122309385e-09,
+      "length_bin": 2.0727946563596256e-09,
+      "ratio_bin": 1.2067153411187987e-05
+    },
+    "chi2_pvalue": {
+      "stress_type": 0.9733659313544308,
+      "syllable_bin": 0.9998446073007422,
+      "length_bin": 0.9999991289300925,
+      "ratio_bin": 0.7291419932660215
+    },
+    "cramers_v": {
+      "stress_type": 0.002409752535975174,
+      "syllable_bin": 5.999756276281242e-05,
+      "length_bin": 5.054064101672567e-05,
+      "ratio_bin": 0.003880179675554137
+    },
+    "verdict": {
+      "quality": "excelente",
+      "confidence": "alta",
+      "any_chi2_significant": false,
+      "bonferroni_alpha": 0.0125,
+      "min_pvalue": 0.7291419932660215,
+      "max_cramers_v": 0.003880179675554137
+    },
+    "train_phoneme_coverage": 1.0,
+    "val_phoneme_coverage": 1.0,
+    "train_bigram_coverage": 0.9513314967860422,
+    "val_bigram_coverage": 0.7796143250688705
+  },
+  "loss_type": "cross_entropy",
+  "loss_config": {},
+  "final_epoch": 99,
+  "total_time_seconds": 11157.727103200043,
+  "avg_epoch_time": 112.7043141737378
+}

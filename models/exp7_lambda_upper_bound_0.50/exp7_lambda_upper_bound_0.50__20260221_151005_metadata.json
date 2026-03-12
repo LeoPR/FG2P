@@ -1,0 +1,129 @@
+{
+  "experiment_name": "exp7_lambda_upper_bound_0.50",
+  "run_id": "20260221_151005",
+  "full_name": "exp7_lambda_upper_bound_0.50__20260221_151005",
+  "timestamp": "2026-02-21 18:04:44",
+  "current_epoch": 73,
+  "total_epochs": 120,
+  "config": {
+    "description": "Exp7 — Lambda Upper Bound 0.50 (Distance-Aware Loss boundary)",
+    "data": {
+      "source": "dicts/pt-br.tsv",
+      "train_ratio": 0.6,
+      "val_ratio": 0.1,
+      "test_ratio": 0.3,
+      "split_seed": 42,
+      "note": "Mesma estratificação Exp1/Exp6 para comparação direta"
+    },
+    "model": {
+      "embedding_type": "learned",
+      "emb_dim": 128,
+      "hidden_dim": 256,
+      "num_layers": 2,
+      "dropout": 0.5,
+      "note": "Arquitetura IDÊNTICA Exp1/Exp6; única variação é lambda"
+    },
+    "training": {
+      "fit_method": "adam",
+      "epochs": 120,
+      "warmup_epochs": 80,
+      "batch_size": 64,
+      "lr": 0.001,
+      "early_stopping_patience": 10,
+      "weight_decay": 1e-05,
+      "loss": {
+        "type": "distance_aware",
+        "config": {
+          "distance_lambda": 0.5,
+          "distance_metric": "euclidean",
+          "normalize_distance": true
+        },
+        "note": "λ=0.50 (VERY HIGH) — testa saturação/overfitting de loss fonético"
+      }
+    },
+    "experiment": {
+      "name": "exp7_lambda_upper_bound_0.50",
+      "purpose": "Otimizar hiperparâmetro λ — variant VERY HIGH (explorar limite superior)",
+      "hypothesis": "λ=0.50 provavelmente TOO HIGH → overweights distância, piora PER; expected ~0.67-0.70%",
+      "compared_with": [
+        "exp6: λ=0.1 (baseline empírico)",
+        "exp7_lower_bound: λ=0.05",
+        "exp7_anchor_baseline: λ=0.10",
+        "exp7_mid_candidate: λ=0.20"
+      ],
+      "expected_metrics": {
+        "per_estimate": "~0.67-0.70%",
+        "wer_estimate": "~5.7-6.0%",
+        "accuracy_estimate": "~94.0-94.3%",
+        "note": "Expected PIOR que Exp6 (λ muito alto = overfitting distância fonética)"
+      },
+      "training_time_estimate": "~4.7h (GPU CUDA, mesma arquitetura Exp6)",
+      "total_params": "4,321,963 (idêntico Exp1/Exp6)",
+      "notes": [
+        "✓ BOUNDARY TEST: Define limite superior de λ útil",
+        "⚠ Expected: λ=0.5 piora performance (too much phonetic weight)",
+        "⚠ Se λ=0.5 < Exp6: confirma optimal λ ∈ [0.1, 0.2]",
+        "⚠ Se λ=0.5 ≈ Exp6: loss fonético saturado (improvável)",
+        "📊 Análise: Curva em U invertido → optimal λ documentado para Exp8-10"
+      ]
+    }
+  },
+  "best_loss": 0.01825953655100117,
+  "training_completed": true,
+  "device": "cuda",
+  "total_params": 4321963,
+  "dataset": {
+    "dict_path": "C:\\Users\\leona\\OneDrive\\Documents\\Projects\\Acadêmicos\\FG2P\\dicts\\pt-br.tsv",
+    "dict_checksum": "b8489fb29248c4bf",
+    "total_words": 95937,
+    "train_size": 57561,
+    "val_size": 9594,
+    "test_size": 28782,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "seed": 42,
+    "char_vocab_size": 39,
+    "phoneme_vocab_size": 43,
+    "stratified": true,
+    "strata_count": 34,
+    "jsd": {
+      "stress_type": 8.699212385781255e-06,
+      "syllable_bin": 2.9213040122298797e-09,
+      "length_bin": 2.0727946563596256e-09,
+      "ratio_bin": 1.2067153411187987e-05
+    },
+    "chi2_pvalue": {
+      "stress_type": 0.9733659313544308,
+      "syllable_bin": 0.9998446073007422,
+      "length_bin": 0.9999991289300925,
+      "ratio_bin": 0.7291419932660215
+    },
+    "cramers_v": {
+      "stress_type": 0.002409752535975174,
+      "syllable_bin": 5.999756276281242e-05,
+      "length_bin": 5.054064101672567e-05,
+      "ratio_bin": 0.003880179675554137
+    },
+    "verdict": {
+      "quality": "excelente",
+      "confidence": "alta",
+      "any_chi2_significant": false,
+      "bonferroni_alpha": 0.0125,
+      "min_pvalue": 0.7291419932660215,
+      "max_cramers_v": 0.003880179675554137
+    },
+    "train_phoneme_coverage": 1.0,
+    "val_phoneme_coverage": 1.0,
+    "train_bigram_coverage": 0.9513314967860422,
+    "val_bigram_coverage": 0.7796143250688705
+  },
+  "loss_type": "distance_aware",
+  "loss_config": {
+    "distance_lambda": 0.5,
+    "distance_metric": "euclidean",
+    "normalize_distance": true
+  },
+  "final_epoch": 90,
+  "total_time_seconds": 12925.689283,
+  "avg_epoch_time": 143.61876981111112
+}

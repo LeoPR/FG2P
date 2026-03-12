@@ -1,0 +1,52 @@
+{
+  "description": "Exp0 LEGACY — Baseline original ANTES de técnicas modernas (splits burro, batch pequeno, sem early stop)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.7,
+    "val_ratio": 0.1,
+    "test_ratio": 0.2,
+    "split_seed": 42,
+    "stratify": false,
+    "note": "Split SIMPLES (não estratificado) — reproduz comportamento original pré-2026-02",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Exatamente igual ao baseline moderno — apenas treino diferente",
+    "total_params_measured": "4,321,963"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 36,
+    "lr": 0.001,
+    "early_stopping_patience": 999,
+    "weight_decay": 1e-05,
+    "batch_sampling_note": "Reduzido para 36 (batch size original pré-2026-03) para reproduzir comportamento antigo"
+  },
+  "experiment": {
+    "name": "exp0_legacy_simple",
+    "purpose": "Referência histórica — baseline SEM técnicas modernas para comparação com exp0 novo",
+    "hypothesis": "Split simples + batch pequeno (36) + sem early stop → pior performance vs exp0 moderno",
+    "compared_with": [
+      "exp0_baseline_70split: mesmo modelo, mas com stratified split, batch=96, early_stop=10"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~1.0-1.2%",
+      "wer_estimate": "~8-9%",
+      "accuracy_estimate": "~91%"
+    },
+    "training_time_estimate": "~15-20h (GPU CUDA)",
+    "notes": [
+      "LEGACY: Esta é a versão ANTES de otimizações",
+      "Split simples = sem controle de estrata",
+      "Batch=36 = mais atualizações, maior variância",
+      "Early stop=999 = sem early stopping efetivo"
+    ]
+  }
+}

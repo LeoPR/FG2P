@@ -1,0 +1,51 @@
+{
+  "description": "Exp101 — Baseline LSTM (60/10/30) + Syllable Separators (control test)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "note": "Replica do Exp1 com separadores de sílaba ativos (controle direto)",
+    "grapheme_encoding": "raw",
+    "keep_syllable_separators": true
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 128,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Baseline Exp1 (4.3M params) — isola efeito de separadores",
+    "total_params_measured": "4,321,963"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05
+  },
+  "experiment": {
+    "name": "exp101_baseline_60split_separators",
+    "purpose": "Medir impacto direto dos separadores de sílaba mantendo a arquitetura e split do Exp1",
+    "hypothesis": "Separadores podem melhorar alinhamento fonético, mas aumentam sequência (+30%)",
+    "compared_with": [
+      "exp1: baseline raw sem separadores",
+      "exp11: decomposed + separadores (mede efeito combinado)"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.65-0.68%",
+      "wer_estimate": "~5.6-5.9%",
+      "accuracy_estimate": "~94.1-94.4%"
+    },
+    "training_time_estimate": "~4h (GPU CUDA)",
+    "notes": [
+      "Controle direto do BUG 2: separadores ligados, sem mexer em encoding",
+      "Se exp101 > exp1: separadores ajudam mesmo com raw",
+      "Se exp101 < exp1: separadores aumentam complexidade sem ganho"
+    ]
+  }
+}

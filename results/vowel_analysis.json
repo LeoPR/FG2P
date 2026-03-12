@@ -1,0 +1,395 @@
+{
+  "metadata": {
+    "analysis_date": "2026-02-26",
+    "corpus_size": 95937,
+    "phenomenon": "Neutralização vocálica PT-BR: e ↔ ɛ em sílabas átonas"
+  },
+  "bigram_patterns": {
+    "t": {
+      "e": 1540,
+      "ɛ": 317
+    },
+    "as": {
+      "e": 2899,
+      "ɛ": 580
+    },
+    "s": {
+      "e": 1412,
+      "ɛ": 144
+    },
+    "em": {
+      "ɛ": 152,
+      "e": 696
+    },
+    "am": {
+      "e": 1358,
+      "ɛ": 98
+    },
+    "ia": {
+      "e": 1385,
+      "ɛ": 186
+    },
+    "eu": {
+      "e": 313,
+      "ɛ": 54
+    },
+    "da": {
+      "e": 1172,
+      "ɛ": 31
+    },
+    "ca": {
+      "e": 428,
+      "ɛ": 255
+    },
+    "de": {
+      "e": 390,
+      "ɛ": 15
+    },
+    "b": {
+      "e": 420,
+      "ɛ": 90
+    },
+    "z": {
+      "e": 284,
+      "ɛ": 47
+    },
+    "d": {
+      "e": 2439,
+      "ɛ": 86
+    },
+    "el": {
+      "ɛ": 53,
+      "e": 766
+    },
+    "ra": {
+      "ɛ": 132,
+      "e": 854
+    },
+    "ba": {
+      "e": 47,
+      "ɛ": 4
+    },
+    "la": {
+      "ɛ": 93,
+      "e": 140
+    },
+    "ha": {
+      "e": 121,
+      "ɛ": 59
+    },
+    "na": {
+      "e": 395,
+      "ɛ": 41
+    },
+    "je": {
+      "ɛ": 4,
+      "e": 5
+    },
+    "es": {
+      "e": 1054,
+      "ɛ": 136
+    },
+    "te": {
+      "e": 692,
+      "ɛ": 95
+    },
+    "ta": {
+      "ɛ": 92,
+      "e": 499
+    },
+    "n": {
+      "e": 757,
+      "ɛ": 181
+    },
+    "l": {
+      "e": 1005,
+      "ɛ": 255
+    },
+    "ea": {
+      "e": 50,
+      "ɛ": 22
+    },
+    "sa": {
+      "e": 250,
+      "ɛ": 27
+    },
+    "er": {
+      "e": 272,
+      "ɛ": 15
+    },
+    "v": {
+      "e": 658,
+      "ɛ": 82
+    },
+    "ei": {
+      "e": 55
+    },
+    "al": {
+      "e": 278,
+      "ɛ": 11
+    },
+    "ar": {
+      "e": 908,
+      "ɛ": 17
+    },
+    "se": {
+      "e": 96,
+      "ɛ": 12
+    },
+    "va": {
+      "e": 391,
+      "ɛ": 13
+    },
+    "re": {
+      "e": 10,
+      "ɛ": 6
+    },
+    "m": {
+      "e": 929,
+      "ɛ": 178
+    },
+    "ga": {
+      "e": 98,
+      "ɛ": 36
+    },
+    "pe": {
+      "e": 33,
+      "ɛ": 9
+    },
+    "za": {
+      "e": 132,
+      "ɛ": 7
+    },
+    "oa": {
+      "e": 27,
+      "ɛ": 1
+    },
+    "ez": {
+      "e": 10,
+      "ɛ": 3
+    },
+    "ɡ": {
+      "e": 110,
+      "ɛ": 15
+    },
+    "ʎ": {
+      "e": 60,
+      "ɛ": 5
+    },
+    "he": {
+      "ɛ": 2,
+      "e": 4
+    },
+    "ça": {
+      "e": 89,
+      "ɛ": 8
+    },
+    "ce": {
+      "e": 12,
+      "ɛ": 6
+    },
+    "ma": {
+      "e": 69,
+      "ɛ": 16
+    },
+    "ua": {
+      "ɛ": 5,
+      "e": 14
+    },
+    "f": {
+      "ɛ": 57,
+      "e": 538
+    },
+    "ne": {
+      "e": 6,
+      "ɛ": 4
+    },
+    "p": {
+      "e": 1239,
+      "ɛ": 159
+    },
+    "eí": {
+      "e": 5
+    },
+    "k": {
+      "e": 297,
+      "ɛ": 26
+    },
+    "az": {
+      "e": 18,
+      "ɛ": 2
+    },
+    "ue": {
+      "ɛ": 8,
+      "e": 7
+    },
+    "pa": {
+      "e": 25,
+      "ɛ": 5
+    },
+    "xa": {
+      "e": 19,
+      "ɛ": 7
+    },
+    "ja": {
+      "e": 37,
+      "ɛ": 15
+    },
+    "eo": {
+      "e": 44,
+      "ɛ": 8
+    },
+    "le": {
+      "ɛ": 3,
+      "e": 8
+    },
+    "fe": {
+      "e": 3,
+      "ɛ": 3
+    },
+    "ve": {
+      "e": 14,
+      "ɛ": 3
+    },
+    "me": {
+      "e": 15,
+      "ɛ": 2
+    },
+    "en": {
+      "e": 5,
+      "ɛ": 2
+    },
+    "fa": {
+      "e": 13,
+      "ɛ": 3
+    },
+    "ax": {
+      "e": 8
+    },
+    "ex": {
+      "e": 4,
+      "ɛ": 1
+    }
+  },
+  "stress_position_analysis": {
+    "pre_tonic": {
+      "e": 38147,
+      "ɛ": 1535
+    },
+    "tonic": {
+      "ɛ": 836,
+      "e": 275
+    },
+    "post_tonic": {
+      "e": 6754,
+      "ɛ": 4139
+    },
+    "unstressed": {
+      "e": 1
+    }
+  },
+  "te_specific_analysis": {
+    "total_te": 4207,
+    "te_e": 3686,
+    "te_epsilon": 521,
+    "tonic_te_e": 545,
+    "tonic_te_epsilon": 333,
+    "atonic_te_e": 3141,
+    "atonic_te_epsilon": 188
+  },
+  "este_words": {
+    "total_found": 13,
+    "all_epsilon": 7,
+    "examples": [
+      {
+        "word": "acipreste",
+        "phonemes": "a . s i . ˈ p ɾ e ʃ . t ʃ ɪ",
+        "vowel": "e",
+        "expected": "ɛ"
+      },
+      {
+        "word": "agreste",
+        "phonemes": "a . ˈ ɡ ɾ ɛ ʃ . t ʃ ɪ",
+        "vowel": "ɛ",
+        "expected": "ɛ"
+      },
+      {
+        "word": "alceste",
+        "phonemes": "a w . ˈ s e ʃ . t ʃ ɪ",
+        "vowel": "e",
+        "expected": "ɛ"
+      },
+      {
+        "word": "alviceleste",
+        "phonemes": "a w . v i . s e . ˈ l e ʃ . t ʃ ɪ",
+        "vowel": "e",
+        "expected": "ɛ"
+      },
+      {
+        "word": "ateste",
+        "phonemes": "a . ˈ t ɛ ʃ . t ʃ ɪ",
+        "vowel": "ɛ",
+        "expected": "ɛ"
+      },
+      {
+        "word": "céleste",
+        "phonemes": "ˈ s ɛ . l e ʃ . t ʃ ɪ",
+        "vowel": "e",
+        "expected": "ɛ"
+      },
+      {
+        "word": "este",
+        "phonemes": "ˈ ɛ ʃ . t ʃ ɪ",
+        "vowel": "ɛ",
+        "expected": "ɛ"
+      },
+      {
+        "word": "este-oeste",
+        "phonemes": "e s . t ɛ . o . ˈ ɛ ʃ . t ʃ ɪ",
+        "vowel": "ɛ",
+        "expected": "ɛ"
+      },
+      {
+        "word": "este-sudeste",
+        "phonemes": "e s . t e . z u . ˈ d e ʃ . t ʃ ɪ",
+        "vowel": "e",
+        "expected": "ɛ"
+      },
+      {
+        "word": "inconteste",
+        "phonemes": "ĩ . k õ . ˈ t ʃ e ʃ . t ʃ ɪ",
+        "vowel": "e",
+        "expected": "ɛ"
+      },
+      {
+        "word": "modeste",
+        "phonemes": "m o . ˈ d ɛ ʃ . t ʃ ɪ",
+        "vowel": "ɛ",
+        "expected": "ɛ"
+      },
+      {
+        "word": "oeste",
+        "phonemes": "o . ˈ ɛ ʃ . t ʃ ɪ",
+        "vowel": "ɛ",
+        "expected": "ɛ"
+      },
+      {
+        "word": "sueste",
+        "phonemes": "s u . ˈ ɛ ʃ . t ʃ ɪ",
+        "vowel": "ɛ",
+        "expected": "ɛ"
+      }
+    ]
+  },
+  "key_statistics": {
+    "total_e": 45177,
+    "total_epsilon": 6510,
+    "te_ratio_e_to_epsilon": "3686:521",
+    "model_error_context": {
+      "exp104b_e_to_epsilon_errors": 265,
+      "exp104b_epsilon_to_e_errors": 197,
+      "exp104b_total_errors": 462,
+      "percentage_of_all_errors": "18.9%"
+    }
+  }
+}

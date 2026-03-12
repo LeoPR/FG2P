@@ -1,0 +1,124 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-03-02 08:47:35
+Predições: predictions_exp107_maxdata_95train__20260301_201806.tsv
+Total: 2879 palavras | Corretas: 2719 | Erros: 160
+Tempo análise: 5.34s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.46%
+WER:      5.56%
+Accuracy: 94.44%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.50%
+PER Ponderado: 0.35%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A:  35248 (99.16%)
+Classe B:    113 ( 0.32%)
+Classe C:     28 ( 0.08%)
+Classe D:    156 ( 0.44%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:   2719 palavras (94.44%)
+Classe B:    113 palavras (3.92%)
+Classe C:     25 palavras (0.87%)
+Classe D:     22 palavras (0.76%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=+0.00 std=0.08 median=+0
+Truncated: 0 palavras
+Over-generated: 0 palavras
+Hallucinations: 4 palavras
+
+Top-10 Alucinações:
+  teerã           patterns=[bigram_loop:ɛ . ×2 (palavra: ×1, ref: ×1)]
+    pred: t ɛ . ɛ . ˈ ɾ ã
+    ref:  t e . ɛ . ˈ ɾ ã
+  araricá         patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1)]
+    pred: a . ɾ a . ɾ i . ˈ k a
+    ref:  a . ɾ a . x i . ˈ k a
+  aleatoriedade   patterns=[bigram_loop:i . ×2 (palavra: ×1, ref: ×1)]
+    pred: a . l e . a . t o . ɾ i . i . ˈ d a . d ʒ ɪ
+    ref:  a . l e . a . t o . ɾ i . e . ˈ d a . d ʒ ɪ
+  fofoqueira      patterns=[trigram_loop:f o . ×2 (palavra: ×1, ref: ×1)]
+    pred: f o . f o . ˈ k e y . ɾ ə
+    ref:  f ɔ . f o . ˈ k e y . ɾ ə
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   e → ɛ        32  0.0417      B
+   ɛ → e        26  0.0417      B
+   ɔ → o        17  0.0417      B
+   i → e        12  0.0417      B
+   o → ɔ        10  0.0417      B
+   ə → a         7  0.0833      C
+   . → a         7  1.0000      D
+   a → ə         5  0.0833      C
+   ˈ → .         5  1.0000      D
+   a → .         5  1.0000      D
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  uí              score=0.938  pred=u . ˈ i  ref=ũ . ˈ i
+  olhe            score=0.950  pred=ˈ ɔ . ʎ ɪ  ref=ˈ o . ʎ ɪ
+  horas           score=0.958  pred=ˈ o . ɾ ə s  ref=ˈ ɔ . ɾ ə s
+  peja            score=0.958  pred=ˈ p e . ʒ ə  ref=ˈ p ɛ . ʒ ə
+  defa            score=0.958  pred=ˈ d ɛ . f ə  ref=ˈ d e . f ə
+  alceu           score=0.964  pred=a w . ˈ s e w  ref=a w . ˈ s ɛ w
+  ulhoa           score=0.964  pred=u . ˈ ʎ o . ə  ref=ũ . ˈ ʎ o . ə
+  abreu           score=0.964  pred=a . ˈ b ɾ ɛ w  ref=a . ˈ b ɾ e w
+  melco           score=0.964  pred=ˈ m ɛ w . k ʊ  ref=ˈ m e w . k ʊ
+  geram           score=0.964  pred=ˈ ʒ e . ɾ ã ʊ̃  ref=ˈ ʒ ɛ . ɾ ã ʊ̃
+
+Classe C:
+  qubi            score=0.875  pred=k u . ˈ b i  ref=k w . ˈ b i
+  jusqu           score=0.893  pred=ʒ u s . ˈ k u  ref=ʒ u s . ˈ k w
+  fôrão           score=0.893  pred=ˈ f ɔ . ɾ ã ʊ̃  ref=ˈ f õ . ɾ ã ʊ̃
+  soprar          score=0.906  pred=s o . ˈ p ɾ a x  ref=ʃ o . ˈ p ɾ a x
+  paiaguás        score=0.932  pred=p a y . ə . ˈ ɡ w a s  ref=p a y . a . ˈ ɡ w a s
+  raimundão       score=0.932  pred=x a y . m ũ . ˈ d ã ʊ̃  ref=x ə y . m ũ . ˈ d ã ʊ̃
+  oleander        score=0.932  pred=o . l ɪ . ã . ˈ d e x  ref=o . l e . ã . ˈ d e x
+  grão-pará       score=0.932  pred=ˈ ɡ ɾ ã ʊ̃ . p a . ɾ ə  ref=ˈ ɡ ɾ ã ʊ̃ . p a . ɾ a
+  absolver        score=0.932  pred=a b . s o w . ˈ v e x  ref=a b . ʃ o w . ˈ v e x
+  azenegues       score=0.938  pred=a . z e . ˈ n ẽ . ɡ ɪ s  ref=a . z e . ˈ n ɛ . ɡ ɪ s
+
+Classe D:
+  ideologias      score=0.176  pred=i . d ʒ e . o . l o . ˈ ʒ i . ə s  ref=i . d e . o . l o . ˈ ʒ i . ə s
+  cardeal-sobrinho score=0.238  pred=k a ɣ . d ʒ e . a w . s o . ˈ b ɾ ĩ . ɲ ʊ  ref=k a ɣ . d e . a w . s o . ˈ b ɾ ĩ . ɲ ʊ
+  interdenominacional score=0.250  pred=ĩ . t e ɣ . d ʒ e . n ɔ . m i . n a . s a . o . ˈ n a w  ref=ĩ . t e ɣ . d e . n o . m i . n a . s i . o . ˈ n a w
+  histriônica     score=0.250  pred=i s . t ɾ i . ˈ õ . n i . k ə  ref=i s . t ʃ ɾ i . ˈ õ . n i . k ə
+  alternarem      score=0.283  pred=a w . t ʃ e ɣ . ˈ n a . ɾ ẽ ỹ  ref=a w . t e ɣ . ˈ n a . ɾ ẽ ỹ
+  endêmicos       score=0.308  pred=ẽ . ˈ d ʒ ẽ . m i . k ʊ s  ref=ẽ . ˈ d ẽ . m i . k ʊ s
+  ex-rainha       score=0.333  pred=e s . x a . ˈ ĩ . ɲ ə  ref=e s . x . a . ˈ ĩ . ɲ ə
+  desordenadamente score=0.333  pred=d e . z o ɣ . d ʒ e . n a . d a . ˈ m ẽ . t ʃ ɪ  ref=d e . z o ɣ . d e . n a . d a . ˈ m ẽ . t ʃ ɪ
+  léxica          score=0.400  pred=ˈ l ɛ . k s i . k ə  ref=ˈ l ɛ . s i . k ə
+  rózsa           score=0.429  pred=ˈ x ɔ . s ə  ref=ˈ x ɔ z . s ə
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   e → ɛ        32
+   ɛ → e        26
+   ɔ → o        17
+   i → e        12
+   o → ɔ        10
+   ə → a         7
+   . → a         7
+   a → ə         5
+   ˈ → .         5
+   a → .         5
+   e → ʒ         4
+   . → e         4
+   . → o         4
+   . → i         4
+   a → n         4

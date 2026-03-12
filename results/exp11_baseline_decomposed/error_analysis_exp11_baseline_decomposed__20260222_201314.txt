@@ -1,0 +1,155 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-02-23 14:51:30
+Predições: predictions_exp11_baseline_decomposed__20260222_201314.tsv
+Total: 28782 palavras | Corretas: 26614 | Erros: 2168
+Tempo análise: 6.50s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.97%
+WER:      7.53%
+Accuracy: 92.47%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  1.55%
+PER Ponderado: 0.64%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 349258 (98.39%)
+Classe B:   1285 ( 0.36%)
+Classe C:    640 ( 0.18%)
+Classe D:   3790 ( 1.07%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  26614 palavras (92.47%)
+Classe B:   1127 palavras (3.92%)
+Classe C:    275 palavras (0.96%)
+Classe D:    766 palavras (2.66%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.14 median=+0
+Truncated: 3 palavras
+Over-generated: 6 palavras
+Hallucinations: 29 palavras
+
+Top-10 Truncadas:
+  absa            ref=12 pred= 7 (Δ-5)
+  abdo            ref=10 pred= 6 (Δ-4)
+  algúem          ref= 9 pred= 6 (Δ-3)
+
+Top-10 Over-generated:
+  político-administrativas ref=36 pred=44 (Δ+8)
+  asl             ref= 4 pred=11 (Δ+7)
+  aps             ref= 4 pred=10 (Δ+6)
+  asr             ref= 4 pred= 9 (Δ+5)
+  aptr            ref= 5 pred=10 (Δ+5)
+  ujr             ref= 4 pred= 8 (Δ+4)
+
+Top-10 Alucinações:
+  subvariedade    patterns=[bigram_loop:i . ×2 (palavra: ×1, ref: ×1)]
+    pred: s u b . v a . ɾ i . i . ˈ d a . d ʒ ɪ
+    ref:  s u b . v a . ɾ i . e . ˈ d a . d ʒ ɪ
+  reelegido       patterns=[bigram_loop:e . ×2 (palavra: ×1, ref: ×1)]
+    pred: x e . e . l e . ˈ ʒ i . d ʊ
+    ref:  x ɛ . e . l e . ˈ ʒ i . d ʊ
+  ibibio          patterns=[trigram_loop:i . b ×2 (palavra: ×1, ref: ×1), trigram_loop:. b i ×2 (palavra: ×1, ref: ×1), trigram_loop:b i . ×2 (palavra: ×1, ref: ×1)]
+    pred: i . b i . b i . ˈ ɔ
+    ref:  i . b i . ˈ b i . ʊ
+  ujr             patterns=[bigram_loop:x x ×2 (palavra: ×1, ref: ×1), char_explosion:x ×5 (ref: ×1)]
+    pred: ˈ ũ ʒ x x x x x
+    ref:  ˈ ʊ ʒ x
+  gagauz          patterns=[trigram_loop:ɡ a . ×2 (palavra: ×1, ref: ×1)]
+    pred: ɡ a . ɡ a . ˈ s
+    ref:  ɡ a . ˈ ɡ a w s
+  cidadanias      patterns=[trigram_loop:. d a ×2 (palavra: ×1, ref: ×1), trigram_loop:d a . ×2 (palavra: ×1, ref: ×1)]
+    pred: s i . d a . d a . ˈ n i . ə s
+    ref:  s i . d a . d ə . ˈ n i . ə s
+  estadunidense-colombiana patterns=[trigram_loop:. ˈ ã ×2 (palavra: ×1, ref: ×1), trigram_loop:ˈ ã . ×2 (palavra: ×1, ref: ×1)]
+    pred: e s . t a . d u . n i . d ẽ . s e . k o . l i . ˈ ã . ˈ ã . n ə
+    ref:  e s . t a . d u . n i . d ẽ . s e . k o . l õ . b i . ˈ ã . n ə
+  pára-raios      patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ a ×2 (palavra: ×1, ref: ×1)]
+    pred: ˈ p a . ɾ a . ɾ a y . ʊ s
+    ref:  ˈ p a . ɾ a . x a y . ʊ s
+  misasagi        patterns=[trigram_loop:. z a ×2 (palavra: ×1, ref: ×1), trigram_loop:z a . ×2 (palavra: ×1, ref: ×1)]
+    pred: m i . z a . z a . ˈ ʒ i
+    ref:  m i . z a . s a . ˈ ʒ i
+  ararapira       patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ a ×2 (palavra: ×1, ref: ×1), trigram_loop:ɾ a . ×2 (palavra: ×1, ref: ×1)]
+    pred: a . ɾ a . ɾ a . p i . ˈ ɾ a
+    ref:  a . ɾ a . x a . ˈ p i . ɾ ə
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   ˈ → .       315  0.0000      B
+   ɛ → e       282  0.0417      B
+   . → ˈ       226  0.0000      B
+   a → ə       200  0.0833      C
+   e → ɛ       199  0.0417      B
+   ə → a       184  0.0833      C
+   ɔ → o       151  0.0417      B
+   a → .       147  0.8333      D
+   i → e       135  0.0417      B
+   o → ɔ       131  0.0417      B
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  eels            score=0.917  pred=ˈ i . ɛ w s  ref=ˈ ɪ . ɪ w s
+  chã             score=0.917  pred=ˈ ʃ a  ref=ˈ ʃ ã
+  rô              score=0.917  pred=ˈ x ɔ  ref=ˈ x o
+  nho             score=0.917  pred=ˈ ɲ ɔ  ref=ˈ ɲ ʊ
+  canaã           score=0.938  pred=k a . n a . ˈ a  ref=k ã . n a . ˈ ã
+  mór             score=0.938  pred=ˈ m ɔ x  ref=ˈ m o x
+  cdo             score=0.938  pred=ˈ k d ɔ  ref=ˈ k d ʊ
+  elr             score=0.938  pred=ˈ e w x  ref=ˈ i w x
+  froilaz         score=0.944  pred=f ɾ ɔ y . ˈ l a s  ref=f ɾ o y . ˈ l a z
+  ilo             score=0.950  pred=ˈ i . l ʊ  ref=ˈ ĩ . l ʊ
+
+Classe C:
+  hu              score=0.625  pred=ˈ ũ  ref=ˈ ʊ
+  ias             score=0.800  pred=ˈ i . ə s  ref=ˈ ĩ . a s
+  hoa             score=0.812  pred=ˈ o . ə  ref=ˈ o . a
+  hujr            score=0.812  pred=ˈ ũ ʒ x  ref=ˈ ʊ ʒ x
+  eas             score=0.850  pred=ˈ ɪ . ə s  ref=ˈ ɪ . a s
+  opõe            score=0.875  pred=o . ˈ p õ ỹ  ref=u . ˈ p õ ỹ
+  ibagué          score=0.875  pred=i . b ə . ˈ ɡ e  ref=i . b a . ˈ ɡ ɛ
+  qubi            score=0.875  pred=k u . ˈ b i  ref=k w . ˈ b i
+  oana            score=0.893  pred=u . ˈ ã . n ə  ref=o . ˈ ã . n ə
+  comos           score=0.893  pred=ˈ k õ . m ʊ s  ref=ˈ k ɔ . m ʊ s
+
+Classe D:
+  uí              score=0.000  pred=ˈ ũ y  ref=ũ . ˈ i
+  abos            score=0.000  pred=ˈ a . b ʊ s  ref=a . b e . ˈ ɔ s
+  guaiuba         score=0.000  pred=ɡ w a y . ˈ b a  ref=ˈ ɡ w a y u . b ə
+  paia            score=0.042  pred=p a y . ˈ a  ref=ˈ p a y . ə
+  diá             score=0.042  pred=ˈ d ʒ i . ə  ref=d ʒ i . ˈ a
+  zinrã           score=0.042  pred=ˈ z ĩ . ɾ ə  ref=z ĩ . ˈ x ã
+  riá             score=0.050  pred=ˈ x i . ə  ref=x i . ˈ a
+  foa             score=0.050  pred=f u . ˈ a  ref=ˈ f o . ə
+  piá             score=0.050  pred=ˈ p i . ə  ref=p i . ˈ a
+  poe             score=0.050  pred=p u . ˈ e  ref=ˈ p o . ɪ
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   ˈ → .       315
+   ɛ → e       282
+   . → ˈ       226
+   a → ə       200
+   e → ɛ       199
+   ə → a       184
+   ɔ → o       151
+   a → .       147
+   i → e       135
+   o → ɔ       131
+   . → i        94
+   . → a        90
+   i → .        81
+   e → i        71
+   . → e        41

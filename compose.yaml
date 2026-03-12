@@ -1,0 +1,33 @@
+# FG2P — Ambiente de teste de inferência
+#
+# Uso:
+#   docker compose build
+#   docker compose run --rm inference-test python src/inference_minimal.py
+#   docker compose run --rm inference-test python test_inference_docker.py
+#   docker compose run --rm inference-test /bin/bash   # shell interativo
+
+services:
+  inference:
+    image: fg2p
+    build: .
+    container_name: fg2p
+    # Montar projeto inteiro como volume:
+    # - código fonte, dicts e models acessíveis sem rebuildar imagem
+    # - modifica src/inference_minimal.py localmente e testa dentro do container
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      # Permite `import inference_minimal` diretamente (sem prefixo src.)
+      - PYTHONPATH=/app/src
+    stdin_open: true
+    tty: true
+
+    # GPU: descomente se tiver nvidia-docker instalado
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
