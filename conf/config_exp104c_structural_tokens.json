@@ -1,5 +1,5 @@
 {
-  "description": "Exp104c: Better handling of structural tokens (. and ') with increased model capacity",
+  "description": "Exp104c: Ablação de capacidade — 17M params, CE Loss, sem sep silábico. ERRATA: config não corresponde ao propósito original (ver experiment.errata).",
   "data": {
     "source": "dicts/pt-br.tsv",
     "train_ratio": 0.6,
@@ -15,7 +15,7 @@
     "hidden_dim": 512,
     "num_layers": 2,
     "dropout": 0.50,
-    "note": "Increased capacity vs exp104b (emb 192→256, hidden 384→512) for better contextual disambiguation of structural tokens"
+    "note": "17M params — capacidade aumentada vs exp104b (emb 192→256, hidden 384→512)"
   },
   "training": {
     "fit_method": "adam",
@@ -25,27 +25,31 @@
     "lr": 0.001,
     "early_stopping_patience": 10,
     "weight_decay": 1e-05,
-    "note": "Larger batch size (64→96) for better gradient stability with rare tokens"
+    "note": "Sem chave 'loss' → CE puro por padrão do train.py. Não corresponde ao planejado."
   },
   "experiment": {
     "name": "exp104c_structural_tokens",
-    "purpose": "Handle . ↔ ˈ ↔ <PAD> confusions with increased model capacity + better gradient flow",
+    "purpose_intended": "Testar se maior capacidade (17M) resolve confusões . ↔ ˈ ↔ <PAD> com DA Loss + sep silábico.",
+    "purpose_actual": "Ablação de capacidade: 17M params + CE Loss + sem sep silábico. Não testa o propósito original.",
+    "errata": {
+      "status": "CONFIG COM BUGS — resultados válidos como ablação de capacidade, não como experimento de tokens estruturais",
+      "bug_1": "keep_syllable_separators ausente na seção data → modelo treinado SEM separador silábico '.' na saída. O token '.' que o experimento pretendia aprender melhor simplesmente não existe no treino.",
+      "bug_2": "Chave 'loss' ausente na seção training → train.py usou CE puro por padrão. Key_changes dizia 'Same DA Loss (λ=0.20)' mas isso nunca foi configurado.",
+      "consequence": "Exp104c é equivalente a 'Exp1 com 17M params + sem sep' — útil como ablação de capacidade pura, mas não comparable com exp104b para fins de tokens estruturais.",
+      "valid_comparison": "exp104c (17M CE sem sep) vs exp1 (4.3M CE sem sep): isola efeito de capacidade. exp104c (17M CE sem sep) vs exp9 (9.7M DA sem sep): mistura capacidade + loss type.",
+      "corrected_by": "exp104d — mesmo config com bugs corrigidos: keep_syllable_separators=true + DA Loss λ=0.2"
+    },
+    "actual_results": {
+      "per": "0.57%",
+      "wer": "4.92% — novo melhor WER entre modelos validados (bate exp9 4.96%)",
+      "class_d": "0.43% — menor Classe D registrada",
+      "hallucinations": "3 (palavras muito longas: político-administrativas, desinstitucionalização, científico-tecnológica)",
+      "notable_error": "s → <PAD> (35×, Classe D) — truncamento antecipado de palavras terminadas em /s/, provavelmente relacionado à ausência do sep como âncora de estrutura"
+    },
     "compared_with": [
-      "exp104b: 0.51% PER (0.90% Class D) - baseline with structural token issues",
-      "exp1: 0.64% PER (1.02% Class D) - pure baseline without DA Loss"
-    ],
-    "hypothesis": "Larger LSTM hidden state allows better contextual understanding of structural tokens (syllable markers, stress markers), reducing confusions. Target: 0.48-0.50% PER with 0.75-0.80% Class D.",
-    "expected_improvements": [
-      "Reduce . ↔ ˈ confusions from 59→30-40",
-      "Reduce a ↔ . confusions from 57→30-40",
-      "Reduce s ↔ <PAD> confusions from 52→20-30",
-      "Overall PER: 0.51% → ~0.48-0.50%"
-    ],
-    "key_changes": [
-      "emb_dim: 192 → 256",
-      "hidden_dim: 384 → 512",
-      "batch_size: 64 → 96",
-      "Same DA Loss (λ=0.20), same architecture (BiLSTM 2 layers)"
+      "exp104b: PER 0.51%, WER 5.43% — 9.7M + sep + DA λ=0.2 (SOTA PER)",
+      "exp9: PER 0.61%, WER 4.96% — 9.7M + DA λ=0.2 sem sep (anterior SOTA WER)",
+      "exp1: PER 0.64%, WER 5.48% — 4.3M + CE sem sep (baseline)"
     ]
   }
 }

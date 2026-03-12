@@ -163,6 +163,34 @@ O acerto em 100% das palavras reais inéditas é evidência conclusiva: o modelo
 
 **Conclusão**: O split 60/10/30 com test set estratificado grande + validação em OOV real comprovam que FG2P **aprende regras**, não memoriza. Esta é uma contribuição metodológica tão importante quanto os números de PER/WER.
 
+### 2.26 Dois Níveis de Aleatoriedade: Estratificação vs Embaralhamento de Treino
+
+Um ponto frequentemente mal compreendido é que a estratificação e o embaralhamento aleatório no treinamento servem a **dois propósitos completamente distintos**, fundamentados em teorias diferentes.
+
+**Nível 1 — Estratificação do Split (teoria de amostragem clássica)**
+
+A estratificação no momento da divisão treino/validação/teste tem origem na teoria clássica de amostragem (Neyman, 1934; Cochran, 1977). O objetivo é garantir **representatividade proporcional**: cada subconjunto deve refletir a distribuição real do corpus em todas as variáveis relevantes. Sem estratificação, um split puramente aleatório pode resultar em subrepresentação de classes raras no conjunto de teste — especialmente relevante em G2P, onde a distribuição de padrões fonológicos é altamente não-uniforme (proparoxítonas são raras; anglicismos com clusters consonantais atípicos são sub-10%).
+
+A justificativa para estratificação no split é estritamente **estatística**: queremos que a medição de PER/WER seja não-viesada, com intervalo de confiança interpretável. O critério clássico de Neyman-Cochran para alocação ótima de amostras minimiza a variância da estimativa para um tamanho de amostra fixo — e a estratificação é o mecanismo que realiza essa minimização.
+
+**Nível 2 — Embaralhamento Aleatório no Treino (teoria de otimização estocástica)**
+
+Uma vez que os dados de treino são fixados pelo split estratificado, cada época de treinamento embaralha aleatoriamente a **ordem** em que os exemplos são apresentados ao modelo. Este embaralhamento tem justificativa completamente diferente: é condição suficiente para convergência do SGD (Bottou, 2010; Bottou, 2012).
+
+Resultados teóricos recentes demonstram que o embaralhamento aleatório sem reposição — chamado *random reshuffling* — **converge mais rápido** que o SGD com amostragem com reposição (HaoChen & Sra, 2019; Mishchenko et al., 2020). A intuição é que, ao longo de uma época completa, o *random reshuffling* garante que todo exemplo seja visto exatamente uma vez, reduzindo a variância do estimador do gradiente em comparação com amostragem independente. PyTorch DataLoader usa *random reshuffling* por padrão (`shuffle=True`).
+
+**Por que os dois níveis são independentes**
+
+| Aspecto | Estratificação do Split | Embaralhamento de Treino |
+|---------|------------------------|--------------------------|
+| **Objetivo** | Representatividade do conjunto de teste | Convergência do otimizador |
+| **Quando ocorre** | Uma vez, antes do treino | A cada época, durante treino |
+| **Teoria base** | Amostragem clássica (Neyman, Cochran) | Otimização estocástica (Bottou, HaoChen) |
+| **Benefício** | IC válido, PER/WER não-viesado | Menor variância de gradiente, convergência mais rápida |
+| **Alternativa sem ele** | Split aleatório → subrepresentação de padrões raros | Ordem fixa → gradientes correlacionados, risco de oscilação |
+
+A distinção importa para comparação com trabalhos relacionados: alguns G2P reportam resultados em splits puramente aleatórios (Farias et al., 2020; Tan et al., 2021), o que pode subestimar o erro em padrões fonológicos raros e inflar artificialmente métricas agregadas como WER. O FG2P combina os dois mecanismos deliberadamente — estratificação garante que a medição seja justa; *random reshuffling* garante que o treino seja eficiente.
+
 ### 2.3 Auditoria do Corpus: Qualidade de Dados
 
 Uma inspeção sistemática do corpus revelou pontos relevantes para validação de qualidade.
@@ -889,6 +917,50 @@ As ablações da Fase 7 quantificam dois trade-offs práticos com impacto direto
 | Exp104b | 0,49% | 11,7 w/s | PER mínimo, análise linguística |
 | Exp105 | 0,54% | 11,7 w/s | Corpus reduzido, mesma speed |
 | Exp106 | 0,58% | **30,2 w/s** | Latência crítica, TTS em tempo real |
+
+### 8.5 Metodologia de Benchmark de Velocidade
+
+As medições de throughput (palavras/s, tokens/s) e latência reportadas na §8.4 seguem um protocolo de medição projetado para **isolar o desempenho real do hardware** de artefatos de contention, throttling térmico e overhead do instrumento.
+
+**Calibração de overhead do loop de medição**
+
+Qualquer instrumento de medição introduz overhead. Para `time.perf_counter()` em hardware moderno, esse overhead é tipicamente 100–300 ns por chamada — determinístico e estável (não estocástico). O protocolo realiza 2.000 medições vazias (apenas `t0 = perf_counter(); t1 = perf_counter(); append(t1-t0)`), descarta os 10% extremos (robustez contra picos), e obtém o overhead médio. Esse valor é subtraído de cada latência medida no loop quente. A justificativa para subtração em vez de remoção: se o overhead é determinístico, subtrair é equivalente a remover — sem perda de acurácia e sem complicar o loop. Para inferência LSTM (~35 ms/palavra), o overhead do instrumento representa ~0,001% da medição — negligível — mas o procedimento está documentado para rastreabilidade científica.
+
+**Loop quente mínimo**
+
+O loop de benchmark contém apenas as operações estritamente necessárias:
+```
+t0 = perf_counter()
+result = predictor.predict(word)
+t1 = perf_counter()
+latencies.append(t1 - t0)
+token_counts.append(len(result.split()))
+```
+Toda análise estatística (percentis, CV, janela estável, check térmico) é realizada *post-hoc*, fora do loop. Isso garante que o overhead do instrumento dentro do loop é constante e determinístico — requisito para que a calibração seja válida. Esta abordagem segue o princípio de separação entre coleta e análise recomendado pelo MLPerf Inference Benchmark (Reddi et al., 2020).
+
+**Detecção de instabilidade de hardware**
+
+Dois problemas de hardware são detectados automaticamente via análise post-hoc:
+
+*Contention de recursos*: em ambientes de nuvem ou máquinas compartilhadas, outros processos competem por GPU/CPU durante o benchmark. Isso se manifesta como alta variância nas latências. O protocolo calcula o **coeficiente de variação (CV = std/mean)** sobre todas as medições. CV > 15% gera aviso de contention.
+
+*Throttling térmico*: em runs longos, o processador pode reduzir frequência por temperatura. Isso se manifesta como latências crescentes ao longo do tempo. O protocolo compara a latência média dos primeiros 20% das medições com os últimos 20% — razão > 1,10 indica throttling; razão < 0,90 indica warmup insuficiente.
+
+**Janela de throughput estável**
+
+Em adição ao throughput global (média de todas as medições), o protocolo reporta o **throughput estável**: varre todas as janelas deslizantes de tamanho 20% × N e seleciona a janela com menor CV. Essa janela representa o período em que o hardware operou com menor interferência externa — o desempenho real quando o sistema está em regime estável, sem contention ou throttling. A distinção entre throughput global e estável é especialmente relevante para comparações cross-hardware (GPU cloud vs GPU local vs CPU).
+
+**Tokens/s vs Palavras/s**
+
+Modelos treinados com separadores silábicos produzem ~30% mais tokens por palavra (saída inclui `.` como delimitador de sílaba e `ˈ` como marcador de acento). Para comparação justa entre modelos com e sem separadores, o benchmark reporta tanto **palavras/s** quanto **tokens/s** — este último normaliza a saída pelo comprimento real da sequência gerada.
+
+| Parâmetro | Valor padrão | Justificativa |
+|-----------|-------------|---------------|
+| Warmup runs | 20 passes | Elimina cold-start do CUDA/CPU cache |
+| Benchmark runs | 200 passes | N suficiente para p95/p99 estáveis |
+| Janela estável | 20% × N | Compromisso entre resolução e estabilidade |
+| Threshold CV | 15% | Heurística conservadora para contention |
+| Threshold térmico | ±10% | Padrão MLPerf para drift de temperatura |
 
 ---
 

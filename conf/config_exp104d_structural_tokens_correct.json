@@ -1,0 +1,69 @@
+{
+  "description": "Exp104d: Experimento original de tokens estruturais com config correto — 17M params + sep silábico + DA Loss λ=0.2. Corrige os dois bugs do exp104c.",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "stratify": true,
+    "grapheme_encoding": "raw",
+    "keep_syllable_separators": true,
+    "note": "Idêntico ao split de exp104b para comparação direta."
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 256,
+    "hidden_dim": 512,
+    "num_layers": 2,
+    "dropout": 0.50,
+    "note": "17M params (emb 192→256, hidden 384→512 vs exp104b). Mesma arquitetura BiLSTM 2 camadas."
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 96,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.2,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "λ=0.2 ótimo de Exp7. Mesmo override estrutural pós-normalização de exp104b: d(.,ˈ)=1.0 na escala final."
+    }
+  },
+  "experiment": {
+    "name": "exp104d_structural_tokens_correct",
+    "purpose": "Testar se maior capacidade (17M) + sep silábico + DA Loss resolve confusões . ↔ ˈ ↔ <PAD> melhor que exp104b (9.7M). Config correto do que exp104c pretendia ser.",
+    "hypothesis": "Maior hidden state (512 vs 384) permite melhor disambiguação contextual dos tokens estruturais (ˈ como modificador prosódico, . como fronteira silábica). DA Loss com d(.,ˈ)=1.0 penaliza maximamente a confusão entre eles.",
+    "fixes_from_104c": [
+      "CORRIGIDO: keep_syllable_separators=true adicionado — modelo agora aprende '.' explicitamente",
+      "CORRIGIDO: DA Loss λ=0.2 adicionado — penalização fonológica ativa durante treino"
+    ],
+    "key_changes_vs_104b": [
+      "emb_dim: 192 → 256 (+33%)",
+      "hidden_dim: 384 → 512 (+33%)",
+      "batch_size: 64 → 96 (gradiente mais estável para tokens raros)",
+      "params: ~9.7M → ~17M (+75%)"
+    ],
+    "compared_with": [
+      "exp104b: PER 0.51%, WER 5.43% — 9.7M + sep + DA λ=0.2 (linha de base correta)",
+      "exp104c: PER 0.57%, WER 4.92% — 17M + CE sem sep (ablação de capacidade com bugs)",
+      "exp9:    PER 0.61%, WER 4.96% — 9.7M + DA sem sep (SOTA WER anterior)"
+    ],
+    "predictions": {
+      "per_estimate": "~0.47-0.51% — espera-se melhora sobre exp104b pela capacidade",
+      "wer_estimate": "~5.0-5.4% — com sep, WER tende a ser maior que sem sep",
+      "class_d_estimate": "<0.43% — DA Loss + maior capacidade deve reduzir erros catastróficos",
+      "structural_confusions": "ˈ ↔ a esperado <15 (vs 21× em exp104c sem DA Loss)"
+    },
+    "ablation_value": "Isola o efeito de capacidade DENTRO do regime sep+DA. Comparação limpa: exp104b (9.7M) vs exp104d (17M), tudo mais igual.",
+    "risk": "17M params com batch=96 pode ter gradiente instável nas primeiras épocas — monitorar warmup (epochs 1-80). Se val_loss não convergir em 30 épocas, considerar lr=0.0005.",
+    "note": "λ=0.2 pode não ser ótimo para o regime sep+DA+17M. Ver TODO no README: revisão de λ com sep silábico habilitado."
+  }
+}

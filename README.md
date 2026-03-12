@@ -121,7 +121,7 @@ Input: "c o m p u t a d o r"
          |
   [LSTM Decoder 2×256D]              ← generates IPA tokens autoregressively
          |
-Output: "k õ p u . t a . ˈ d o x ."
+Output: "k õ p u . t a . ˈ d o x"
 ```
 
 **Two embedding mechanisms** (independent, both explored):
@@ -139,9 +139,18 @@ Output: "k õ p u . t a . ˈ d o x ."
 
 22 models trained across systematic ablations. Training typically converges within 30–50 epochs with early stopping (patience=10):
 
-![Exp104b convergence: train/val loss over epochs](results/exp104b_intermediate_sep_da_custom_dist_fixed/exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333_convergence.png)
+<table>
+<tr>
+<td align="center"><strong>Exp104b</strong> — DA Loss + sep + dist fix (Best PER)</td>
+<td align="center"><strong>Exp9</strong> — DA Loss, no sep (Best WER)</td>
+</tr>
+<tr>
+<td><img src="results/exp104b_intermediate_sep_da_custom_dist_fixed/exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333_convergence.png" alt="Exp104b convergence"/></td>
+<td><img src="results/exp9_intermediate_distance_aware/exp9_intermediate_distance_aware__20260222_064838_convergence.png" alt="Exp9 convergence"/></td>
+</tr>
+</table>
 
-*Exp104b convergence: train loss (blue) and val loss (orange) converge stably. Best checkpoint at epoch where val loss is minimum.*
+*Train loss (blue) and val loss (orange). Both models converge stably with early stopping (patience=10). Best checkpoint at minimum val loss.*
 
 ---
 
@@ -241,7 +250,7 @@ predictor = G2PPredictor.load("best_per")   # SOTA PER (for TTS)
 predictor = G2PPredictor.load("best_wer")   # SOTA WER (for NLP)
 
 # Predict
-print(predictor.predict("computador"))  # k o~ p u t a . 'do x
+print(predictor.predict("computador"))  # k õ . p u t a . 'do x
 print(predictor.predict("borboleta"))   # b o x . b o . l e t a
 ```
 
@@ -458,12 +467,14 @@ FG2P learns *rules*, not memorized mappings. Evidence:
 | Wilson CI | ✅ FG2P [0.47%, 0.51%] vs LatPhon [0.56%, 1.16%] — non-overlapping |
 | Scientific article | ✅ docs/article/ARTICLE.md v1.2 complete (IMRaD, §1–§6) |
 | Reproducibility | ✅ ±0.02pp PER variance between identical runs (D1 validation) |
+| Exp104c | ✅ Rodado — ablação de capacidade válida (17M CE sem sep, WER 4.92% novo record); errata documentada em `conf/config_exp104c_structural_tokens.json` |
 
 ### Roadmap
 
 | Priority | Item | Description |
 |----------|------|-------------|
-| High | **Exp104c** | Increased LSTM capacity for structural token disambiguation (. ↔ ˈ) |
+| High | **Exp104d** | Corrected structural token experiment: 17M + sep silábico + DA λ=0.2 (fixes exp104c config bugs) |
+| High | **Revisão de λ com sep** | λ=0.2 foi otimizado em Exp7 (sem sep). Com sep silábico + custom dist, o ótimo pode ser diferente — sweep λ∈{0.1, 0.2, 0.3, 0.5} no regime sep+DA |
 | Medium | **Class E errors** | Fifth error class for structural token confusions (post-publication) |
 | Medium | **Chart: convergence grid** | Show Exp1 / Exp9 / Exp104b convergence side-by-side (currently only Exp104b in README) |
 | Medium | **Chart: da_loss_gain layout** | Annotation boxes can overlap bars; move gain labels below chart area |
