@@ -1,0 +1,25 @@
+{
+  "experiment": "exp4_panphon_fixed_24d__20260219_195619",
+  "timestamp": "2026-02-26T23:50:53.853311",
+  "training": {
+    "num_epochs": 99,
+    "throughput": {
+      "avg_samples_per_sec": 394.99310431375966,
+      "min_samples_per_sec": 394.99310431375966,
+      "max_samples_per_sec": 394.99310431375966
+    },
+    "best_epoch": 89,
+    "best_val_loss": 0.021361,
+    "best_train_loss": 0.03181,
+    "initial_train_loss": 1.129336,
+    "initial_val_loss": 0.267145,
+    "final_train_loss": 0.03193,
+    "final_val_loss": 0.021475,
+    "convergence_epoch_95percent": 14,
+    "gap_at_best": -0.010448999999999996,
+    "gap_at_final": -0.010454999999999999,
+    "overfitting": "[OK] Nenhum",
+    "last5_std": 0.002241
+  },
+  "test_metrics": {}
+}

@@ -1,0 +1,25 @@
+{
+  "experiment": "exp106_no_hyphen_50split__20260226_034556",
+  "timestamp": "2026-02-26T23:51:01.357892",
+  "training": {
+    "num_epochs": 90,
+    "throughput": {
+      "avg_samples_per_sec": 382.85104513460163,
+      "min_samples_per_sec": 382.85104513460163,
+      "max_samples_per_sec": 382.85104513460163
+    },
+    "best_epoch": 70,
+    "best_val_loss": 0.017444,
+    "best_train_loss": 0.019952,
+    "initial_train_loss": 0.524901,
+    "initial_val_loss": 0.111513,
+    "final_train_loss": 0.018019,
+    "final_val_loss": 0.017714,
+    "convergence_epoch_95percent": 18,
+    "gap_at_best": -0.002508,
+    "gap_at_final": -0.0003049999999999997,
+    "overfitting": "[OK] Nenhum",
+    "last5_std": 0.0009125000000000001
+  },
+  "test_metrics": {}
+}

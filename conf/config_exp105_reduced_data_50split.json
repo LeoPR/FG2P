@@ -1,0 +1,73 @@
+{
+  "description": "Exp105 — Reduced Data (50% train) | 9.7M + Sep + DA Loss λ=0.2 + Custom Dist",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.5,
+    "val_ratio": 0.1,
+    "test_ratio": 0.4,
+    "split_seed": 42,
+    "note": "Única variável: 10% menos dados de treino (50% vs 60% em Exp104b). Split estratificado garante representatividade. Test set maior (+33%) aumenta poder estatístico.",
+    "grapheme_encoding": "raw",
+    "keep_syllable_separators": true
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 192,
+    "hidden_dim": 384,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "Arquitetura idêntica a Exp104b (9.7M params). Não aumentar neurônios: com 50% treino, risco de overfitting aumenta.",
+    "total_params_estimate": "~9.7M"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.2,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "λ=0.2 ótimo (Exp7). Override estrutural pós-normalização: d(.,ˈ)=1.0."
+    }
+  },
+  "experiment": {
+    "name": "exp105_reduced_data_50split",
+    "purpose": "Avaliar impacto de REDUÇÃO DE DADOS DE TREINO (50% vs 60%) sobre PER/WER. Única variável: menos 10K palavras no treino. Corpus formatação transparent (verificado em docs/12_DATA_PIPELINE.md).",
+    "hypothesis": "Com 10% menos dados, PER pode aumentar marginalmente (0.49%→0.50-0.55%). WER similar (5.4-5.8%). Test set 33% maior → intervalos de confiança mais estreitos.",
+    "split_rationale": {
+      "train": "50% ≈ 47.968 palavras",
+      "val": "10% ≈ 9.594 palavras",
+      "test": "40% ≈ 38.375 palavras (+33% vs Exp104b)"
+    },
+    "grapheme_processing": {
+      "encoding_type": "raw",
+      "filters": [],
+      "note": "Sem filtros grafêmicos. Caractere '-' em 2.46% das palavras (2.361 pares). Mantido para representar PT-BR (compostos, verbos+pronome)."
+    },
+    "compared_with": [
+      "exp104b: 9.7M + sep + DA, split 60/10/30 (PER 0.49%, WER 5.43%) — SOTA PER, referência",
+      "exp102: 9.7M + sep + CE, split 60/10/30 (PER 0.52%, WER 5.79%) — baseline sep",
+      "exp9: 9.7M + DA (sem sep), split 60/10/30 (PER 0.58%, WER 4.96%) — SOTA WER"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.49-0.55%",
+      "wer_estimate": "~5.4-5.8%",
+      "per_confidence_interval": "±0.02% (test set 38.4K vs 28.8K em Exp104b)",
+      "note": "Degradação modesta esperada. Se PER > 0.55%: investigar causa adicional."
+    },
+    "training_time_estimate": "~5-6h GPU (menos dados = épocas mais rápidas)",
+    "notes": [
+      "Phase 6C: ablação de quantidade de dados de treino",
+      "Config criado: 2026-02-25",
+      "Comparar direto contra exp104b (mesma arquitetura, loss, apenas dados diferentes)",
+      "Se sucesso (PER < 0.55%): validação de robustez do modelo com menos dados"
+    ]
+  }
+}

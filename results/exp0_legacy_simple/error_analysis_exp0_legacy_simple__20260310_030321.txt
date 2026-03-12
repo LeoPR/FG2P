@@ -1,0 +1,118 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-03-10 20:17:14
+Predições: predictions_exp0_legacy_simple__20260310_030321.tsv
+Total: 19188 palavras | Corretas: 18533 | Erros: 655
+Tempo análise: 5.62s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.38%
+WER:      3.41%
+Accuracy: 96.59%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.34%
+PER Ponderado: 0.16%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 180941 (99.41%)
+Classe B:    486 ( 0.27%)
+Classe C:    104 ( 0.06%)
+Classe D:    475 ( 0.26%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  18533 palavras (96.59%)
+Classe B:    475 palavras (2.48%)
+Classe C:     85 palavras (0.44%)
+Classe D:     95 palavras (0.50%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.07 median=+0
+Truncated: 0 palavras
+Over-generated: 1 palavras
+Hallucinations: 1 palavras
+
+Top-10 Over-generated:
+  estadunidense-colombiana ref=22 pred=25 (Δ+3)
+
+Top-10 Alucinações:
+  estadunidense-colombiana patterns=[bigram_loop:k o ×2 (palavra: ×1, ref: ×1), bigram_loop:i b ×2 (palavra: ×1, ref: ×1), bigram_loop:b i ×2 (palavra: ×1, ref: ×1)]
+    pred: e s t a d u n i d ẽ s e k o k o l i b i b i ˈ ã ʊ̃
+    ref:  e s t a d u n i d ẽ s e k o l õ b i ˈ ã n ə
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   ɛ → e       157  0.0417      B
+   i → e        77  0.0417      B
+   e → ɛ        56  0.0417      B
+   o → ɔ        55  0.0417      B
+   ɔ → o        47  0.0417      B
+   ə → a        26  0.0833      C
+   s → <PAD>     21  0.8750      D
+   e → i        18  0.0417      B
+   ẽ → e        12  0.0417      B
+   ũ → u        11  0.0417      B
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  uí              score=0.833  pred=u ˈ ĩ  ref=ũ ˈ i
+  ife             score=0.938  pred=ˈ i f ɪ  ref=ˈ ĩ f ɪ
+  ilê             score=0.938  pred=i ˈ l e  ref=i ˈ l ɛ
+  toda            score=0.950  pred=ˈ t ɔ d ə  ref=ˈ t o d ə
+  beja            score=0.950  pred=ˈ b e ʒ ə  ref=ˈ b ɛ ʒ ə
+  ide             score=0.950  pred=ˈ i d ʒ ɪ  ref=ˈ ĩ d ʒ ɪ
+  orto            score=0.950  pred=ˈ ɔ x t ʊ  ref=ˈ o x t ʊ
+  hojas           score=0.950  pred=ˈ ɔ ʒ ə s  ref=ˈ o ʒ ə s
+  peja            score=0.950  pred=ˈ p e ʒ ə  ref=ˈ p ɛ ʒ ə
+  dero            score=0.950  pred=ˈ d e ɾ ʊ  ref=ˈ d ɛ ɾ ʊ
+
+Classe C:
+  orim            score=0.812  pred=ɔ ˈ ɾ ĩ  ref=u ˈ ɾ ĩ
+  uádi            score=0.833  pred=u ˈ a d ʒ ɪ  ref=ũ ˈ ə d ʒ ɪ
+  oils            score=0.850  pred=ˈ o y w s  ref=ˈ o ɪ w s
+  éaco            score=0.850  pred=ˈ ɛ a k ʊ  ref=ˈ ɛ ə k ʊ
+  efx             score=0.850  pred=ˈ ɛ f k s  ref=ˈ i f k s
+  unhcr           score=0.850  pred=ˈ ũ ɲ k ɾ  ref=ˈ ʊ ɲ k ɾ
+  qubi            score=0.850  pred=k u ˈ b i  ref=k w ˈ b i
+  aprox           score=0.875  pred=a ˈ p ɾ ɔ s  ref=a ˈ p ɾ ɔ ʃ
+  halachá         score=0.875  pred=a l a ˈ ʃ a  ref=a l ə ˈ ʃ a
+  acaçá           score=0.875  pred=a k a ˈ s a  ref=a k ə ˈ s a
+
+Classe D:
+  abos            score=0.000  pred=ˈ a b ʊ s  ref=a b e ˈ ɔ s
+  oxigenados      score=0.083  pred=o ʃ i ʒ e ˈ n a d ʊ s  ref=o k s i ʒ e ˈ n a d ʊ s
+  oxidação        score=0.100  pred=o k s i d a ˈ s ã ʊ̃  ref=o ʃ i d a ˈ s ã ʊ̃
+  inexorabilidade score=0.167  pred=i n e ʃ o ɾ a b i l i ˈ d a d ʒ ɪ  ref=i n e k s o ɾ a b i l i ˈ d a d ʒ ɪ
+  antevendo       score=0.222  pred=ã t ʃ e ˈ v ẽ d ʊ  ref=ã t e ˈ v ẽ d ʊ
+  tímpano         score=0.250  pred=ˈ t ĩ p a n ʊ  ref=ˈ t ʃ ĩ p a n ʊ
+  cuidadosamente  score=0.250  pred=k u y d a d ɔ z a ˈ m ẽ t ʃ ɪ  ref=k u y d ʒ a d ɔ z a ˈ m ẽ t ʃ ɪ
+  ideologias      score=0.271  pred=i d ʒ o o l o ˈ ʒ i ə s  ref=i d e o l o ˈ ʒ i ə s
+  êxtase          score=0.281  pred=ˈ e s t a z ɪ  ref=ˈ e k s t a z ɪ
+  exala           score=0.286  pred=e ˈ z a l ə  ref=e ˈ k s a l ə
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   ɛ → e       157
+   i → e        77
+   e → ɛ        56
+   o → ɔ        55
+   ɔ → o        47
+   ə → a        26
+   e → i        18
+   ẽ → e        12
+   ũ → u        11
+   a → ˈ        10
+   a → ə        10
+   ĩ → i         9
+   a → d         9
+   ʃ → a         8
+   z → s         8

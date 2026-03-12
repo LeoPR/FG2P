@@ -1,0 +1,417 @@
+{
+  "total_pairs": 24,
+  "pairs_in_corpus": 13,
+  "pairs_missing": 11,
+  "pairs_with_one_form": 0,
+  "pairs_with_both_forms": 13,
+  "pairs": [
+    {
+      "word": "jogo",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈʒɔgʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈʒogʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "ˈ ʒ o . ɡ ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "gosto",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈgɔʃtʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈgoʃtʊ"
+      },
+      "in_corpus": false,
+      "corpus_entry": null,
+      "matches_A": null,
+      "matches_B": null,
+      "missing_form": null,
+      "chosen_form": null
+    },
+    {
+      "word": "molho",
+      "form_A": {
+        "description": "substantivo (sauce)",
+        "ipa": "ˈmɔʎʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈmoʎʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "ˈ m o . ʎ ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "torço",
+      "form_A": {
+        "description": "substantivo (plant)",
+        "ipa": "ˈtɔɾsʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈtoɾsʊ"
+      },
+      "in_corpus": false,
+      "corpus_entry": null,
+      "matches_A": null,
+      "matches_B": null,
+      "missing_form": null,
+      "chosen_form": null
+    },
+    {
+      "word": "corte",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈkɔɾtʃɪ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈkoɾtʃɪ"
+      },
+      "in_corpus": false,
+      "corpus_entry": null,
+      "matches_A": null,
+      "matches_B": null,
+      "missing_form": null,
+      "chosen_form": null
+    },
+    {
+      "word": "sorte",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈsɔɾtʃɪ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈsoɾtʃɪ"
+      },
+      "in_corpus": false,
+      "corpus_entry": null,
+      "matches_A": null,
+      "matches_B": null,
+      "missing_form": null,
+      "chosen_form": null
+    },
+    {
+      "word": "porto",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈpɔɾtʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈpoɾtʊ"
+      },
+      "in_corpus": false,
+      "corpus_entry": null,
+      "matches_A": null,
+      "matches_B": null,
+      "missing_form": null,
+      "chosen_form": null
+    },
+    {
+      "word": "forma",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈfɔɾmə"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈfoɾmə"
+      },
+      "in_corpus": false,
+      "corpus_entry": null,
+      "matches_A": null,
+      "matches_B": null,
+      "missing_form": null,
+      "chosen_form": null
+    },
+    {
+      "word": "morro",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈmɔxʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈmoɾʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "ˈ m o . x ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "torro",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈtɔxʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈtoɾʊ"
+      },
+      "in_corpus": false,
+      "corpus_entry": null,
+      "matches_A": null,
+      "matches_B": null,
+      "missing_form": null,
+      "chosen_form": null
+    },
+    {
+      "word": "socorro",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "sʊˈkɔxʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "sʊˈkoɾʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "s o . ˈ k o . x ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "acordo",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "aˈkɔɾdʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "aˈkoɾdʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "a . ˈ k ɔ ɣ . d ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "adorço",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "aˈdɔɾsʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "aˈdoɾsʊ"
+      },
+      "in_corpus": false,
+      "corpus_entry": null,
+      "matches_A": null,
+      "matches_B": null,
+      "missing_form": null,
+      "chosen_form": null
+    },
+    {
+      "word": "aperto",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "aˈpɛɾtʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "aˈpeɾtʊ"
+      },
+      "in_corpus": false,
+      "corpus_entry": null,
+      "matches_A": null,
+      "matches_B": null,
+      "missing_form": null,
+      "chosen_form": null
+    },
+    {
+      "word": "seco",
+      "form_A": {
+        "description": "adjetivo",
+        "ipa": "ˈsɛkʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈsekʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "ˈ s ɛ . k ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "pego",
+      "form_A": {
+        "description": "adjetivo/particípio",
+        "ipa": "ˈpɛgʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈpegʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "ˈ p ɛ . ɡ ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "cego",
+      "form_A": {
+        "description": "adjetivo",
+        "ipa": "ˈsɛgʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈsegʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "ˈ s ɛ . ɡ ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "cedo",
+      "form_A": {
+        "description": "advérbio",
+        "ipa": "ˈsɛdʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈsedʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "ˈ s e . d ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "neto",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈnɛtʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈnetʊ"
+      },
+      "in_corpus": false,
+      "corpus_entry": null,
+      "matches_A": null,
+      "matches_B": null,
+      "missing_form": null,
+      "chosen_form": null
+    },
+    {
+      "word": "veto",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈvɛtʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈvetʊ"
+      },
+      "in_corpus": false,
+      "corpus_entry": null,
+      "matches_A": null,
+      "matches_B": null,
+      "missing_form": null,
+      "chosen_form": null
+    },
+    {
+      "word": "dedo",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈdɛdʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈdedʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "ˈ d ɛ . d ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "medo",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈmɛdʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈmedʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "ˈ m ɛ . d ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "rego",
+      "form_A": {
+        "description": "substantivo",
+        "ipa": "ˈɾɛgʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈɾegʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "ˈ x ɛ . ɡ ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    },
+    {
+      "word": "teco",
+      "form_A": {
+        "description": "substantivo (rare)",
+        "ipa": "ˈtɛkʊ"
+      },
+      "form_B": {
+        "description": "1ª p. verbo",
+        "ipa": "ˈtekʊ"
+      },
+      "in_corpus": true,
+      "corpus_entry": "ˈ t ɛ . k ʊ",
+      "matches_A": false,
+      "matches_B": false,
+      "missing_form": "both",
+      "chosen_form": "NEITHER (unexpected)"
+    }
+  ]
+}

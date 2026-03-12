@@ -1,0 +1,58 @@
+{
+  "description": "Exp4 — PanPhon-fixed (non-trainable) LSTM (70/10/20 split, 24D features only)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.7,
+    "val_ratio": 0.1,
+    "test_ratio": 0.2,
+    "split_seed": 42,
+    "note": "Split 70/10/20 — volta ao original como exp0, testa se PanPhon features fixas suficientes",
+    "grapheme_encoding": "raw"
+  },
+  "model": {
+    "embedding_type": "panphon",
+    "emb_dim": 24,
+    "hidden_dim": 256,
+    "num_layers": 2,
+    "dropout": 0.5,
+    "note": "PRIOR GEOMÉTRICO PURO (frozen): 24D PanPhon fixos — sem aprendizado estatístico no embedding. Teste extremo: fonologia linguística substitui embedding aprendido. AVISO DE CONFOUND: usa split 70/10/20 (como Exp0), não 60/10/30 (como Exp3) — comparação direta Exp4 vs Exp3 confunde split com embedding config. Comparação válida: Exp4 vs Exp0 (isolates panphon_fixed vs learned, mesmo split 70/20) — mas dim diferente (24D vs 128D) é confound adicional."
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05
+  },
+  "experiment": {
+    "name": "exp4_panphon_fixed_24d",
+    "purpose": "Teste extremo: PanPhon features puras (24D fixed) suficientes sem learned embedding? Validar linguística > estatística",
+    "hypothesis": "Representação linguística (24D PanPhon) generaliza MELHOR que learned embeddings porque menos overfitting, mais interpretable",
+    "compared_with": [
+      "exp0: mesma split 70/10/20, learned embedding → mede impacto de features fixas vs learned",
+      "exp3: mesma setup PanPhon trainable, 128D → mede if trainability ajuda (exp4 < exp3) ou prejudica (exp4 ≈ exp3)"
+    ],
+    "expected_metrics": {
+      "per_estimate": "~0.62-0.68%",
+      "wer_estimate": "~5.2-5.6%",
+      "accuracy_estimate": "~93.8-94.4%"
+    },
+    "training_time_estimate": "~14-18h (GPU CUDA)",
+    "total_params": "~4.0M (similar exp0, 4x menor que exp2)",
+    "benchmark": {
+      "efficiency_gain": "4x fewer params than exp2 (17.2M), similar to exp0/exp1 (4.3M)",
+      "interpretability": "100% — cada feature é linguisticamente definida (vozeado, nasal, etc)"
+    },
+    "notes": [
+      "✓ LINGUISTIC HYPOTHESIS TEST: Valida se knowledge linguístico SUBSTITUI aprendizado estatístico",
+      "✓ Extreme efficiency: 2.1M params — prototipo para móbile/embedded g2p",
+      "⚠ Trade-off esperado: performance < exp0/exp3 (features fixas), mas eficiência ENORME",
+      "📊 Esperado exp4 PER ≤ 0.68% — se > 0.8%: PanPhon sozinho INSUFICIENTE",
+      "⭐ KEY RESULT: exp4 baseline para determinar if linguística é foundational (não apenas initialization)",
+      "🔬 Scientific value: Se exp4 ≈ exp0 (learned): surprising! Indica PanPhon completo para PT-BR;",
+      "                   Se exp4 << exp0: confirma aprendizado estatístico ESSENCIAL em G2P"
+    ]
+  }
+}

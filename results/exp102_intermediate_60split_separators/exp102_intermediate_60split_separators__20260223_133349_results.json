@@ -1,0 +1,25 @@
+{
+  "experiment": "exp102_intermediate_60split_separators__20260223_133349",
+  "timestamp": "2026-02-26T23:50:58.975717",
+  "training": {
+    "num_epochs": 92,
+    "throughput": {
+      "avg_samples_per_sec": 349.02994322433165,
+      "min_samples_per_sec": 349.02994322433165,
+      "max_samples_per_sec": 349.02994322433165
+    },
+    "best_epoch": 82,
+    "best_val_loss": 0.013631,
+    "best_train_loss": 0.017571,
+    "initial_train_loss": 0.450149,
+    "initial_val_loss": 0.05055,
+    "final_train_loss": 0.018773,
+    "final_val_loss": 0.015994,
+    "convergence_epoch_95percent": 36,
+    "gap_at_best": -0.003939999999999999,
+    "gap_at_final": -0.0027790000000000002,
+    "overfitting": "[OK] Nenhum",
+    "last5_std": 0.0007440000000000007
+  },
+  "test_metrics": {}
+}

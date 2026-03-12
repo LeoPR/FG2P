@@ -1,0 +1,24 @@
+# Files required for inference_minimal.py to work in Docker
+# Use with: docker build --build-arg FILES="$(cat .docker-files)"
+# Or manually copy as per Dockerfile
+
+# Source code (inference stack)
+src/inference_minimal.py
+src/inference_light.py
+src/g2p.py
+src/utils.py
+src/inference.py
+src/analyze_errors.py
+src/phoneme_embeddings.py
+src/file_registry.py
+src/phonetic_features.py
+
+# Data
+dicts/pt-br.tsv
+
+# Models (published aliases: best_per, best_wer)
+models/model_registry.json
+models/exp104b_intermediate_sep_da_custom_dist_fixed/exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333.pt
+models/exp104b_intermediate_sep_da_custom_dist_fixed/exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333_metadata.json
+models/exp9_intermediate_distance_aware/exp9_intermediate_distance_aware__20260222_064838.pt
+models/exp9_intermediate_distance_aware/exp9_intermediate_distance_aware__20260222_064838_metadata.json

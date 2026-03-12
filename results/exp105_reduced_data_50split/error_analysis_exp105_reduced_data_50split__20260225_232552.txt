@@ -1,0 +1,154 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-03-10 20:19:56
+Predições: predictions_exp105_reduced_data_50split__20260225_232552.tsv
+Total: 38375 palavras | Corretas: 36121 | Erros: 2254
+Tempo análise: 7.15s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.54%
+WER:      5.87%
+Accuracy: 94.13%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.65%
+PER Ponderado: 0.43%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 468468 (99.02%)
+Classe B:   1531 ( 0.32%)
+Classe C:    451 ( 0.10%)
+Classe D:   2650 ( 0.56%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  36121 palavras (94.13%)
+Classe B:   1467 palavras (3.82%)
+Classe C:    396 palavras (1.03%)
+Classe D:    391 palavras (1.02%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.12 median=+0
+Truncated: 10 palavras
+Over-generated: 0 palavras
+Hallucinations: 27 palavras
+
+Top-10 Truncadas:
+  político-administrativas ref=36 pred=29 (Δ-7)
+  estadunidense-colombiana ref=32 pred=26 (Δ-6)
+  científico-tecnológico ref=31 pred=25 (Δ-6)
+  absa            ref=12 pred= 6 (Δ-6)
+  vitórias-derrotas ref=23 pred=19 (Δ-4)
+  cabárdia-balcária ref=25 pred=22 (Δ-3)
+  famíliadasorquídeas ref=27 pred=24 (Δ-3)
+  abdo            ref=10 pred= 7 (Δ-3)
+  sócio-econômicos ref=23 pred=20 (Δ-3)
+  considerávelmente ref=23 pred=20 (Δ-3)
+
+Top-10 Alucinações:
+  alemão-oriental patterns=[bigram_loop:. o ×2 (palavra: ×1, ref: ×1), bigram_loop:o . ×2 (palavra: ×1, ref: ×1)]
+    pred: a . l e . ˈ m ã ʊ̃ . o . o . ẽ . t ə
+    ref:  a . l e . ˈ m ã ʊ̃ . o . ɾ i . ẽ . t ə w
+  otorrinolaringologia patterns=[trigram_loop:. l o ×2 (palavra: ×1, ref: ×1), trigram_loop:l o . ×2 (palavra: ×1, ref: ×1)]
+    pred: o . t o . x i . n o . l ə . ɾ o . l o . l o . ˈ ʒ i . ə
+    ref:  o . t o . x i . n o . l a . ɾ ĩ . ɡ ɔ . l ɔ . ˈ ʒ i . ə
+  freeride        patterns=[bigram_loop:e . ×2 (palavra: ×1, ref: ×1)]
+    pred: f ɾ e . e . ˈ ɾ i . d ʒ ɪ
+    ref:  f ɾ ɛ . e . ˈ ɾ i . d ʒ ɪ
+  ararapira       patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ a ×2 (palavra: ×1, ref: ×1), trigram_loop:ɾ a . ×2 (palavra: ×1, ref: ×1)]
+    pred: a . ɾ a . ɾ a . ˈ p i . ɾ ə
+    ref:  a . ɾ a . x a . ˈ p i . ɾ ə
+  cururuquara     patterns=[trigram_loop:u . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ u ×2 (palavra: ×1, ref: ×1), trigram_loop:ɾ u . ×2 (palavra: ×1, ref: ×1)]
+    pred: k u . ɾ u . ɾ u . ˈ k w a . ɾ ə
+    ref:  k u . ɾ u . x u . ˈ k w a . ɾ ə
+  otorrinolaringologista patterns=[trigram_loop:. l o ×2 (palavra: ×1, ref: ×1), trigram_loop:l o . ×2 (palavra: ×1, ref: ×1)]
+    pred: o . t o . x i . n o . l ə . ɾ o . l o . l o . ˈ ʒ i s . t ə
+    ref:  o . t o . x i . n o . l a . ɾ ĩ . ɡ ɔ . l ɔ . ˈ ʒ i s . t ə
+  pára-raios      patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ a ×2 (palavra: ×1, ref: ×1)]
+    pred: ˈ p a . ɾ a . ɾ a y . ʊ s
+    ref:  ˈ p a . ɾ a . x a y . ʊ s
+  ciclooxigenase  patterns=[bigram_loop:o . ×2 (palavra: ×1, ref: ×1)]
+    pred: s i . k l o . o . k i . ʒ e . ˈ n a . z ɪ
+    ref:  s i . k l ɔ . o . k s i . ʒ e . ˈ n a . z ɪ
+  neemias         patterns=[bigram_loop:e . ×2 (palavra: ×1, ref: ×1)]
+    pred: n e . e . ˈ m i . ə s
+    ref:  n ɛ . i . ˈ m i . ə s
+  araricá         patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1)]
+    pred: a . ɾ a . ɾ i . ˈ k a
+    ref:  a . ɾ a . x i . ˈ k a
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   ɛ → e       343  0.0417      B
+   e → ɛ       276  0.0417      B
+   ɔ → o       245  0.0417      B
+   i → e       204  0.0417      B
+   o → ɔ       139  0.0417      B
+   ə → a       112  0.0833      C
+   . → ˈ        92  1.0000      D
+   e → i        88  0.0417      B
+   i → .        75  1.0000      D
+   a → .        66  1.0000      D
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  noz-            score=0.900  pred=ˈ n ɔ s .  ref=ˈ n o z .
+  eels            score=0.917  pred=ˈ ɛ . ɛ w s  ref=ˈ ɪ . ɪ w s
+  uí              score=0.938  pred=u . ˈ i  ref=ũ . ˈ i
+  olo             score=0.950  pred=ˈ ɔ . l ʊ  ref=ˈ o . l ʊ
+  ertl            score=0.950  pred=ˈ i x t w  ref=ˈ e x t w
+  iça             score=0.950  pred=ˈ i . s ə  ref=ˈ ĩ . s ə
+  ife             score=0.950  pred=ˈ i . f ɪ  ref=ˈ ĩ . f ɪ
+  hijo            score=0.950  pred=ˈ i . ʒ ʊ  ref=ˈ ĩ . ʒ ʊ
+  côa             score=0.950  pred=ˈ k õ . ə  ref=ˈ k o . ə
+  ele             score=0.950  pred=ˈ ɛ . l ɪ  ref=ˈ e . l ɪ
+
+Classe C:
+  nús             score=0.812  pred=ˈ n ʊ s  ref=ˈ n u s
+  ruiu            score=0.850  pred=ˈ x u y ʊ  ref=ˈ x ʊ y ʊ
+  opô             score=0.850  pred=u . ˈ p o  ref=o . ˈ p o
+  mpla            score=0.850  pred=ˈ m p l a  ref=ˈ m p l ə
+  rímur           score=0.857  pred=ˈ x i . m u x  ref=ˈ x ĩ . m ʊ x
+  desde           score=0.875  pred=ˈ d ɛ z . d ʒ ɪ  ref=ˈ d e ʒ . d ʒ ɪ
+  bílá            score=0.875  pred=ˈ b i . l ə  ref=ˈ b i . l a
+  qubi            score=0.875  pred=k u . ˈ b i  ref=k w . ˈ b i
+  homem           score=0.875  pred=ˈ ɔ . m ẽ ỹ  ref=ˈ õ . m ẽ ỹ
+  opôr            score=0.875  pred=u . ˈ p o x  ref=o . ˈ p o x
+
+Classe D:
+  abos            score=0.000  pred=ˈ a . b ʊ s  ref=a . b e . ˈ ɔ s
+  vltava          score=0.000  pred=v w . ˈ t a . v ə  ref=ˈ v l t a . v ə
+  c-sar           score=0.000  pred=ˈ k a x  ref=k . ˈ s a x
+  mbcgame         score=0.025  pred=m b k . ˈ ɡ ã . m ɪ  ref=ˈ m b k ɡ ã . m ɪ
+  deambulação     score=0.062  pred=d e . ã . b u . l a . ˈ s ã ʊ̃  ref=d ʒ e . ã . b u . l a . ˈ s ã ʊ̃
+  deambular       score=0.077  pred=d e . ã . b u . ˈ l a x  ref=d ʒ e . ã . b u . ˈ l a x
+  ad-darazi       score=0.077  pred=a d ʒ . d a . ɾ a . ˈ z i  ref=a . d a . ɾ a . ˈ z i
+  ochroleuca      score=0.077  pred=o . ʃ o . ˈ l e w . k ə  ref=o ʃ . x o . ˈ l e w . k ə
+  réalisme        score=0.083  pred=ˈ ɛ . a . l i z . m ɪ  ref=ˈ x ɛ . a . l i z . m ɪ
+  ochracea        score=0.091  pred=o . ʃ a . ˈ s ɪ . ə  ref=o ʃ . x a . ˈ s ɪ . ə
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   ɛ → e       343
+   e → ɛ       276
+   ɔ → o       245
+   i → e       204
+   o → ɔ       139
+   ə → a       112
+   . → ˈ        92
+   e → i        88
+   i → .        75
+   a → .        66
+   a → ə        65
+   ˈ → .        63
+   . → i        54
+   . → a        46
+   ĩ → i        42

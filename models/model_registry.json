@@ -1,0 +1,66 @@
+{
+  "_version": "1.0",
+  "_generated_by": "python src/manage_experiments.py --registry",
+  "_generated_at": "2026-03-09 00:00:00",
+  "_promotion_rules": {
+    "min_test_words": 5000,
+    "note": "N_test >= 5000 required for best_* aliases. Experiments with >90% train split or N_test < 5000 go to comparison_* only (see _experiment_flags)."
+  },
+  "_experiment_flags": {
+    "note": "Experiments marked 'fair=false' should NOT be promoted to best_* aliases.",
+    "exp107_maxdata_95train": {"fair": false, "reason": "95% train split leaves only N=960 test — statistically fragile, not comparable to standard 70/30 splits."}
+  },
+  "aliases": {
+    "best_per": {
+      "experiment": "exp104b_intermediate_sep_da_custom_dist_fixed",
+      "run_id": "20260225_045333",
+      "per": 0.0049,
+      "wer": 0.0543,
+      "n_test": 28800,
+      "uses_separators": true,
+      "description": "Best phoneme accuracy on large test set (N=28.8k). Recommended general-purpose model.",
+      "notes": "DA Loss lambda=0.2 + syllable separators + structural distance correction (fixed). SOTA PER on fair evaluation."
+    },
+    "best_wer": {
+      "experiment": "exp9_intermediate_distance_aware",
+      "run_id": "20260222_064838",
+      "per": 0.0058,
+      "wer": 0.0496,
+      "n_test": 28800,
+      "uses_separators": false,
+      "description": "Best word accuracy (N=28.8k). Recommended for NLP, search, word-level tasks.",
+      "notes": "DA Loss lambda=0.2, intermediate capacity 9.7M params. No syllable separators — clean phoneme output."
+    },
+    "best_tts": {
+      "experiment": "exp104b_intermediate_sep_da_custom_dist_fixed",
+      "run_id": "20260225_045333",
+      "per": 0.0049,
+      "wer": 0.0543,
+      "n_test": 28800,
+      "uses_separators": true,
+      "description": "Best model for Text-to-Speech. Outputs syllable boundaries (.) and stress markers.",
+      "notes": "Same checkpoint as best_per. Syllable separators improve prosody in TTS pipelines."
+    },
+    "fast": {
+      "status": "pending_retrain",
+      "experiment": null,
+      "run_id": null,
+      "per": null,
+      "wer": null,
+      "n_test": null,
+      "uses_separators": null,
+      "description": "Fastest model (exp106 target) — pending retrain. 2.58x faster, modest accuracy trade-off.",
+      "notes": "Retrain exp106 to activate. Expected PER ~0.58%, WER ~6.12%, ~400 w/s on CPU."
+    },
+    "comparison_latphon": {
+      "experiment": "exp107_maxdata_95train",
+      "run_id": null,
+      "per": 0.0046,
+      "wer": 0.0556,
+      "n_test": 960,
+      "uses_separators": true,
+      "description": "Methodological comparison with LatPhon 2025 (N=960). NOT eligible for best_* aliases.",
+      "notes": "N_test=960 too small for fair comparison. 95% train split inflates PER — experimental condition only."
+    }
+  }
+}

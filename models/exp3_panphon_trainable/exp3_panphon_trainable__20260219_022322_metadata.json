@@ -1,0 +1,112 @@
+{
+  "experiment_name": "exp3_panphon_trainable",
+  "run_id": "20260219_022322",
+  "full_name": "exp3_panphon_trainable__20260219_022322",
+  "timestamp": "2026-02-19 05:34:07",
+  "current_epoch": 72,
+  "total_epochs": 120,
+  "config": {
+    "description": "Exp3 — PanPhon-initialized LSTM (60/10/30 split, same capacity as exp1)",
+    "data": {
+      "source": "dicts/pt-br.tsv",
+      "train_ratio": 0.6,
+      "val_ratio": 0.1,
+      "test_ratio": 0.3,
+      "split_seed": 42,
+      "note": "Split 60/10/30 — EXATAMENTE igual exp1 e exp2 para isolar efeito de PanPhon features"
+    },
+    "model": {
+      "embedding_type": "panphon",
+      "emb_dim": 128,
+      "hidden_dim": 256,
+      "num_layers": 2,
+      "dropout": 0.5,
+      "note": "PANPHON FEATURES: embedding inicial 24D articulatório features → 128D trainable; capacity = exp1"
+    },
+    "training": {
+      "fit_method": "adam",
+      "epochs": 120,
+      "warmup_epochs": 80,
+      "batch_size": 64,
+      "lr": 0.001,
+      "early_stopping_patience": 10,
+      "weight_decay": 1e-05
+    },
+    "experiment": {
+      "name": "exp3_panphon_trainable",
+      "purpose": "Testar se embeddings informados por features linguísticas MELHORAM aprendizado vs learned embeddings puros",
+      "hypothesis": "Iniciar embedding com 24D PanPhon features → convergência mais rápida + melhor generalização + parâmetros reduzidos",
+      "compared_with": [
+        "exp1: mesmos parâmetros capacity/split, but learned embedding → mede IMPACTO puramente de PanPhon init",
+        "exp2: mesma split, mais capacity learned → se exp3 ≤ exp2: features linguísticas > mais params"
+      ],
+      "expected_metrics": {
+        "per_estimate": "~0.60-0.62%",
+        "wer_estimate": "~5.0-5.2%",
+        "accuracy_estimate": "~94.5-94.8%"
+      },
+      "training_time_estimate": "~12-18h (GPU CUDA, menos params que exp2)",
+      "total_params": "~4.0M (vs 4.3M exp1: similar — compara features, não params)",
+      "notes": [
+        "✓ FEATURE ENGINEERING TEST: Valida se knowledge linguístico (PanPhon) melhora aprendizado",
+        "✓ Interpretable: 24 features articulatórios (vozeado, nasal, sílábico, etc)",
+        "✓ Params: ~4.0M (vs 4.3M exp1) — comparação isola efeito das features linguísticas",
+        "📊 Hipótese científica: Features informadas = better inductive bias; esperado exp3 ≥ exp1 com menos params",
+        "⭐ KEY INSIGHT: Se exp3 ≈ exp1 com params similares → PanPhon features SÃO valuable!",
+        "📝 Paper relevante: Articulatory Feature Embeddings (RapidPitch, FastPitch architecture logic)"
+      ]
+    }
+  },
+  "best_loss": 0.01760621749330312,
+  "training_completed": true,
+  "device": "cuda",
+  "total_params": 4319659,
+  "dataset": {
+    "dict_path": "C:\\Users\\leona\\OneDrive\\Documents\\Projects\\Acadêmicos\\FG2P\\dicts\\pt-br.tsv",
+    "dict_checksum": "f74d2ec80a7e3ef0",
+    "total_words": 95937,
+    "train_size": 57561,
+    "val_size": 9594,
+    "test_size": 28782,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "seed": 42,
+    "char_vocab_size": 39,
+    "phoneme_vocab_size": 43,
+    "stratified": true,
+    "strata_count": 34,
+    "jsd": {
+      "stress_type": 8.702009676692127e-06,
+      "syllable_bin": 2.9213040122309385e-09,
+      "length_bin": 2.0727946563596256e-09,
+      "ratio_bin": 1.4080879246151039e-05
+    },
+    "chi2_pvalue": {
+      "stress_type": 0.973336888567754,
+      "syllable_bin": 0.9998446073007422,
+      "length_bin": 0.9999991289300925,
+      "ratio_bin": 0.6785275797985397
+    },
+    "cramers_v": {
+      "stress_type": 0.002410467707483833,
+      "syllable_bin": 5.999756276281242e-05,
+      "length_bin": 5.054064101672567e-05,
+      "ratio_bin": 0.004190542051781302
+    },
+    "verdict": {
+      "quality": "excelente",
+      "confidence": "alta",
+      "any_chi2_significant": false,
+      "bonferroni_alpha": 0.0125,
+      "min_pvalue": 0.6785275797985397,
+      "max_cramers_v": 0.004190542051781302
+    },
+    "train_phoneme_coverage": 1.0,
+    "val_phoneme_coverage": 1.0,
+    "train_bigram_coverage": 0.9494949494949495,
+    "val_bigram_coverage": 0.7860422405876951
+  },
+  "final_epoch": 90,
+  "total_time_seconds": 14248.0927009,
+  "avg_epoch_time": 158.31214112111113
+}

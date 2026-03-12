@@ -1,0 +1,34 @@
+G2P LSTM Training Summary
+============================================================
+Experiment: exp7_lambda_lower_bound_0.05
+Run ID: 20260221_020217
+Full Name: exp7_lambda_lower_bound_0.05__20260221_020217
+Timestamp: 2026-02-21 06:02:52
+------------------------------------------------------------
+Device: cuda
+Embedding: learned
+Optimizer: adam
+Train/Val/Test Split: 60% / 10% / 30%
+------------------------------------------------------------
+Model: G2PLSTMModel | BiLSTM | emb=128 hidden=256 layers=2 dropout=0.50
+Total params: 4,321,963
+------------------------------------------------------------
+Train samples: 57,561
+Val samples: 9,594
+Test samples (held-out): 28,782
+Batch size: 64
+Learning rate: 0.001
+Epochs trained: 90
+------------------------------------------------------------
+Best val loss: 0.017011 (epoch 80)
+------------------------------------------------------------
+Total time: 14434.6s (240.6m)
+Avg epoch time: 160.4s
+Training speed (avg): 359 samples/s
+============================================================
+Generated files:
+  Model:    models/exp7_lambda_lower_bound_0.05.pt
+  History:  results/exp7_lambda_lower_bound_0.05_history.csv
+  Summary:  results/exp7_lambda_lower_bound_0.05_summary.txt
+
+Use 'python src/analyze.py' para gerar gráficos de convergência.

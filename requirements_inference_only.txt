@@ -1,0 +1,33 @@
+# Dependências ABSOLUTAS para rodar inference_minimal.py ou inference_light.py
+#
+# Justificativa para cada linha:
+#
+# torch>=2.0.0
+#   - Requerido: carregar modelo .pt + forward pass (encoder-decoder LSTM)
+#   - Sem essa, não há modelo
+#   - Versão mínima: 2.0.0 (modelos treinados com PyTorch 2.x)
+#
+# numpy>=1.20.0
+#   - Requerido por g2p.py (importado por inference_light.py)
+#   - Usado em análise de qualidade de dados (quality_report)
+#   - Nota: Torch wheel CPU não inclui automaticamente numpy em todas as versões
+#   - Testado: falha sem numpy em Docker python:3.13-slim
+#
+# scipy>=1.7.0
+#   - Importado no topo de g2p.py (stats.chi2_contingency em quality_report)
+#   - Usada apenas em análise de treino, mas importação é necessária
+#   - Testado: falha sem scipy em Docker
+#
+# scikit-learn>=1.0.0
+#   - Importado no topo de g2p.py (train_test_split em split de corpus)
+#   - Usada apenas em treino, mas importação é necessária para carregar g2p.py
+#   - Testado: falha sem sklearn em Docker
+#
+# Nota: pandas, editdistance — NÃO aparecem aqui porque
+# NÃO são usados na inferência pura (usados apenas em análise/treino).
+# editdistance: import lazy em calculate_per() — carregado apenas quando métricas são calculadas.
+
+torch
+numpy
+scipy
+scikit-learn

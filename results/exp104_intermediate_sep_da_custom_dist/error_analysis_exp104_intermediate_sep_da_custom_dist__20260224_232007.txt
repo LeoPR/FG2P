@@ -1,0 +1,160 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-02-25 04:41:41
+Predições: predictions_exp104_intermediate_sep_da_custom_dist__20260224_232007.tsv
+Total: 28782 palavras | Corretas: 27091 | Erros: 1691
+Tempo análise: 6.70s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.54%
+WER:      5.88%
+Accuracy: 94.12%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.65%
+PER Ponderado: 0.45%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 351362 (99.00%)
+Classe B:   1160 ( 0.33%)
+Classe C:    315 ( 0.09%)
+Classe D:   2068 ( 0.58%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  27091 palavras (94.12%)
+Classe B:   1125 palavras (3.91%)
+Classe C:    275 palavras (0.96%)
+Classe D:    291 palavras (1.01%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.14 median=+0
+Truncated: 10 palavras
+Over-generated: 4 palavras
+Hallucinations: 21 palavras
+
+Top-10 Truncadas:
+  político-administrativas ref=36 pred=26 (Δ-10)
+  absa            ref=12 pred= 6 (Δ-6)
+  estadunidense-colombiana ref=32 pred=26 (Δ-6)
+  desinstitucionalização ref=32 pred=27 (Δ-5)
+  olmütz          ref= 9 pred= 5 (Δ-4)
+  considerávelmente ref=23 pred=19 (Δ-4)
+  vestibulococlear ref=24 pred=21 (Δ-3)
+  antibioticoterapia ref=29 pred=26 (Δ-3)
+  interdenominacional ref=27 pred=24 (Δ-3)
+  otorrinolaringologista ref=30 pred=27 (Δ-3)
+
+Top-10 Over-generated:
+  modificabilidade ref=26 pred=29 (Δ+3)
+  irredutibilidade ref=25 pred=28 (Δ+3)
+  impraticabilidade ref=26 pred=29 (Δ+3)
+  irreversibilidade ref=25 pred=28 (Δ+3)
+
+Top-10 Alucinações:
+  totvs           patterns=[bigram_loop:t t ×2 (palavra: ×1, ref: ×1)]
+    pred: t t t t v s
+    ref:  ˈ t ʊ t v s
+  cidadanias      patterns=[trigram_loop:. d a ×2 (palavra: ×1, ref: ×1), trigram_loop:d a . ×2 (palavra: ×1, ref: ×1)]
+    pred: s i . d a . d a . ˈ n i . ə s
+    ref:  s i . d a . d ə . ˈ n i . ə s
+  pára-raios      patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ a ×2 (palavra: ×1, ref: ×1)]
+    pred: ˈ p a . ɾ a . ɾ a y . ʊ s
+    ref:  ˈ p a . ɾ a . x a y . ʊ s
+  misasagi        patterns=[trigram_loop:. z a ×2 (palavra: ×1, ref: ×1), trigram_loop:z a . ×2 (palavra: ×1, ref: ×1)]
+    pred: m i . z a . z a . ˈ ʒ i
+    ref:  m i . z a . s a . ˈ ʒ i
+  ararapira       patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ a ×2 (palavra: ×1, ref: ×1), trigram_loop:ɾ a . ×2 (palavra: ×1, ref: ×1)]
+    pred: a . ɾ a . ɾ a . ˈ p i . ɾ ə
+    ref:  a . ɾ a . x a . ˈ p i . ɾ ə
+  freeride        patterns=[bigram_loop:e . ×2 (palavra: ×1, ref: ×1)]
+    pred: f ɾ e . e . ˈ ɾ i . d ʒ ɪ
+    ref:  f ɾ ɛ . e . ˈ ɾ i . d ʒ ɪ
+  eletroencefalografia patterns=[trigram_loop:a . ɡ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɡ a ×2 (palavra: ×1, ref: ×1), trigram_loop:ɡ a . ×2 (palavra: ×1, ref: ×1)]
+    pred: ɛ . l e . t ɾ o . ẽ . s e . f a . ɡ a . ɡ a . ˈ f i . ə
+    ref:  ɛ . l e . t ɾ o . ẽ . s e . f a . l o . ɡ ɾ a . ˈ f i . ə
+  modificabilidade patterns=[trigram_loop:i . l ×2 (palavra: ×1, ref: ×1), trigram_loop:. l i ×2 (palavra: ×1, ref: ×1), trigram_loop:l i . ×2 (palavra: ×1, ref: ×1)]
+    pred: m o . d ʒ i . f i . k a . b i . l i . l i . ˈ d a . d ʒ ɪ
+    ref:  m o . d ʒ i . f i . k ə . b i . l i . ˈ d a . d ʒ ɪ
+  teerã           patterns=[bigram_loop:ɛ . ×2 (palavra: ×1, ref: ×1)]
+    pred: t ɛ . ɛ . ˈ ɾ ã
+    ref:  t e . ɛ . ˈ ɾ ã
+  ararajuba       patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ a ×2 (palavra: ×1, ref: ×1), trigram_loop:ɾ a . ×2 (palavra: ×1, ref: ×1)]
+    pred: a . ɾ a . ɾ a . ˈ ʒ u . b ə
+    ref:  a . ɾ a . x a . ˈ ʒ u . b ə
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   ɛ → e       251  0.0417      B
+   e → ɛ       212  0.0417      B
+   ɔ → o       210  0.0417      B
+   i → e       126  0.0417      B
+   . → ˈ        80  1.0000      D
+   a → .        80  1.0000      D
+   e → i        72  0.0417      B
+   o → ɔ        70  0.0417      B
+   i → .        69  1.0000      D
+   ə → a        61  0.0833      C
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  eels            score=0.917  pred=ˈ ɛ . ɛ w s  ref=ˈ ɪ . ɪ w s
+  uíma            score=0.929  pred=u . ˈ i . m ə  ref=ũ . ˈ ĩ . m ə
+  uí              score=0.938  pred=u . ˈ i  ref=ũ . ˈ i
+  hazm            score=0.938  pred=ˈ a s m  ref=ˈ a z m
+  leonel          score=0.944  pred=l ɛ . o . ˈ n ɛ w  ref=l e . o . ˈ n e w
+  froilaz         score=0.944  pred=f ɾ ɔ y . ˈ l a s  ref=f ɾ o y . ˈ l a z
+  pról            score=0.950  pred=ˈ p ɾ ɔ w  ref=ˈ p ɾ o w
+  ilê             score=0.950  pred=i . ˈ l e  ref=i . ˈ l ɛ
+  ertl            score=0.950  pred=ˈ ɛ x t w  ref=ˈ e x t w
+  verdelho        score=0.950  pred=v e ɣ . ˈ d ɛ . ʎ ʊ  ref=v i ɣ . ˈ d e . ʎ ʊ
+
+Classe C:
+  nús             score=0.812  pred=ˈ n ʊ s  ref=ˈ n u s
+  hoa             score=0.812  pred=ˈ o . ə  ref=ˈ o . a
+  elr             score=0.812  pred=ˈ ɛ w x  ref=ˈ i w x
+  refn            score=0.850  pred=ˈ x ɛ f n  ref=ˈ x i f n
+  ojá             score=0.850  pred=o . ˈ ʒ a  ref=u . ˈ ʒ a
+  ias             score=0.850  pred=ˈ ĩ . ə s  ref=ˈ ĩ . a s
+  opô             score=0.850  pred=u . ˈ p o  ref=o . ˈ p o
+  orim            score=0.850  pred=ɔ . ˈ ɾ ĩ  ref=u . ˈ ɾ ĩ
+  bsgi            score=0.850  pred=ˈ b ʒ ʒ i  ref=ˈ b s ʒ i
+  cuius           score=0.875  pred=ˈ k u y ʊ s  ref=ˈ k ʊ y ʊ s
+
+Classe D:
+  olmütz          score=0.000  pred=ˈ ɔ w t s  ref=ɔ w . ˈ m k s t s
+  derülo          score=0.000  pred=ˈ d ɛ x . . l ʊ  ref=d e . ˈ ɾ k s . l ʊ
+  abos            score=0.000  pred=ˈ a . b ʊ s  ref=a . b e . ˈ ɔ s
+  raiz            score=0.000  pred=x a . ˈ i s  ref=ˈ x a y s
+  guaiuba         score=0.000  pred=ɡ w a y ˈ . b ə  ref=ˈ ɡ w a y u . b ə
+  unhcr           score=0.050  pred=ũ ũ k ɾ  ref=ˈ ʊ ɲ k ɾ
+  deambulação     score=0.062  pred=d e . ã . b u . l a . ˈ s ã ʊ̃  ref=d ʒ e . ã . b u . l a . ˈ s ã ʊ̃
+  ad-darazi       score=0.077  pred=a d ʒ . d a . ɾ a . ˈ z i  ref=a . d a . ɾ a . ˈ z i
+  vltavou         score=0.100  pred=v w . t a . ˈ v o w  ref=v l t a . ˈ v o w
+  n-versões       score=0.104  pred=n e . v e x . ˈ s õ ỹ s  ref=n . v e x . ˈ s õ ỹ s
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   ɛ → e       251
+   e → ɛ       212
+   ɔ → o       210
+   i → e       126
+   . → ˈ        80
+   a → .        80
+   e → i        72
+   o → ɔ        70
+   i → .        69
+   ə → a        61
+   a → ə        53
+   i → ĩ        46
+   u → o        45
+   e → .        41
+   ˈ → .        39

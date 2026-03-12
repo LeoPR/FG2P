@@ -1,0 +1,25 @@
+{
+  "experiment": "exp8_panphon_distance_aware__20260222_000737",
+  "timestamp": "2026-02-26T23:50:56.606290",
+  "training": {
+    "num_epochs": 90,
+    "throughput": {
+      "avg_samples_per_sec": 457.9965772714525,
+      "min_samples_per_sec": 457.9965772714525,
+      "max_samples_per_sec": 457.9965772714525
+    },
+    "best_epoch": 65,
+    "best_val_loss": 0.018169,
+    "best_train_loss": 0.02079,
+    "initial_train_loss": 0.710943,
+    "initial_val_loss": 0.155664,
+    "final_train_loss": 0.018349,
+    "final_val_loss": 0.018593,
+    "convergence_epoch_95percent": 14,
+    "gap_at_best": -0.0026209999999999983,
+    "gap_at_final": 0.0002439999999999977,
+    "overfitting": "[OK] Nenhum",
+    "last5_std": 0.0030645000000000013
+  },
+  "test_metrics": {}
+}

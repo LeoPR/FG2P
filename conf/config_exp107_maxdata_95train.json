@@ -1,0 +1,76 @@
+{
+  "description": "Exp107 — MaxData 95% treino + Syllable Separators + DA Loss (λ=0.2) + Custom Structural Distances (FIXED)",
+  "data": {
+    "source": "dicts/pt-br.tsv",
+    "train_ratio": 0.90,
+    "val_ratio": 0.07,
+    "test_ratio": 0.03,
+    "split_seed": 42,
+    "note": "Maximizar dados de treino: 91.140 palavras (vs 57.562 no Exp104b = +58%). Test set ~959 palavras — comparável a 500 de outros papers (LatPhon 2025).",
+    "grapheme_encoding": "raw",
+    "keep_syllable_separators": true
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 256,
+    "hidden_dim": 768,
+    "num_layers": 2,
+    "dropout": 0.6,
+    "note": "Idêntico Exp104b em arquitetura.",
+    "total_params_estimate": "~9.7M"
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 64,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.2,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "λ=0.2 ótimo de Exp7. Override estrutural aplicado APÓS normalização (bug fix de Exp104b)."
+    }
+  },
+  "experiment": {
+    "name": "exp107_maxdata_95train",
+    "purpose": "Avaliar impacto de maximizar dados de treino (60%→95%) sobre PER/WER. Com 91K palavras de treino (vs 57K no Exp104b), esperamos melhorar PER abaixo de 0.49%. Comparação metodológica com LatPhon 2025 (PER 0.89%, N_test=500): nosso modelo com ~959 palavras de teste deve superar claramente.",
+    "hypothesis": "Mais dados de treino → PER < 0.49% (SOTA atual Exp104b). O corpus de 95K palavras ainda não está saturando o modelo 9.7M — margem de melhoria provável.",
+    "comparison_target": {
+      "paper": "LatPhon 2025",
+      "per": "0.89%",
+      "n_test": 500,
+      "language": "PT-BR",
+      "note": "Comparação justa em tamanho de test set: nosso ~959 vs 500 deles. Ambos testam generalização fora de treino."
+    },
+    "compared_with": [
+      "exp104b: 60% treino, DA Loss + sep + override (PER 0.49%, WER 5.43%) — SOTA PER atual",
+      "exp105: 50% treino, DA Loss + sep + override (PER 0.54%, WER 5.87%) — menos dados",
+      "exp9:   60% treino, DA Loss sem sep (PER 0.58%, WER 4.96%) — SOTA WER"
+    ],
+    "expected_metrics": {
+      "per_estimate": "< 0.49% (esperado 0.44-0.47%)",
+      "wer_estimate": "~5.1-5.4% (similar ou melhor que Exp104b)",
+      "note": "Mais dados devem ajudar especialmente em padrões raros e palavras longas."
+    },
+    "data_split_sizes": {
+      "total": 95937,
+      "train": "~91140 (95%)",
+      "val": "~3837 (4%)",
+      "test": "~960 (1%)"
+    },
+    "training_time_estimate": "~7-8h GPU (mais palavras por epoch = mais tempo)",
+    "total_params": "~9.7M",
+    "risk": "Test set pequeno (~960) aumenta variância estatística das métricas. Usar WER/PER com cautela — reportar junto com N do test set.",
+    "notes": [
+      "Phase 7: Exp107 é o primeiro experimento após Phase 6C (ablações completas)",
+      "Split seed=42 mantido para reprodutibilidade, mas splits são completamente diferentes de Exp104b",
+      "Config criado: 2026-02-28"
+    ]
+  }
+}

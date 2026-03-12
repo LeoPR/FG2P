@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-03-11 14:42:57",
+  "experiment_name": "exp0_training_regime",
+  "inference_time_s": 1049.062,
+  "samples_per_sec": 18.3,
+  "total_words": 19188,
+  "predictions_file": "predictions_exp0_training_regime__20260311_125626.tsv"
+}

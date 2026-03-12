@@ -1,0 +1,153 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-02-23 23:23:30
+Predições: predictions_exp102_intermediate_60split_separators__20260223_133349.tsv
+Total: 28782 palavras | Corretas: 27116 | Erros: 1666
+Tempo análise: 6.38s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.52%
+WER:      5.79%
+Accuracy: 94.21%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.64%
+PER Ponderado: 0.35%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 351575 (99.05%)
+Classe B:   1139 ( 0.32%)
+Classe C:    317 ( 0.09%)
+Classe D:   1902 ( 0.54%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  27116 palavras (94.21%)
+Classe B:   1085 palavras (3.77%)
+Classe C:    289 palavras (1.00%)
+Classe D:    292 palavras (1.01%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.13 median=+0
+Truncated: 4 palavras
+Over-generated: 3 palavras
+Hallucinations: 12 palavras
+
+Top-10 Truncadas:
+  político-administrativas ref=36 pred=26 (Δ-10)
+  científico-tecnológica ref=31 pred=24 (Δ-7)
+  absa            ref=12 pred= 6 (Δ-6)
+  abdo            ref=10 pred= 6 (Δ-4)
+
+Top-10 Over-generated:
+  eletroencefalografia ref=29 pred=33 (Δ+4)
+  asterosismologia ref=24 pred=27 (Δ+3)
+  otorrinolaringologista ref=30 pred=33 (Δ+3)
+
+Top-10 Alucinações:
+  cidadanias      patterns=[trigram_loop:. d a ×2 (palavra: ×1, ref: ×1), trigram_loop:d a . ×2 (palavra: ×1, ref: ×1)]
+    pred: s i . d a . d a . ˈ n i . ə s
+    ref:  s i . d a . d ə . ˈ n i . ə s
+  pára-raios      patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ a ×2 (palavra: ×1, ref: ×1)]
+    pred: ˈ p a . ɾ a . ɾ a y . ʊ s
+    ref:  ˈ p a . ɾ a . x a y . ʊ s
+  misasagi        patterns=[trigram_loop:. z a ×2 (palavra: ×1, ref: ×1), trigram_loop:z a . ×2 (palavra: ×1, ref: ×1)]
+    pred: m i . z a . z a . ˈ ʒ i
+    ref:  m i . z a . s a . ˈ ʒ i
+  asterosismologia patterns=[trigram_loop:o . l ×2 (palavra: ×1, ref: ×1)]
+    pred: a s . t e . ɾ ɔ . z i z . m o . l o . l ɔ . ˈ ʒ i . ə
+    ref:  a s . t e . ɾ ɔ . z i z . m o . l ɔ . ˈ ʒ i . ə
+  teerã           patterns=[bigram_loop:ɛ . ×2 (palavra: ×1, ref: ×1)]
+    pred: t ɛ . ɛ . ˈ ɾ ã
+    ref:  t e . ɛ . ˈ ɾ ã
+  buéréré         patterns=[trigram_loop:ɛ . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ ɛ ×2 (palavra: ×1, ref: ×1)]
+    pred: b u . ˈ ɛ . ɾ ɛ . ɾ ɛ
+    ref:  b u . ˈ ɛ . ɾ ɛ . x ɛ
+  anarco-comunistas patterns=[trigram_loop:. k o ×2 (palavra: ×1, ref: ×1), trigram_loop:k o . ×2 (palavra: ×1, ref: ×1)]
+    pred: a . n a x . k o . k o . m u . ˈ n i s . t ə s
+    ref:  a . n a x . k o . k ɔ . m u . ˈ n i s . t ə s
+  ururaí          patterns=[trigram_loop:u . ɾ ×2 (palavra: ×1, ref: ×1)]
+    pred: u . ɾ u . ɾ a . ˈ i
+    ref:  u . ɾ u . x a . ˈ ĩ
+  cururuquara     patterns=[trigram_loop:u . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ u ×2 (palavra: ×1, ref: ×1), trigram_loop:ɾ u . ×2 (palavra: ×1, ref: ×1)]
+    pred: k u . ɾ u . ɾ u . ˈ k w a . ɾ ə
+    ref:  k u . ɾ u . x u . ˈ k w a . ɾ ə
+  otorrinolaringologista patterns=[trigram_loop:ɔ . l ×2 (palavra: ×1, ref: ×1), trigram_loop:. l ɔ ×2 (palavra: ×1, ref: ×1), trigram_loop:l ɔ . ×2 (palavra: ×1, ref: ×1)]
+    pred: o . t o . x i . n o . l a . ɾ ĩ . ɡ ɔ . l ɔ . l ɔ . ˈ ʒ i s . t ə
+    ref:  o . t o . x i . n o . l a . ɾ ĩ . ɡ ɔ . l ɔ . ˈ ʒ i s . t ə
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   ɛ → e       284  0.0417      B
+   e → ɛ       198  0.0417      B
+   ɔ → o       184  0.0417      B
+   i → e       120  0.0417      B
+   e → i        85  0.0417      B
+   o → ɔ        79  0.0417      B
+   ə → a        62  0.0833      C
+   . → ˈ        59  0.0000      B
+   i → .        52  0.8333      D
+   a → .        51  0.8333      D
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  oroz            score=0.917  pred=o . ˈ ɾ ɔ s  ref=ɔ . ˈ ɾ o s
+  esox            score=0.929  pred=e . ˈ z ɔ k s  ref=ɛ . ˈ z o k s
+  uí              score=0.938  pred=u . ˈ i  ref=ũ . ˈ i
+  hazm            score=0.938  pred=ˈ a s m  ref=ˈ a z m
+  elr             score=0.938  pred=ˈ e w x  ref=ˈ i w x
+  conserva        score=0.950  pred=k õ . ˈ z ɛ ɣ . v ə  ref=k õ . ˈ s e ɣ . v ə
+  ilha            score=0.950  pred=ˈ i . ʎ ə  ref=ˈ ĩ . ʎ ə
+  pról            score=0.950  pred=ˈ p ɾ ɔ w  ref=ˈ p ɾ o w
+  ilê             score=0.950  pred=i . ˈ l e  ref=i . ˈ l ɛ
+  ertl            score=0.950  pred=ˈ ɛ x t w  ref=ˈ e x t w
+
+Classe C:
+  rô              score=0.750  pred=ˈ x ʊ  ref=ˈ x o
+  nús             score=0.812  pred=ˈ n ʊ s  ref=ˈ n u s
+  hoa             score=0.812  pred=ˈ o . ə  ref=ˈ o . a
+  oa              score=0.812  pred=ˈ o . ə  ref=ˈ o . a
+  ias             score=0.850  pred=ˈ ĩ . ə s  ref=ˈ ĩ . a s
+  psol            score=0.850  pred=ˈ p s ʊ w  ref=ˈ p s o w
+  bsgi            score=0.850  pred=ˈ b ʒ ʒ i  ref=ˈ b s ʒ i
+  eas             score=0.850  pred=ˈ ɪ . ə s  ref=ˈ ɪ . a s
+  opõe            score=0.875  pred=ɔ . ˈ p õ ỹ  ref=u . ˈ p õ ỹ
+  guesde          score=0.875  pred=ˈ ɡ e z . d ʒ ɪ  ref=ˈ ɡ ɛ ʒ . d ʒ ɪ
+
+Classe D:
+  abos            score=0.000  pred=ˈ a . b ʊ s  ref=a . b e . ˈ ɔ s
+  vltava          score=0.000  pred=v w . ˈ t a . v ə  ref=ˈ v l t a . v ə
+  fruilhe         score=0.000  pred=ˈ f ɾ u y . ʎ ɪ  ref=f ɾ u . ˈ i . ʎ ɪ
+  ad-darazi       score=0.077  pred=a d ʒ . d a . ɾ a . ˈ z i  ref=a . d a . ɾ a . ˈ z i
+  ixtapa          score=0.100  pred=i s . ˈ t a . p ə  ref=i k s . ˈ t a . p ə
+  duelar          score=0.100  pred=d ʒ u . ɛ . ˈ l a x  ref=d u . ɛ . ˈ l a x
+  vltavou         score=0.100  pred=v w . t a . ˈ v o w  ref=v l t a . ˈ v o w
+  tschierva       score=0.104  pred=t ʃ . ʃ i . ˈ ɛ ɣ . v ə  ref=t s ʃ i . ˈ ɛ ɣ . v ə
+  oxigenados      score=0.125  pred=o . ʃ i . ʒ e . ˈ n a . d ʊ s  ref=o . k s i . ʒ e . ˈ n a . d ʊ s
+  oxigenado       score=0.133  pred=o . ʃ i . ʒ e . ˈ n a . d ʊ  ref=o . k s i . ʒ e . ˈ n a . d ʊ
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   ɛ → e       284
+   e → ɛ       198
+   ɔ → o       184
+   i → e       120
+   e → i        85
+   o → ɔ        79
+   ə → a        62
+   . → ˈ        59
+   i → .        52
+   a → .        51
+   a → ə        49
+   ˈ → .        48
+   u → o        45
+   i → ĩ        34
+   . → i        33

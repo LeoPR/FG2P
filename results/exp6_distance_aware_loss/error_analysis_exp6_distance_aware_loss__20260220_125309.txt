@@ -1,0 +1,133 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-02-20 20:16:52
+Predições: predictions_exp6_distance_aware_loss__20260220_125309.tsv
+Total: 28782 palavras | Corretas: 27243 | Erros: 1539
+Tempo análise: 6.58s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.63%
+WER:      5.35%
+Accuracy: 94.65%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.60%
+PER Ponderado: 0.27%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 270193 (99.02%)
+Classe B:   1063 ( 0.39%)
+Classe C:    330 ( 0.12%)
+Classe D:   1271 ( 0.47%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  27243 palavras (94.65%)
+Classe B:   1019 palavras (3.54%)
+Classe C:    256 palavras (0.89%)
+Classe D:    264 palavras (0.92%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.09 median=+0
+Truncated: 0 palavras
+Over-generated: 0 palavras
+Hallucinations: 7 palavras
+
+Top-10 Alucinações:
+  pós-aposentadoria patterns=[trigram_loop:d o ə ×2 (palavra: ×1, ref: ×1)]
+    pred: ˈ p ɔ s a p o z ẽ t a d o ə d o ə
+    ref:  ˈ p ɔ s a p o z ẽ t a d o ɾ i ə
+  absa            patterns=[bigram_loop:b e ×2 (palavra: ×1, ref: ×1)]
+    pred: a b e b e ˈ a a
+    ref:  a b e ɛ s i ˈ a
+  alcântara-terra patterns=[bigram_loop:x ə ×2 (palavra: ×1, ref: ×1)]
+    pred: a w ˈ k ã t a ɾ ə t e x ə x ə
+    ref:  a w ˈ k ã t a ɾ ə t e x ə
+  abadessas       patterns=[bigram_loop:s s ×2 (palavra: ×1, ref: ×1)]
+    pred: a b a ˈ d ʒ s s s s s
+    ref:  a b a ˈ d e s ə s
+  inconteste      patterns=[bigram_loop:ʃ ʃ ×2 (palavra: ×1, ref: ×1)]
+    pred: ĩ k õ ˈ t ʃ ʃ ʃ ʃ ɪ ʃ
+    ref:  ĩ k õ ˈ t ʃ e ʃ t ʃ ɪ
+  abdas           patterns=[bigram_loop:b e ×2 (palavra: ×1, ref: ×1)]
+    pred: a b e b e s
+    ref:  ˈ a b d ə s
+  abdo            patterns=[bigram_loop:b e ×2 (palavra: ×1, ref: ×1)]
+    pred: a b e b e ˈ d ʊ
+    ref:  a b e d e ˈ ɔ
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   e → ɛ       265  0.0417      B
+   ɛ → e       202  0.0417      B
+   o → ɔ       139  0.0417      B
+   i → e       116  0.0417      B
+   ɔ → o       107  0.0417      B
+   ə → a        65  0.0833      C
+   e → i        57  0.0417      B
+   i → ĩ        47  0.0417      B
+   a → ə        35  0.0833      C
+<PAD> → s        32  0.8750      D
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  uder            score=0.900  pred=ũ ˈ d ɛ x  ref=u ˈ d e x
+  beecham         score=0.929  pred=b ɛ ˈ e ʃ ã ʊ̃  ref=b e ˈ ẽ ʃ ã ʊ̃
+  ilha            score=0.938  pred=ˈ i ʎ ə  ref=ˈ ĩ ʎ ə
+  ilê             score=0.938  pred=i ˈ l e  ref=i ˈ l ɛ
+  sól             score=0.938  pred=ˈ s ɔ w  ref=ˈ s o w
+  froilaz         score=0.938  pred=f ɾ ɔ y ˈ l a s  ref=f ɾ o y ˈ l a z
+  uaz             score=0.938  pred=u ˈ a s  ref=ũ ˈ a s
+  ife             score=0.938  pred=ˈ i f ɪ  ref=ˈ ĩ f ɪ
+  olhe            score=0.938  pred=ˈ ɔ ʎ ɪ  ref=ˈ o ʎ ɪ
+  leoberto        score=0.944  pred=l ɛ o ˈ b ɛ x t ʊ  ref=l e o ˈ b e x t ʊ
+
+Classe C:
+  uas             score=0.812  pred=ˈ ũ ə s  ref=ˈ ũ a s
+  nús             score=0.812  pred=ˈ n ʊ s  ref=ˈ n u s
+  ias             score=0.812  pred=ˈ ĩ ə s  ref=ˈ ĩ a s
+  oils            score=0.850  pred=ˈ ʊ ɪ w s  ref=ˈ o ɪ w s
+  cbda            score=0.850  pred=ˈ k b b ə  ref=ˈ k b d ə
+  éaco            score=0.850  pred=ˈ ɛ a k ʊ  ref=ˈ ɛ ə k ʊ
+  qubi            score=0.850  pred=k u ˈ b i  ref=k w ˈ b i
+  máel            score=0.850  pred=ˈ m a ɪ w  ref=ˈ m a e w
+  bílá            score=0.850  pred=ˈ b i l ə  ref=ˈ b i l a
+  quba            score=0.850  pred=ˈ k u b ə  ref=ˈ k w b ə
+
+Classe D:
+  abos            score=0.000  pred=ˈ a b ʊ s  ref=a b e ˈ ɔ s
+  oxigenados      score=0.083  pred=o ʃ i ʒ e ˈ n a d ʊ s  ref=o k s i ʒ e ˈ n a d ʊ s
+  oxigenado       score=0.091  pred=o ʃ i ʒ e ˈ n a d ʊ  ref=o k s i ʒ e ˈ n a d ʊ
+  deambulação     score=0.104  pred=d e ã b u l a ˈ s ã ʊ̃  ref=d ʒ e ã b u l a ˈ s ã ʊ̃
+  axumita         score=0.111  pred=a ʃ u ˈ m i t ə  ref=a k s u ˈ m i t ə
+  tenente         score=0.111  pred=t ʃ ɛ ˈ n ẽ t ʃ ɪ  ref=t ɛ ˈ n ẽ t ʃ ɪ
+  axonal          score=0.125  pred=a ʃ o ˈ n a w  ref=a k s o ˈ n a w
+  ixtapa          score=0.125  pred=i s ˈ t a p ə  ref=i k s ˈ t a p ə
+  taxidermizados  score=0.125  pred=t a k s i d e ɣ m i ˈ z a d ʊ s  ref=t a ʃ i d e ɣ m i ˈ z a d ʊ s
+  hidraulicamente score=0.125  pred=i d ɾ a w l i k a ˈ m ẽ t ʃ ɪ  ref=i d ʒ ɾ a w l i k a ˈ m ẽ t ʃ ɪ
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   e → ɛ       265
+   ɛ → e       202
+   o → ɔ       139
+   i → e       116
+   ɔ → o       107
+   ə → a        65
+   e → i        57
+   i → ĩ        47
+   a → ə        35
+   a → ˈ        26
+   ʃ → k        23
+   ʃ → s        19
+   o → u        18
+   õ → ɔ        18
+   e → ẽ        17
