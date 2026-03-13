@@ -1,6 +1,6 @@
 # 008 - DA Loss: Forcas, Limites e Narrativa Justa
 
-Status: em aberto
+Status: respondida
 
 ## Problema
 

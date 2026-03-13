@@ -1,6 +1,6 @@
 # 006 - Curva de Estabilidade com Menos Dados
 
-Status: em aberto
+Status: respondida
 
 ## Problema
 
@@ -40,3 +40,11 @@ Uma narrativa do tipo:
 1. Consolidar uma tabela unica com `% treino`, `N treino`, `PER`, `WER` e possiveis CIs.
 2. Ver se faltam pontos intermediarios entre 50% e 60%.
 3. Decidir se a analise final sera apenas descritiva ou tambem modelada por regressao simples.
+
+## Fechamento editorial (sem novo experimento)
+
+Decisao adotada para esta versao:
+
+1. A analise fica **descritiva**, usando os pontos ja disponiveis (Exp104b, Exp105, Exp106).
+2. Conclusao editorial: ha evidencia de estabilidade no intervalo observado, sem declarar joelho universal.
+3. Pontos intermediarios adicionais (ex.: 55%, 65%, 75%) ficam registrados como extensao futura opcional.

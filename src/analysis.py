@@ -312,7 +312,7 @@ def generate_plots(model_name: str, rows: list[dict], registry: FileRegistry):
     ax.set_xlabel('Epoch')
     ax.set_ylabel('Loss (log scale)')
     ax.set_yscale('log')
-    ax.set_title(f'{model_name} - Convergencia')
+    ax.set_title(f'{model_name} - Convergence')
     ax.legend()
     
     # Configurar eixo X: ticks de 10 em 10

@@ -1,6 +1,6 @@
 # 004 - Validade Externa, Comparacao Classica e Generalizacao
 
-Status: em aberto
+Status: respondida
 
 ## Problema
 
@@ -41,3 +41,13 @@ O argumento mais forte talvez nao seja apenas "treinou em muito dado", mas:
 1. Decidir a redacao final para separar claramente os dois sentidos de validade externa.
 2. Ligar essa nota aos testes de neologismos e palavras reais ineditas ja citados no artigo.
 3. Definir se a evidencia atual ja basta para afirmar generalizacao robusta ou apenas generalizacao promissora.
+
+## Fechamento editorial (sem novo experimento)
+
+Formula final adotada para o texto principal:
+
+1. **Validade externa alta para comparacao classica** no universo `ipa-dict` (mesma linhagem de recurso lexical e metrica comum em PER).
+2. **Validade externa moderada para generalizacao ampla** fora desse universo.
+3. Evidencias OOV atuais entram como **suporte promissor/inicial**, nao como prova universal.
+
+Com isso, a nota fica encerrada para a versao atual do manuscrito.

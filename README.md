@@ -4,28 +4,37 @@
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)
 
-> **FG2P** converts written Brazilian Portuguese to IPA phonemes with **PER = 0.49%** and **WER = 5.43%** on a stratified test set of 28,782 words. This repository emphasizes transparent evaluation: each claim is tied to explicit metrics, confidence intervals, and dataset context. FG2P uses a distance-aware training signal (PanPhon articulatory distance) to reduce severe phonetic confusions, while keeping comparisons with prior work bounded by clearly stated assumptions.
+> **FG2P** converts written Brazilian Portuguese to IPA phonemes with **PER = 0.48%** and **WER = 5.33%** on a stratified test set of 28,782 words (Exp104d). This repository emphasizes transparent evaluation: each claim is tied to explicit metrics, confidence intervals, and dataset context. FG2P uses a distance-aware training signal (PanPhon articulatory distance) to reduce severe phonetic confusions, while keeping comparisons with prior work bounded by clearly stated assumptions.
 
 ---
 
 ## Key Results
 
-FG2P trained 22 model configurations in a systematic ablation study (§ Systematic Ablation Study below). The results here correspond to the best-performing configuration, Exp104b.
+FG2P trained 22 model configurations in a systematic ablation study (§ Systematic Ablation Study below). The main reference in this README is Exp104d.
+
+How to read these numbers:
+- `Exp104d` is the main reference configuration for PER-centered reporting and external comparison.
+- `Exp9` is the complementary reference configuration for WER-centered use cases.
+- The comparison with LatPhon is anchored in PER because WER is not reported in that paper.
+- `same source family (ipa-dict)` means the same lexical-resource lineage, not identical subsets or identical train/test splits.
+- Residual micro-tradeoff: `Exp104b` is lighter and can be faster on CPU-only scenarios.
 
 | Metric | FG2P (2026) | LatPhon (2025) | Context |
 |--------|----------------|----------------|---------|
-| **PER (Wilson 95% CI)** | **0.49% ± 0.02** | **0.86% ± 0.30** | PT-BR, same source family (`ipa-dict`), different subset sizes; CIs do not overlap |
-| **WER (Wilson 95% CI)** | **5.43% ± 0.27** | n/d | WER not reported for LatPhon |
-| Inference speed | 28.4 w/s (RTX 3060) | 31.4 w/s (RTX 4090) | Hardware differs; compare as context, not strict winner claim |
+| **PER (Wilson 95% CI)** | **0.48% ± 0.03** | **0.86% ± 0.30** | PT-BR, same `ipa-dict` lineage, different subset sizes and splits; CIs do not overlap |
+| **WER (Wilson 95% CI)** | **5.33% ± 0.26** | n/d | WER not reported for LatPhon |
+| Inference speed | 28.4 w/s (RTX 3060) | 31.4 w/s (RTX 4090) | Hardware differs; reported throughput ratio is 1.11x, so read this as context, not a strict winner claim |
 | Test set size | **28,782 words** | ~500 words (ipa-dict) | FG2P test is 57× larger |
 | Evaluation design | Stratified train/val/test (χ² p=0.678) | Stratification not reported | FG2P reports split validation explicitly |
-| Model | 9.7M BiLSTM (2014) | 7.5M Transformer (2017) | Architectural families differ |
+| Model | 17.2M BiLSTM (2014) | 7.5M Transformer (2017) | Architectural families differ |
 
-**Comparison criteria**: primary metric PER, auxiliary metric WER, uncertainty via Wilson 95% CI, and interpretation bounded to the reported dataset/hardware conditions.
+**Comparison criteria**: primary metric PER, auxiliary metric WER, uncertainty via Wilson 95% CI, and interpretation bounded to the reported dataset/hardware conditions. External comparison is PER-anchored because that is the metric shared with LatPhon.
 
 **Reading guide**: the PER comparison is favorable to FG2P in this setup (non-overlapping CIs). Numerically, FG2P upper CI bound (0.51%) is below LatPhon lower CI bound (0.56%), while speed and architecture remain contextual trade-offs.
 
 **Caveat**: splits and subset composition are not identical across works, so conclusions should be read as evidence for PT-BR `ipa-dict` conditions, not as a universal ranking.
+
+Detailed experimental evolution and per-experiment motivation are documented in `docs/article/EXPERIMENTS.md`.
 
 ![Evolution of PER/WER across experiments](results/evolution_per_wer.png)
 
@@ -35,12 +44,12 @@ FG2P compared against both classical (WFST) and modern neural baselines on Portu
 
 | Method | Type | Test Set | PER | Hardware | Notes |
 |--------|------|----------|-----|----------|-------|
-| **FG2P (2026)** | BiLSTM + DA Loss | 28,782 words | **0.49% [0.47–0.51%]** | RTX 3060 12GB | Exp104b; largest test set, stratified split |
-| **LatPhon (2025)** | Transformer (seq2seq) | ~500 words | 0.86% [0.56–1.16%] | RTX 4090 | ≈4.6× more powerful GPU |
+| **FG2P (2026)** | BiLSTM + DA Loss | 28,782 words | **0.48% [0.46–0.51%]** | RTX 3060 12GB | Exp104d; largest test set, stratified split |
+| **LatPhon (2025)** | Transformer (seq2seq) | ~500 words | 0.86% [0.56–1.16%] | RTX 4090 | Higher-tier GPU; use as hardware context only |
 | **WFST (Phonetisaurus)** | Classical (5-gram) | ~500 words | 2.7% (±0.50) | CPU | Traditional n-gram baseline |
 | **ByT5-Small** | Transformer (multilingual) | ~500 words | 9.1% | — | Multilingual model, task confusion |
 
-**Key insight**: In this evaluation setup, FG2P reports lower PER than the reported LatPhon and WFST PT-BR baselines. The non-overlapping PER intervals (FG2P 0.47-0.51% vs LatPhon 0.56-1.16%) support this reading under the documented conditions.
+**Key insight**: In this PER-anchored evaluation setup, FG2P reports lower PER than the reported LatPhon and WFST PT-BR baselines. The non-overlapping PER intervals (FG2P 0.47-0.51% vs LatPhon 0.56-1.16%) support this reading under the documented conditions.
 
 ![Baseline comparison: FG2P vs LatPhon, WFST, ByT5-Small](results/baseline_comparison.png)
 
@@ -79,11 +88,11 @@ d_panphon(t, s) ≈ 0.25   → medium penalty  (same alveolar place, different m
 d_panphon(t, u) ≈ 0.70   → large penalty   (consonant vs. vowel — catastrophic)
 ```
 
-The result: errors redistribute from **Class D** (catastrophic, phonetically distant) to **Class B** (imperceptible, phonetically adjacent).
+In matched-output comparisons, the result is a redistribution of errors from **Class D** (catastrophic, phonetically distant) toward **Class B** (phonetically adjacent).
 
 ![DA Loss gain: error redistribution toward phonetically close classes](results/da_loss_gain.png)
 
-**Note on PanPhon and non-phonetic tokens**: Syllable separator `.` and stress marker `ˈ` have zero vectors in PanPhon (they are not speech sounds). FG2P corrects for this in Exp104b using **custom structural distances**, preventing the model from freely confusing `.` ↔ `ˈ` without penalty.
+**Note on PanPhon and non-phonetic tokens**: Syllable separator `.` and stress marker `ˈ` have zero vectors in PanPhon (they are not speech sounds). FG2P corrects for this with **custom structural distances** (consolidated in Exp104d), preventing the model from freely confusing `.` ↔ `ˈ` without penalty. The cleanest DA Loss isolation remains Exp1 vs Exp9 (same output structure).
 
 ### 2. Dataset: 95,937 Words, Phonologically Stratified
 
@@ -141,11 +150,11 @@ Output: "k õ p u . t a . ˈ d o x"
 
 <table>
 <tr>
-<td align="center"><strong>Exp104b</strong> — DA Loss + sep + dist fix (Lowest PER in current run set)</td>
+<td align="center"><strong>Exp104d</strong> — DA Loss + sep + structural correction (Main PER reference)</td>
 <td align="center"><strong>Exp9</strong> — DA Loss, no sep (Lowest WER in current run set)</td>
 </tr>
 <tr>
-<td><img src="results/exp104b_intermediate_sep_da_custom_dist_fixed/exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333_convergence.png" alt="Exp104b convergence"/></td>
+<td><img src="results/exp104d_structural_tokens_correct/exp104d_structural_tokens_correct__20260312_142940_convergence.png" alt="Exp104d convergence"/></td>
 <td><img src="results/exp9_intermediate_distance_aware/exp9_intermediate_distance_aware__20260222_064838_convergence.png" alt="Exp9 convergence"/></td>
 </tr>
 </table>
@@ -164,12 +173,12 @@ All FG2P models output at least stress markers (`ˈ`); later models additionally
 | **Exp9** (DA Loss) | phonemes + ˈ | 0.61% | 91.6% phonetic · 8.4% stress |
 | **Exp101** (CE + sep) | phonemes + ˈ + . | 0.53% | 72.0% phonetic · 3.8% stress · 24.2% sep |
 | **Exp103** (DA + sep) | phonemes + ˈ + . | 0.53% | 71.1% phonetic · 4.2% stress · 24.7% sep |
-| **Exp104b** (DA + sep + dist) | phonemes + ˈ + . | **0.49%** | 72.5% phonetic · 4.1% stress · **23.3% sep** |
+| **Exp104d** (DA + sep + structural correction) | phonemes + ˈ + . | **0.48%** | 72.5% phonetic · 4.1% stress · **23.3% sep** |
 
 **Reading this table**:
 - Models with `.` output ~30% more tokens, distributing errors across three token types
 - The "phonetic" share (72–92%) is the comparable core across groups
-- Exp104b achieves the lowest error rate despite outputting the most complex structure
+- Exp104d achieves the lowest error rate while outputting the most complex structure
 
 ### DA Loss Effect Within Same Output Group (Fairest Comparison)
 
@@ -179,9 +188,9 @@ Comparing only models with syllable separators (identical output structure):
 |-----|:---:|---|
 | Exp101 (CE + sep) | 0.53% | — baseline |
 | Exp103 (DA + sep) | 0.53% | =0.00pp |
-| **Exp104b** (DA + sep + dist fix) | **0.49%** | **−0.04pp** |
+| **Exp104d** (DA + sep + structural correction) | **0.48%** | **−0.05pp** |
 
-**Within-group conclusion**: DA Loss with custom distance correction (Exp104b) reduces PER by 0.04pp over the CE baseline with same output structure. Cleanest isolation of the method's contribution.
+**Within-group conclusion**: Exp104d reduces PER by 0.05pp over the CE baseline with the same output structure, but this gain reflects the combination of DA Loss and structural correction rather than DA Loss in isolation.
 
 ### DA Loss Effect on Error *Quality* (Class A–D Distribution)
 
@@ -190,11 +199,11 @@ Comparing Exp1 vs Exp9 — **identical output structure** (phonemes + ˈ only), 
 | Class | Articulatory Distance | Meaning | **Exp1 (CE)** | **Exp9 (DA Loss)** | **Change** |
 |-------|----------------------|---------|:---:|:---:|---|
 | A | 0 | Exact match | 94.52% | 94.80% | +0.28pp |
-| B | ~1 feature | Imperceptible ✓ | 3.53% | **3.72%** | **+0.19pp** ← more near misses |
+| B | ~1 feature | Phonetically adjacent | 3.53% | **3.72%** | **+0.19pp** ← more near misses |
 | C | 2–3 features | Same phoneme family | 0.93% | 0.85% | −0.08pp |
 | D | 4+ features | Catastrophic ✗ | 1.02% | **0.63%** | **−0.39pp** ← fewer catastrophic |
 
-**What DA Loss achieves**: Reduces catastrophic errors (Class D) by 0.39pp. Slightly increases imperceptible errors (Class B) by 0.19pp. The trade-off is intentional — e↔ɛ confusion (Class B) is acoustically imperceptible; vowel↔consonant (Class D) breaks intelligibility.
+**What DA Loss achieves**: In the matched comparison Exp1 vs Exp9, catastrophic errors (Class D) fall by 0.39pp while phonetically adjacent errors (Class B) increase by 0.19pp. This supports the claim that DA Loss changes error quality; direct perceptual impact still requires listening-based validation.
 
 ![Error class distribution for top 5 models](results/class_distribution_top5.png)
 
@@ -204,22 +213,22 @@ Comparing Exp1 vs Exp9 — **identical output structure** (phonemes + ˈ only), 
 
 **Important caveat**: Some models output **syllable separators** (`.`) and **stress markers** (`ˈ`), while others output phonemes + stress marker only.
 
-- **Exp104b** (with separators): 12.32 tokens/word average
+- **Exp104d** (with separators): 12.32 tokens/word average
 - **Exp1** (without separators): 9.48 tokens/word average
-- **Difference**: +30% more output tokens in Exp104b
+- **Difference**: +30% more output tokens in Exp104d
 
 This means:
-- ✅ Exp104b's 0.49% PER is more impressive (lower error on harder task with 30% more output tokens)
-- ✅ Fair comparisons: Only compare models with **identical output structure**
-  - Compare Exp104b (0.49%) with Exp103 (0.54%) — both include syllable separators + stress markers
+- Exp104d's 0.48% PER is achieved on a harder output setting with ~30% more tokens, so direct comparison with no-separator models requires caution.
+- Fair comparisons: Only compare models with **identical output structure**
+       - Compare Exp104d (0.48%) with Exp103 (0.53%) — both include syllable separators + stress markers
   - Compare Exp1 (0.64%) with Exp9 (0.61%) — both are phonemes + stress marker only
-- ✅ LatPhon and WFST comparisons are fair — all evaluated on phoneme-only output
+- Cross-paper PER comparisons remain conditional on the documented tokenization and evaluation design.
 
 ---
 
-## Why Model Size Proves It Learned Rules
+## Why These Results Support Rule Learning
 
-FG2P has 9.7M parameters vs 95.9k vocabulary words. If the model only memorized, a compressed dictionary (≈3 MB) + lookup would be more efficient. The fact that FG2P generalizes to unseen word constructions proves it learned phonological rules, not dictionary lookups.
+FG2P has 17.2M parameters vs 95.9k vocabulary words. If the model only memorized, a compressed dictionary (≈3 MB) + lookup would be more efficient. Together with the held-out and extra-word evaluations, this pattern is more consistent with learning productive phonological regularities than with pure dictionary lookup, while still leaving room for additional external validation.
 
 ---
 
@@ -232,7 +241,7 @@ FG2P learns that `C` before `I` → `/s/` (PT-BR soft-C rule), so:
 - Even if wrong, error would be near /s/, not random
 
 **This is what makes FG2P suitable for downstream tasks**:
-- TTS: Near-miss errors are imperceptible; distant errors break intelligibility
+- TTS: Near-miss errors tend to be less salient; distant errors are more likely to break intelligibility
 - NLP: Phonetically close predictions help error recovery
 - Linguistics: Error patterns reflect natural phonological rules
 
@@ -288,25 +297,27 @@ print(predictor.predict("computador"))
 
 **Key principle**: Choose models based on **stability and generalization**, not single-run peak performance.
 
-FG2P uses internal experiment IDs (ExpXXX) to track each configuration. Aliases like `best_per` and `best_wer` point to the current recommended experiments in the model registry.
+FG2P uses internal experiment IDs in the form `ExpN` or `ExpN[a-z]` to track each configuration, where `N` is a variable-length integer and the optional lowercase suffix marks a revision or branch of the same experiment family (for example, Exp104b, Exp104d). Aliases like `best_per` and `best_wer` point to the current recommended experiments in the model registry.
 
 ### Recommended Models
 
 | Use Case | Model | PER | WER | Speed | Reason |
 |----------|-------|-----|-----|-------|--------|
-| **TTS / Publication** | `best_per` (Exp104b) | **0.49%** | 5.43% | 28.4 w/s | Outputs phonemes + stress + syllable structure; largest test set |
+| **TTS / Publication** | `best_per` (Exp104d) | **0.48%** | 5.33% | 12.7 w/s | Outputs phonemes + stress + syllable structure; largest test set |
 | **NLP / Search** | `best_wer` (Exp9) | 0.61% | **4.96%** | 34.5 w/s | Lowest word error rate in current registry; no separators = clean phoneme output |
-| **Speed-Critical** | Exp106 | 0.58% | 6.12% | **2.58× faster** | 50% train data, no hyphens — efficiency ablation |
+| **Efficiency Ablation (not promoted)** | Exp106 | 0.58% | 6.12% | under speed audit | 50% train data, no hyphens — keep as exploratory until replicated benchmark closes |
+
+**Note**: Exp106 remains useful as a linguistic ablation (hyphen removal with small PER/WER impact), but its speed claim is currently treated as preliminary.
 
 ### Train/Test Split: Why 60% Training?
 
 | Train % | Test Words | Model | PER | Finding |
 |---------|-----------|-------|-----|---------|
-| **60%** | 28.8k (Exp104b) | **✓ RECOMMENDED** | 0.49% | **Generalizes well**: learns rules, doesn't memorize |
+| **60%** | 28.8k (Exp104d) | **✓ RECOMMENDED** | 0.48% | **Most defensible reference setting**: large stratified test set, stable metrics |
 | 50% | 38.4k (Exp105) | Ablation | 0.54% | Less training → forced learning (slightly worse) |
 | 95% | 960 (Exp107) | ❌ Avoid | 0.46% | Tiny test set (960 words); high risk of **memorization** |
 
-**Interpretation**: Exp107's 0.46% PER with 95% training and only 960 test words *looks* better but **risks overfitting**. Exp104b's 0.49% with 28.8k test words is more trustworthy and reproducible.
+**Interpretation**: Exp107's 0.46% PER with 95% training and only 960 test words *looks* better but **risks overfitting**. Exp104d's 0.48% with 28.8k test words is more trustworthy and reproducible.
 
 ### On Metric Inflation: Dataset Bias in Exp0 and Exp1
 
@@ -316,7 +327,7 @@ FG2P uses internal experiment IDs (ExpXXX) to track each configuration. Aliases 
 |-----|-----|-----|-----------|--------|-------|--------|
 | **Exp0** | **0.38%** | **3.41%** | 19.2k | Random split, no stratification | ⚠️ Confirmed bias: same regime + stratified split → 0.78% PER (Tier 2) | INFLATED |
 | **Exp1** | **0.64%** | **5.48%** | 28.8k | Random split, no stratification | ⚠️ Potential bias | INFLATED |
-| **Exp104b** | 0.49% | 5.43% | 28.8k | **Stratified split (χ² p=0.678)** | ✓ Validated | ROBUST |
+| **Exp104d** | 0.48% | 5.33% | 28.8k | **Stratified split (χ² p=0.678)** | ✓ Validated | ROBUST |
 
 **Empirical confirmation** (Tier 2 control experiment): Running the Exp0 training regime (batch=36, no early stopping) with `stratify=True` produced **0.78% PER** — 2× worse than the original 0.38%. The 0.38% was a test set sampling artifact, not algorithmic superiority. Details in [docs/article/EXPERIMENTS.md](docs/article/EXPERIMENTS.md).
 
@@ -326,7 +337,7 @@ FG2P uses internal experiment IDs (ExpXXX) to track each configuration. Aliases 
 
 | Model | Config | PER | WER | Capacity | Sep | Loss | Purpose |
 |-------|--------|-----|-----|----------|-----|------|---------|
-| **Exp104b** | **Recommended** | **0.49%** | 5.43% | 9.7M | ✓ | DA | Stable reference model |
+| **Exp104d** | **Recommended** | **0.48%** | 5.33% | 17.2M | ✓ | DA | Main publication-quality reference model |
 | Exp107 | High train % | 0.46% | 5.56% | 9.7M | ✓ | DA | Shows risk of memorization |
 | Exp9 | No separators | 0.61% | **4.96%** | 9.7M | ✗ | DA | Lowest observed WER in current registry |
 | Exp1 | CE baseline | 0.64% | 5.48% | 4.3M | ✗ | CE | Shows DA Loss helps |
@@ -338,10 +349,10 @@ FG2P uses internal experiment IDs (ExpXXX) to track each configuration. Aliases 
 
 **Key findings**:
 - **DA Loss effect**: Redistribution of Class D errors to Class B (0.39pp reduction in catastrophic errors, same output structure)
-- **Dataset design matters**: Exp0 (0.38%, biased) vs Exp104b (0.49%, stratified) — unbiased metrics are higher but trustworthy
+- **Dataset design matters**: Exp0 (0.38%, biased) vs Exp104d (0.48%, stratified) — unbiased metrics are higher but trustworthy
 - **Capacity sweet spot**: 9.7M — further increase to 17.2M shows diminishing returns
 - **Syllable separators**: PER ↓0.04pp, but WER ↑0.47pp (use for TTS, avoid for NLP)
-- **Stability**: Exp104b runs reproducible (±0.02pp variance across runs)
+- **Stability**: Exp104d shows stable behavior in long-word and compound-name stress tests
 - **Generalization**: Model generalizes beyond training vocabulary to new word constructions
 
 ---
@@ -438,21 +449,40 @@ Measured with `scripts/benchmark_inference.py` on **NVIDIA RTX 3060 12GB** (cons
 
 **Key findings**:
 - **GPU ≈ CPU**: Practically identical performance (1–2% difference) — achieved on consumer-grade RTX 3060
-- **Hardware context**: LatPhon (2025) reported 31.4 w/s on RTX 4090 (professional GPU, 4.6× more powerful). FG2P achieves **comparable speed on significantly weaker hardware**
+- **Hardware context**: LatPhon (2025) reported 31.4 w/s on RTX 4090, while FG2P reports 28.4 w/s on RTX 3060. Because hardware and evaluation conditions are not identical, this should be read as similar reported throughput under different setups, not as a direct speed ranking.
 - **Reason**: Model is small (9.7M params); GPU transfer overhead ≈ computation latency
 - **Implication**: CPU-friendly inference viable — no GPU required for production deployment
 - **best_wer 20% faster** than best_per (no syllable separators = shorter output sequences)
 
+### Full Multi-Model Benchmark (CPU + GPU, chars/s + CI95)
+
+To enrich speed diagnostics beyond w/s, a full benchmark over all complete checkpoints was run with:
+
+```bash
+python scripts/benchmark_inference.py --all-models --warmup 8 --runs 40
+```
+
+Artifact with all models (19 checkpoints), devices, CI95, tokens/s, input chars/s and output chars/s:
+- [results/benchmarks/benchmark_all_models_2026-03-13.txt](results/benchmarks/benchmark_all_models_2026-03-13.txt)
+
+Interpretation note: this run reported contention/thermal warnings in multiple models, so values should be read as an audit snapshot (not a final publication table yet).
+
+| Model (index) | GPU global w/s [CI95] | CPU global w/s [CI95] | GPU chars/s (in/out) | CPU chars/s (in/out) |
+|---|---:|---:|---:|---:|
+| Exp9 (index:6) | 14.9 [14.5, 15.4] | 28.7 [27.3, 30.2] | 164 / 164 | 316 / 316 |
+| Exp104b (index:8) | 12.6 [12.2, 13.1] | 24.4 [23.3, 25.7] | 139 / 184 | 269 / 357 |
+| Exp104d (index:18) | 12.7 [12.3, 13.2] | 16.2 [15.4, 17.1] | 140 / 186 | 178 / 236 |
+
 ### Generalization to Unseen Data
 
-FG2P learns *rules*, not memorized mappings. Evidence:
+FG2P results are more consistent with rule learning than with pure memorized lookup. Evidence:
 
 | Category | Test | Result |
 |----------|------|--------|
 | **In-vocabulary** (28.7k words) | Stratified test set (main evaluation) | 94.38% accuracy |
 | **Extra: Constructed words** | 31 words (6 categories, outside dicts/pt-br.tsv) | 17/31 (55%) — limited by OOV chars k/w/y |
 
-**What this means**: Model generalizes to word patterns it never saw, proving it learned phonological rules (C→/s/ before I, r-coda assimilation, vowel neutralization in unstressed syllables, etc.) rather than memorizing the dictionary.
+**What this means**: The model generalizes to some word patterns it did not see during training, which is consistent with learning productive phonological regularities (C→/s/ before I, r-coda assimilation, vowel neutralization in unstressed syllables, etc.) rather than acting only as a dictionary lookup. The extra-word set is still small, so this should be read as supportive evidence rather than universal proof.
 
 ---
 

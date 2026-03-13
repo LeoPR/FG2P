@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-03-13 02:17:21",
+  "experiment_name": "exp104d_structural_tokens_correct",
+  "inference_time_s": 1108.985,
+  "samples_per_sec": 26.0,
+  "total_words": 28782,
+  "predictions_file": "predictions_exp104d_structural_tokens_correct__20260312_142940.tsv"
+}
