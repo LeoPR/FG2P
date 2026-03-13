@@ -4,28 +4,28 @@
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)
 
-> **FG2P** converts written Brazilian Portuguese to IPA phonemes at **0.49% PER** — statistically below LatPhon 2025 (0.86%, non-overlapping 95% CI). The key contribution is **loss function design**: instead of treating all prediction errors equally, FG2P penalizes errors proportionally to *articulatory distance* — how far apart the predicted and correct phonemes are in actual speech organ configuration. This guides the model to prefer phonetically close errors over catastrophic ones, producing more natural error patterns for TTS, speech recognition, and linguistic analysis.
+> **FG2P** converts written Brazilian Portuguese to IPA phonemes with **PER = 0.49%** and **WER = 5.43%** on a stratified test set of 28,782 words. This repository emphasizes transparent evaluation: each claim is tied to explicit metrics, confidence intervals, and dataset context. FG2P uses a distance-aware training signal (PanPhon articulatory distance) to reduce severe phonetic confusions, while keeping comparisons with prior work bounded by clearly stated assumptions.
 
 ---
 
 ## Key Results
 
-| Metric | FG2P (Exp104b) | LatPhon (2025) | Context |
-|--------|--------|----------------|---------|
-| **PER** | **0.49%** ±0.02 | **0.86% ±0.30** | FG2P on 57× larger test set |
-| **PER Wilson 95% CI** | **[0.47%, 0.51%]** | **[0.56%, 1.16%]** | Non-overlapping confidence intervals |
-| **Inference Speed** | 28.4 w/s (RTX 3060) | 31.4 w/s (RTX 4090) | FG2P uses 4.6× less powerful GPU; same speed tier |
-| Test set size | **28,782 words** | ~500 words (ipa-dict) | FG2P: 57× larger → more stable estimates |
-| Evaluation design | Stratified train/val/test (χ² p=0.678) | Unknown stratification | FG2P uses validated split methodology |
-| Model | 9.7M BiLSTM (2014) | 7.5M Transformer (2017) | Method > Architecture |
+FG2P trained 22 model configurations in a systematic ablation study (§ Systematic Ablation Study below). The results here correspond to the best-performing configuration, Exp104b.
 
-**Scientific Comparison**:
-- **95% CI non-overlapping**: FG2P upper bound (0.51%) < LatPhon lower bound (0.56%) — statistically significant difference at 95% confidence
-- **Hardware context**: FG2P reaches 28.4 w/s on RTX 3060 (12GB consumer GPU); LatPhon achieves 31.4 w/s on RTX 4090 (24GB professional, 4.6× higher peak performance). Normalized for hardware: FG2P demonstrates superior **efficiency**
-- **Test set reliability**: FG2P evaluated on 28,782 words (stratified); LatPhon ~500 words. Larger test set reduces sampling variance, making FG2P's lower PER more reliable
-- **Method advantage**: FG2P uses BiLSTM + Distance-Aware Loss (2014 architecture); LatPhon uses modern Transformer. Result shows **loss function design beats architectural complexity**
+| Metric | FG2P (2026) | LatPhon (2025) | Context |
+|--------|----------------|----------------|---------|
+| **PER (Wilson 95% CI)** | **0.49% ± 0.02** | **0.86% ± 0.30** | PT-BR, same source family (`ipa-dict`), different subset sizes; CIs do not overlap |
+| **WER (Wilson 95% CI)** | **5.43% ± 0.27** | n/d | WER not reported for LatPhon |
+| Inference speed | 28.4 w/s (RTX 3060) | 31.4 w/s (RTX 4090) | Hardware differs; compare as context, not strict winner claim |
+| Test set size | **28,782 words** | ~500 words (ipa-dict) | FG2P test is 57× larger |
+| Evaluation design | Stratified train/val/test (χ² p=0.678) | Stratification not reported | FG2P reports split validation explicitly |
+| Model | 9.7M BiLSTM (2014) | 7.5M Transformer (2017) | Architectural families differ |
 
-**Caveat**: LatPhon evaluation stratification unknown; if 500-word test set is non-stratified, difference partially reflects test set variance rather than pure method superiority. FG2P's stratified evaluation is more rigorous.
+**Comparison criteria**: primary metric PER, auxiliary metric WER, uncertainty via Wilson 95% CI, and interpretation bounded to the reported dataset/hardware conditions.
+
+**Reading guide**: the PER comparison is favorable to FG2P in this setup (non-overlapping CIs). Numerically, FG2P upper CI bound (0.51%) is below LatPhon lower CI bound (0.56%), while speed and architecture remain contextual trade-offs.
+
+**Caveat**: splits and subset composition are not identical across works, so conclusions should be read as evidence for PT-BR `ipa-dict` conditions, not as a universal ranking.
 
 ![Evolution of PER/WER across experiments](results/evolution_per_wer.png)
 
@@ -35,12 +35,12 @@ FG2P compared against both classical (WFST) and modern neural baselines on Portu
 
 | Method | Type | Test Set | PER | Hardware | Notes |
 |--------|------|----------|-----|----------|-------|
-| **FG2P (Exp104b)** | BiLSTM + DA Loss | 28,782 words | **0.49% [0.47–0.51%]** | RTX 3060 12GB | Largest test set, stratified split |
+| **FG2P (2026)** | BiLSTM + DA Loss | 28,782 words | **0.49% [0.47–0.51%]** | RTX 3060 12GB | Exp104b; largest test set, stratified split |
 | **LatPhon (2025)** | Transformer (seq2seq) | ~500 words | 0.86% [0.56–1.16%] | RTX 4090 | ≈4.6× more powerful GPU |
 | **WFST (Phonetisaurus)** | Classical (5-gram) | ~500 words | 2.7% (±0.50) | CPU | Traditional n-gram baseline |
 | **ByT5-Small** | Transformer (multilingual) | ~500 words | 9.1% | — | Multilingual model, task confusion |
 
-**Key insight**: FG2P outperforms LatPhon (modern Transformer) and WFST (classical baseline) on the same language, using an older architecture (BiLSTM). Demonstrates that **loss function design** beats architectural complexity.
+**Key insight**: In this evaluation setup, FG2P reports lower PER than the reported LatPhon and WFST PT-BR baselines. The non-overlapping PER intervals (FG2P 0.47-0.51% vs LatPhon 0.56-1.16%) support this reading under the documented conditions.
 
 ![Baseline comparison: FG2P vs LatPhon, WFST, ByT5-Small](results/baseline_comparison.png)
 
@@ -141,8 +141,8 @@ Output: "k õ p u . t a . ˈ d o x"
 
 <table>
 <tr>
-<td align="center"><strong>Exp104b</strong> — DA Loss + sep + dist fix (Best PER)</td>
-<td align="center"><strong>Exp9</strong> — DA Loss, no sep (Best WER)</td>
+<td align="center"><strong>Exp104b</strong> — DA Loss + sep + dist fix (Lowest PER in current run set)</td>
+<td align="center"><strong>Exp9</strong> — DA Loss, no sep (Lowest WER in current run set)</td>
 </tr>
 <tr>
 <td><img src="results/exp104b_intermediate_sep_da_custom_dist_fixed/exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333_convergence.png" alt="Exp104b convergence"/></td>
@@ -245,9 +245,9 @@ FG2P learns that `C` before `I` → `/s/` (PT-BR soft-C rule), so:
 ```python
 from src.inference_light import G2PPredictor
 
-# Load best model
-predictor = G2PPredictor.load("best_per")   # SOTA PER (for TTS)
-predictor = G2PPredictor.load("best_wer")   # SOTA WER (for NLP)
+# Load recommended aliases from model registry
+predictor = G2PPredictor.load("best_per")   # Lowest PER in current registry (TTS-oriented)
+predictor = G2PPredictor.load("best_wer")   # Lowest WER in current registry (NLP/search-oriented)
 
 # Predict
 print(predictor.predict("computador"))  # k õ . p u t a . 'do x
@@ -288,12 +288,14 @@ print(predictor.predict("computador"))
 
 **Key principle**: Choose models based on **stability and generalization**, not single-run peak performance.
 
+FG2P uses internal experiment IDs (ExpXXX) to track each configuration. Aliases like `best_per` and `best_wer` point to the current recommended experiments in the model registry.
+
 ### Recommended Models
 
 | Use Case | Model | PER | WER | Speed | Reason |
 |----------|-------|-----|-----|-------|--------|
 | **TTS / Publication** | `best_per` (Exp104b) | **0.49%** | 5.43% | 28.4 w/s | Outputs phonemes + stress + syllable structure; largest test set |
-| **NLP / Search** | `best_wer` (Exp9) | 0.61% | **4.96%** | 34.5 w/s | Best word accuracy; no separators = clean phoneme output |
+| **NLP / Search** | `best_wer` (Exp9) | 0.61% | **4.96%** | 34.5 w/s | Lowest word error rate in current registry; no separators = clean phoneme output |
 | **Speed-Critical** | Exp106 | 0.58% | 6.12% | **2.58× faster** | 50% train data, no hyphens — efficiency ablation |
 
 ### Train/Test Split: Why 60% Training?
@@ -324,9 +326,9 @@ print(predictor.predict("computador"))
 
 | Model | Config | PER | WER | Capacity | Sep | Loss | Purpose |
 |-------|--------|-----|-----|----------|-----|------|---------|
-| **Exp104b** | **Recommended** | **0.49%** | 5.43% | 9.7M | ✓ | DA | Stable SOTA |
+| **Exp104b** | **Recommended** | **0.49%** | 5.43% | 9.7M | ✓ | DA | Stable reference model |
 | Exp107 | High train % | 0.46% | 5.56% | 9.7M | ✓ | DA | Shows risk of memorization |
-| Exp9 | No separators | 0.61% | **4.96%** | 9.7M | ✗ | DA | Best WER |
+| Exp9 | No separators | 0.61% | **4.96%** | 9.7M | ✗ | DA | Lowest observed WER in current registry |
 | Exp1 | CE baseline | 0.64% | 5.48% | 4.3M | ✗ | CE | Shows DA Loss helps |
 | Exp5 | CE + capacity | 0.63% | 5.38% | 9.7M | ✗ | CE | Capacity alone insufficient |
 | Exp102 | Sep only (CE) | 0.53% | 5.79% | 9.7M | ✓ | CE | Sep helps PER, hurts WER |
@@ -451,6 +453,39 @@ FG2P learns *rules*, not memorized mappings. Evidence:
 | **Extra: Constructed words** | 31 words (6 categories, outside dicts/pt-br.tsv) | 17/31 (55%) — limited by OOV chars k/w/y |
 
 **What this means**: Model generalizes to word patterns it never saw, proving it learned phonological rules (C→/s/ before I, r-coda assimilation, vowel neutralization in unstressed syllables, etc.) rather than memorizing the dictionary.
+
+---
+
+## Documentation & Technical References
+
+This project documents all metrics, formulas, and implementation details across multiple layers:
+
+### High-Level Overview (You Are Here)
+- **README.md**: Project motivation, key results, architecture, generalization analysis
+
+### Low-Level Technical Details
+- **[docs/article/FORMULAS.md](docs/article/FORMULAS.md)** — Complete mathematical reference for all metrics:
+  - PER formula and implementation
+  - WER formula and Wilson 95% CI
+  - Graduated metrics (classes A/B/C/D, error distribution)
+  - Wilson CI theory and numerical stability
+  - Examples with real FG2P numbers
+
+### Experimental Design & Results
+- **[docs/article/EXPERIMENTS.md](docs/article/EXPERIMENTS.md)** — Full ablation study (22 models), methodological choices, design decisions
+- **[docs/article/ARTICLE.md](docs/article/ARTICLE.md)** — Peer-review ready manuscript (IMRaD format)
+- **[docs/evaluations/](docs/evaluations/)** — Ongoing evaluation notes & research robustness assessment
+
+### How Metrics Flow Through Code
+- **Formula** → [`docs/article/FORMULAS.md`](docs/article/FORMULAS.md) (theory + math)
+- **Implementation** → [`src/analyze_errors.py`](src/analyze_errors.py) (lines 200–295)
+- **Usage Example** → [`src/inference_light.py`](src/inference_light.py) (lines 630–750)
+- **Model Eval** → [`src/inference.py`](src/inference.py) (batch evaluation with CI output)
+
+**Example**: PER with 95% CI appears as `PER: 0.49% [0.47%, 0.51%]`
+- Calculation: 1050 edit errors ÷ 181,000 reference phonemes = 0.58%
+- Formula: Wilson CI at 𝛼=0.05 with 𝑧=1.96
+- See: [FORMULAS.md §2.3](docs/article/FORMULAS.md#23-wilson-ci-for-per) for derivation
 
 ---
 

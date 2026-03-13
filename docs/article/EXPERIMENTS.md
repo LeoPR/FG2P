@@ -491,7 +491,7 @@ Interpretação pelo design fatorial (comparação correta: Exp7_0.20 vs Exp8, m
 **Conclusão**: ✅ **SOTA CONFIRMADO.** Exp9 supera Exp2 (0.60%) com 56% menos parâmetros.
 - Capacidade 9.7M + DA Loss λ=0.20 = **sweet spot ótimo**
 - Trade-off ROI: **5× melhor que Exp10** (17.2M, 0.61%)
-- Supera LatPhon 2025 (0.86%) com test set 57× maior (28.8k vs 500)
+- Comparação contextual com LatPhon 2025 (0.86% reportado): PER de Exp9 é menor neste recorte, com test set 57× maior (28.8k vs 500)
 
 ---
 

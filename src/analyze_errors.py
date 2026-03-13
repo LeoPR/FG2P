@@ -575,16 +575,29 @@ Exemplos:
     logger.info("")
     
     # =========================================================================
-    # 2. Métricas clássicas (referência)
+    # 2. Métricas clássicas (referência) com Intervalos de Confiança
     # =========================================================================
+    # Referência técnica completa: docs/article/FORMULAS.md
+    # Fórmulas exatas, motivação, e casos de uso: PER, WER, Wilson CI
     per = calculate_per(predictions, references)
     accuracy = calculate_accuracy(predictions, references)
     wer = 100.0 - accuracy
     
-    logger.info("MÉTRICAS CLÁSSICAS (referência)")
-    logger.info("-" * 40)
-    logger.info(f"  PER:      {per:.2f}%")
-    logger.info(f"  WER:      {wer:.2f}%")
+    # Calcular Intervalos de Confiança (Wilson 95%)
+    # No nível de fonema para PER
+    total_fonemas = sum(len(r) for r in references)
+    erros_fonemas = sum(editdistance.eval(p, r) for p, r in zip(predictions, references))
+    per_ci_low, per_ci_high = wilson_ci(erros_fonemas, total_fonemas, confidence=0.95)
+    
+    # No nível de palavra para WER
+    total_palavras = len(predictions)
+    erros_palavras = sum(1 for p, r in zip(predictions, references) if p != r)
+    wer_ci_low, wer_ci_high = wilson_ci(erros_palavras, total_palavras, confidence=0.95)
+    
+    logger.info("MÉTRICAS CLÁSSICAS COM INTERVALOS DE CONFIANÇA (Wilson 95%)")
+    logger.info("-" * 60)
+    logger.info(f"  PER:      {per:.2f}%  [{per_ci_low:.2f}%, {per_ci_high:.2f}%]")
+    logger.info(f"  WER:      {wer:.2f}%  [{wer_ci_low:.2f}%, {wer_ci_high:.2f}%]")
     logger.info(f"  Accuracy: {accuracy:.2f}%")
     logger.info("")
     
