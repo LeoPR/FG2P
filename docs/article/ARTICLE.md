@@ -45,7 +45,7 @@ Comparar sistemas de G2P entre estudos é notoriamente difícil: datasets, split
 
 A referência mais próxima é **LatPhon** (Chary et al., 2025), um Transformer de 4 camadas (7,5M params, RoPE) multilíngue. Para PT-BR, a Tabela II do paper LatPhon reporta **PER = 0,86% (±0,3)** em ~500 palavras (ipa-dict).
 
-| Métrica | **LatPhon (PT)** | **FG2P (Exp104b)** | Interpretação |
+| Métrica | **LatPhon (2025)** | **FG2P (2026)** | Interpretação |
 |---------|-----------|-----------|------|
 | **PER** | 0,86% (±0,3) | **0,51%** | FG2P **0,35pp menor** |
 | **IC 95% Wilson** | **[0,56%, 1,16%]** | **[0,48%, 0,54%]** | **Intervalos não-sobrepostos** → Stat. significante |
@@ -55,12 +55,12 @@ A referência mais próxima é **LatPhon** (Chary et al., 2025), um Transformer 
 
 **Resultado estatístico**: O limite **superior** do IC de FG2P (0,54%) está **abaixo** do limite **inferior** do IC de LatPhon (0,56%) — **diferença estatisticamente significativa a 95% de confiança**.
 
-**Implicação científica**: FG2P com 9,7M params (BiLSTM 2014) **supera** LatPhon com 7,5M params (Transformer 2017) em PT-BR. Isso demonstra que **inovação metodológica (Distance-Aware Loss) supera inovação arquitetural** quando aplicada com dados bem-caracterizados e evaluação em escala grande.
+**Implicação científica**: No cenário reportado (PT-BR `ipa-dict`), FG2P apresenta PER menor que o valor reportado para LatPhon, com ICs de Wilson não sobrepostos. Este resultado é consistente com a hipótese de que desenho metodológico (loss + protocolo de avaliação) pode compensar diferenças arquiteturais, sem estabelecer hierarquia universal entre famílias de modelo.
 
 **Diferenças metodológicas**:
 - LatPhon: Transformer multilíngue (6 idiomas), RoPE, sem loss fonológica, test ~500 palavras
 - FG2P: BiLSTM monolíngue PT-BR, Bahdanau attention, Distance-Aware Loss, test 28.8k estratificado
-- Conclusão: FG2P não apenas é comparável — é **melhor** em PT-BR.
+- Conclusão: No escopo reportado, os resultados indicam vantagem de PER para FG2P, com interpretação restrita ao setup e aos dados documentados.
 
 #### ByT5-Small (Xue et al., 2022) — Multilíngue Zero-Shot
 
@@ -70,11 +70,11 @@ A diferença (8,9% vs 0,51%) é esperada: ByT5 é **zero-shot multilíngue** (10
 
 #### Conclusão da Comparação
 
-**Resultado principal**: FG2P atinge **0,51% PER com IC [0,48%, 0,54%]**, superando estatisticamente LatPhon (0,86%, IC [0,56%, 1,16%]) em PT-BR.
+**Resultado principal**: FG2P atinge **0,51% PER com IC [0,48%, 0,54%]**; LatPhon reporta 0,86% (IC [0,56%, 1,16%]). Os intervalos não se sobrepõem e, neste recorte, o limite superior de FG2P (0,54%) fica abaixo do limite inferior de LatPhon (0,56%).
 
 **Mensagem científica**:
-1. **Distance-Aware Loss funciona**: Método fonológico + dados bem-estratificados supera Transformers modernos
-2. **Método > Arquitetura**: BiLSTM (2014) + DA Loss ≈ Transformer (2017) em recursos, melhor em performance
+1. **Distance-Aware Loss funciona**: Método fonológico + dados bem-estratificados mostra ganho consistente no recorte avaliado
+2. **Método e protocolo importam fortemente**: neste setup, BiLSTM + DA Loss apresenta PER menor que o valor reportado para Transformer comparado, sem inferir superioridade arquitetural geral
 3. **Confiabilidade**: Avaliação em 28.782 palavras estratificadas fornece IC 10× mais preciso que 500 palavras
 
 ---
@@ -127,7 +127,7 @@ Um aspecto metodológico crítico é distinguir se o modelo **memoriza** o dicio
 
 **Tamanho do modelo vs dataset**:
 - Vocabulário PT-BR: 95.937 palavras
-- Modelo FG2P (Exp104b): 9,7M parâmetros
+- Modelo FG2P (configuração Exp104b): 9,7M parâmetros
 - Dicionário comprimido gzip: ~3 MB
 
 Se o modelo apenas memorasse, seria mais eficiente: um índice de hash da matriz (palavra → IPA) ocuparia menos espaço que 9,7M params. O fato de o modelo ser tão grande só se justifica se aprende *padrões* — regras fonológicas que generalizam além do treinamento.
