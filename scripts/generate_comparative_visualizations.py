@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Gerar visualizações comparativas: FG2P vs LatPhon + distribuição de classes A-D.
+Generate comparative visualizations: FG2P vs LatPhon + A-D class distribution.
 
-Saída:
-  - class_distribution_all_experiments.png: Distribuição A/B/C/D para todos os experimentos
-  - baseline_comparison.png: FG2P vs LatPhon, WFST, ByT5-Small (PER com CI)
-  - top_5_models_metrics.png: Top 5 modelos com métricas detalhadasver
-  - class_distribution_top5.png: Distribuição A/B/C/D para top 5 modelos
+Output:
+    - class_distribution_all_experiments.png: A/B/C/D distribution for all experiments
+    - baseline_comparison.png: FG2P vs LatPhon, WFST, ByT5-Small (PER with CI)
+    - top_5_models_metrics.png: Top 5 models with detailed metrics
+    - class_distribution_top5.png: A/B/C/D distribution for top 5 models
 """
 
 import re
@@ -66,7 +66,7 @@ BASELINES = [
         "ci_low": None,
         "ci_high": None,
         "color": "#e74c3c",   # vermelho
-        "note": "9.10% (sem CI)",
+        "note": "9.10% (no CI)",
     },
 ]
 
@@ -100,10 +100,10 @@ def safe_print(msg):
 
 def plot_baseline_comparison():
     """
-    Gráfico 2: FG2P vs todos os baselines — LatPhon, WFST, ByT5-Small.
-    PER com barras de erro (95% CI onde disponível).
+    Chart 2: FG2P vs all baselines — LatPhon, WFST, ByT5-Small.
+    PER with error bars (95% CI where available).
     """
-    safe_print("[2/3] Plotando comparacao com baselines...")
+    safe_print("[2/3] Plotting baseline comparison...")
 
     fig, ax = plt.subplots(figsize=(12, 7), dpi=FIGURE_DPI)
 
@@ -124,7 +124,7 @@ def plot_baseline_comparison():
 
     # Destaque: IC não sobrepostos entre FG2P e LatPhon
     ax.annotate(
-        "ICs não se sobrepõem\n(FG2P upper 0.51% < LatPhon lower 0.56%)",
+        "CIs do not overlap\n(FG2P upper 0.51% < LatPhon lower 0.56%)",
         xy=(0.5, 0.86), xycoords=("data", "data"),
         xytext=(1.5, 2.2), textcoords="data",
         fontsize=9, style="italic", ha="center",
@@ -133,7 +133,7 @@ def plot_baseline_comparison():
     )
 
     ax.set_ylabel("PER (%)", fontsize=12, fontweight="bold")
-    ax.set_title("Comparação de Baselines — Phoneme Error Rate (PER)\n"
+    ax.set_title("Baseline Comparison — Phoneme Error Rate (PER)\n"
                  "FG2P vs LatPhon 2025, WFST/Phonetisaurus, ByT5-Small",
                  fontsize=13, fontweight="bold")
     ax.set_xticks(x_pos)
@@ -143,16 +143,16 @@ def plot_baseline_comparison():
 
     plt.tight_layout()
     plt.savefig("results/baseline_comparison.png", dpi=FIGURE_DPI, bbox_inches="tight")
-    safe_print("   [OK] Salvo: results/baseline_comparison.png")
+    safe_print("   [OK] Saved: results/baseline_comparison.png")
     plt.close()
 
 
 def plot_top_5_models(all_metrics, all_metadata):
     """
-    Gráfico 3: Top 5 modelos (por PER) com métricas detalhadasver.
-    Tabela com: PER, WER, Accuracy, Params, Classe A/B/C/D.
+    Chart 3: Top 5 models (by PER) with detailed metrics.
+    Table with: PER, WER, Accuracy, Params, Class A/B/C/D.
     """
-    safe_print("[3/4] Plotando top 5 modelos...")
+    safe_print("[3/4] Plotting top 5 models...")
 
     # Obter top 5 por PER
     sorted_by_per = sorted(all_metrics.items(), key=lambda x: x[1].per)
@@ -182,7 +182,7 @@ def plot_top_5_models(all_metrics, all_metadata):
     fig, ax = plt.subplots(figsize=(14, 5), dpi=FIGURE_DPI)
     ax.axis("off")
 
-    columns = ["Exp", "PER", "WER", "Acc", "Params", "Cl.A", "Cl.B", "Cl.C", "Cl.D"]
+    columns = ["Exp", "PER", "WER", "Acc", "Params", "Class A", "Class B", "Class C", "Class D"]
 
     table = ax.table(cellText=rows, colLabels=columns, cellLoc="center", loc="center",
                      colWidths=[0.08, 0.08, 0.08, 0.08, 0.10, 0.10, 0.10, 0.10, 0.10])
@@ -204,10 +204,10 @@ def plot_top_5_models(all_metrics, all_metadata):
             else:
                 table[(i, j)].set_facecolor("#ffffff")
 
-    plt.title("Top 5 Modelos por PER (com Distribuição de Classes)", fontsize=14, fontweight="bold", pad=20)
+    plt.title("Top 5 Models by PER (with Class Distribution)", fontsize=14, fontweight="bold", pad=20)
     plt.tight_layout()
     plt.savefig("results/top_5_models_metrics.png", dpi=FIGURE_DPI, bbox_inches="tight")
-    safe_print("   [OK] Salvo: results/top_5_models_metrics.png")
+    safe_print("   [OK] Saved: results/top_5_models_metrics.png")
     plt.close()
 
 
@@ -239,11 +239,11 @@ def _highlight_info(exp_name):
 
 def plot_class_distribution_top5(all_metrics):
     """
-    Gráfico: Top 5 modelos validados por PER + Exp1 e Exp9 forçados.
+    Chart: Top 5 PER-validated models + forced Exp1 and Exp9.
     Exp104b (★ Best PER) e Exp9 (★ Best WER) são destacados na tabela e no gráfico.
-    Esquerda: tabela A/B/C/D. Direita: barras B/C/D com escala ajustada.
+    Left: A/B/C/D table. Right: B/C/D bars with adjusted scale.
     """
-    safe_print("[3/3] Plotando distribuicao de classes para top 5 validados...")
+    safe_print("[3/3] Plotting class distribution for validated top 5...")
 
     valid = {k: v for k, v in all_metrics.items()
              if not any(p in k for p in _BIASED_PATTERNS)}
@@ -274,7 +274,7 @@ def plot_class_distribution_top5(all_metrics):
 
     # ===== Esquerda: Tabela A/B/C/D =====
     ax_table.axis("off")
-    col_labels = ["Modelo", "A (%)", "B (%)", "C (%)", "D (%)"]
+    col_labels = ["Model", "A (%)", "B (%)", "C (%)", "D (%)"]
     table_data = [
         [lbl, f"{a:.2f}", f"{b:.2f}", f"{c:.2f}", f"{d:.2f}"]
         for lbl, a, b, c, d in zip(labels_short, class_a, class_b, class_c, class_d)
@@ -311,7 +311,7 @@ def plot_class_distribution_top5(all_metrics):
         elif col == 4:
             cell.set_facecolor(COLORS_CLASSES["D"])
 
-    ax_table.set_title("Distribuição completa A/B/C/D", fontsize=12, fontweight="bold", pad=12)
+    ax_table.set_title("Full A/B/C/D Distribution", fontsize=12, fontweight="bold", pad=12)
 
     # ===== Direita: Barras agrupadas B/C/D =====
     x = np.arange(len(labels_display))
@@ -322,11 +322,11 @@ def plot_class_distribution_top5(all_metrics):
         if hl_color:
             ax_chart.axvspan(i - 0.45, i + 0.45, color=hl_color, alpha=0.35, zorder=0)
 
-    ax_chart.bar(x - width, class_b, width, label="B — próximo (~1 feat)",
+    ax_chart.bar(x - width, class_b, width, label="B — close (~1 feature)",
                  color=COLORS_CLASSES["B"], zorder=2)
-    ax_chart.bar(x,          class_c, width, label="C — distante (2–3 feat)",
+    ax_chart.bar(x,          class_c, width, label="C — distant (2–3 features)",
                  color=COLORS_CLASSES["C"], zorder=2)
-    ax_chart.bar(x + width,  class_d, width, label="D — catastrófico (4+ feat)",
+    ax_chart.bar(x + width,  class_d, width, label="D — catastrophic (4+ features)",
                  color=COLORS_CLASSES["D"], zorder=2)
 
     max_val = max(max(class_b), max(class_c), max(class_d))
@@ -336,40 +336,40 @@ def plot_class_distribution_top5(all_metrics):
         ax_chart.text(i,          c + label_offset, f"{c:.2f}", ha="center", va="bottom", fontsize=9)
         ax_chart.text(i + width,  d + label_offset, f"{d:.2f}", ha="center", va="bottom", fontsize=9)
 
-    ax_chart.set_xlabel("Modelo", fontsize=11, fontweight="bold")
-    ax_chart.set_ylabel("Erros B+C+D (% de palavras)", fontsize=11, fontweight="bold")
-    ax_chart.set_title("Erros por Classe — Modelos Validados por PER", fontsize=12, fontweight="bold")
+    ax_chart.set_xlabel("Model", fontsize=11, fontweight="bold")
+    ax_chart.set_ylabel("B+C+D Errors (% of words)", fontsize=11, fontweight="bold")
+    ax_chart.set_title("Errors by Class — PER-Validated Models", fontsize=12, fontweight="bold")
     ax_chart.set_xticks(x)
     ax_chart.set_xticklabels(labels_display, fontsize=10)
     ax_chart.legend(fontsize=9, loc="upper right")
     ax_chart.grid(axis="y", alpha=0.3, zorder=1)
     ax_chart.set_ylim([0, max_val * 1.45])
 
-    fig.suptitle("Distribuição de Classes Fonológicas — Modelos Validados por PER",
+    fig.suptitle("Phonological Class Distribution — PER-Validated Models",
                  fontsize=13, fontweight="bold")
     plt.tight_layout()
     plt.savefig("results/class_distribution_top5.png", dpi=FIGURE_DPI, bbox_inches="tight")
-    safe_print("   [OK] Salvo: results/class_distribution_top5.png")
+    safe_print("   [OK] Saved: results/class_distribution_top5.png")
     plt.close()
 
 
 def main():
     safe_print("\n" + "="*70)
-    safe_print("GERANDO VISUALIZACOES COMPARATIVAS (FG2P vs LatPhon)")
+    safe_print("GENERATING COMPARATIVE VISUALIZATIONS (FG2P vs LatPhon)")
     safe_print("="*70 + "\n")
 
     try:
         extractor, all_metrics, all_metadata = load_data()
-        safe_print(f"[OK] Carregados {len(all_metrics)} experimentos com metricas\n")
+        safe_print(f"[OK] Loaded {len(all_metrics)} experiments with metrics\n")
 
         plot_baseline_comparison()
         plot_top_5_models(all_metrics, all_metadata)
         plot_class_distribution_top5(all_metrics)
 
         safe_print("\n" + "="*70)
-        safe_print("[OK] TODAS AS VISUALIZACOES GERADAS COM SUCESSO")
+        safe_print("[OK] ALL VISUALIZATIONS GENERATED SUCCESSFULLY")
         safe_print("="*70)
-        safe_print("\nArquivos gerados em results/:")
+        safe_print("\nFiles generated in results/:")
         safe_print("  1. baseline_comparison.png")
         safe_print("  2. top_5_models_metrics.png")
         safe_print("  3. class_distribution_top5.png")

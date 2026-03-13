@@ -1,6 +1,6 @@
 # 009 - Regras para Comparacoes Empiricas Justas
 
-Status: em aberto
+Status: respondida
 
 ## Problema
 

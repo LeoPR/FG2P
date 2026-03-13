@@ -1,38 +1,78 @@
-# 012 - Clareza de nomenclatura no README
+# 012 - Clareza narrativa e nomenclatura
 
 Status: respondida
 
 ## Pergunta
 
-As tabelas comparativas do README usavam eixos de nomeacao inconsistentes: "FG2P (Exp104b)" (ID interno) ao lado de "LatPhon (2025)" (ano de publicacao). Isso confunde o leitor e nao segue a convencao de papers cientificos.
+Como manter clareza quando o texto mistura historia do projeto (fases/experimentos internos) e comparacoes com trabalhos externos?
 
-## Convencao cientifica de referencia
+## Principio geral
 
-Em papers de NLP/speech (ACL, Interspeech, ICASSP), tabelas comparativas usam o mesmo eixo para todos os metodos:
-- **Nome (Ano)** ou **Nome (Autores, Ano)** para identificar trabalhos
-- Configuracao especifica vai em nota de rodape, caption ou coluna separada
-- Trabalho proprio: "Ours", "This work" ou "Nome (Ano)"
+Documentacao deve preservar a ordem da historia do projeto e usar nomenclatura consistente por contexto.
 
-## Decisao adotada
+1. Comparacao externa (entre trabalhos):
+- usar o mesmo eixo de rotulo para todas as linhas da tabela (ex.: Nome + Ano)
+- deixar detalhes de configuracao em nota/caption/coluna de contexto
 
-1. Tabelas de **comparacao externa** (FG2P vs LatPhon/WFST/ByT5):
-   - "FG2P (2026)" e "LatPhon (2025)" — mesmo eixo (ano)
-   - Nota curta antes da tabela explicando que os numeros vem da melhor configuracao (Exp104b) do estudo de ablacao
+2. Comparacao interna (entre variantes do proprio projeto):
+- usar IDs internos no formato canonico `ExpN` ou `ExpN[a-z]`, com uma frase curta explicando a convencao
 
-2. Tabelas **internas** (ablacao entre variantes do FG2P):
-   - Mantidos IDs de experimento (Exp1, Exp9, Exp104b etc.)
-   - Uma frase introdutoria explica o sistema de IDs antes das tabelas internas
+3. Fluxo narrativo:
+- primeiro "quem compara com quem" (contexto externo)
+- depois "qual configuracao interna foi usada" (rastreabilidade)
 
-3. Secao "Model Selection":
-   - Frase introdutoria explica que aliases (best_per, best_wer) apontam para IDs internos
+## Exemplo aplicado
 
-## O que foi removido
+No ajuste FG2P vs LatPhon:
+- a tabela externa passou a usar o mesmo eixo para ambos (Nome + Ano)
+- o identificador interno (Exp104b) ficou como referencia de configuracao, nao como rotulo principal da comparacao
 
-- Bloco verbose "How to read names in this section" (tentativa anterior, excessivamente literal)
-- Rotulos longos como "FG2P (reference run: Exp104b)" e "LatPhon (paper, 2025)"
+Esse exemplo deve servir de padrao para outras secoes que misturem baseline externo com fases internas.
 
-## Aplicacao
+## Regra reutilizavel para futuras revisoes
 
-- README.md: tabelas Key Results e Baselines atualizadas
-- ARTICLE.md: tabela comparativa atualizada
-- docs internos (evaluations, experiments): mantidos como estao (sao notas de trabalho, nao publicacao)
+Padrao recomendado para IDs internos:
+- formato canonico: `ExpN` ou `ExpN[a-z]`
+- regex pratica: `^Exp[0-9]+[a-z]?$`
+- exemplo: `Exp0`, `Exp9`, `Exp104b`, `Exp104d`
+- quando houver variacao de hiperparametro dentro da mesma familia, preferir texto contextual, por exemplo `Exp7 (lambda=0.20)`, em vez de embutir o valor no ID principal
+
+Antes de publicar uma tabela, verificar:
+- o eixo de nomeacao e o mesmo para todas as linhas?
+- a ordem da explicacao ajuda um leitor novo a entender a historia sem conhecer os IDs internos?
+- os detalhes tecnicos ficaram no lugar certo (contexto), sem poluir o rotulo principal?
+
+## O que ainda precisa ser explicado na ordem feliz
+
+Mesmo com a nomenclatura ajustada, ainda ha pontos que um leitor novo so entende por inferencia.
+
+1. Configuracoes complementares antes dos numeros principais:
+- explicar cedo que FG2P nao tem um unico "melhor modelo" universal
+- Exp104b e referencia para PER/TTS
+- Exp9 e referencia para WER/NLP
+
+2. Por que o topo escolhe Exp104b como vitrine:
+- deixar explicito por que o resumo inicial abre com PER 0,49% e WER 5,43%
+- explicar que a abertura privilegia o modelo de referencia principal para comparacao externa, enquanto a secao de selecao de modelos mostra as alternativas por caso de uso
+
+3. Qual metrica ancora a comparacao com literatura:
+- dizer antes da tabela que a comparacao externa com LatPhon e feita principalmente em PER
+- justificar isso pelo fato de WER nao estar disponivel na referencia externa
+
+4. O que significa "same source family (ipa-dict)":
+- esclarecer que significa mesma linhagem de recurso lexical, nao subconjunto identico nem split identico
+
+5. Quando a dificuldade da tarefa muda:
+- avisar cedo que alguns modelos predizem separadores silabicos e outros nao
+- deixar claro que isso altera a dificuldade e a leitura de PER/WER
+
+6. Onde entra o override estrutural:
+- explicar cedo que o melhor PER (Exp104b) depende da correcao de distancias para tokens estruturais
+- isso evita que o leitor atribua todo o ganho apenas a DA Loss de forma generica
+
+7. Ordem ideal para leitor novo:
+- o que o projeto faz
+- quais sao as duas referencias praticas (Exp104b e Exp9)
+- qual metrica compara com literatura
+- por que a comparacao e limitada ao setup
+- so depois: detalhes de loss, split, arquitetura e ablacoes

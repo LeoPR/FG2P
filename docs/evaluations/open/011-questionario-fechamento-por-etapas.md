@@ -1,6 +1,6 @@
 # 011 - Questionario de Fechamento por Etapas
 
-Status: em aberto
+Status: respondida
 
 Objetivo:
 - transformar pendencias abertas em decisoes objetivas;
@@ -112,3 +112,12 @@ Criterio de fechamento da etapa:
 ## Resultado esperado do questionario
 
 Ao responder as etapas acima, cada resposta vira uma decisao editorial ou experimental concreta. Isso permite fechar o backlog sem loops e com rastreabilidade.
+
+## Fechamento
+
+As decisoes editoriais principais deste questionario foram aplicadas no README, ARTICLE e no indice de avaliacoes:
+
+1. Claims comparativos passaram para redacao condicional e orientada por metrica comum.
+2. Narrativa da DA Loss foi separada do efeito de override estrutural.
+3. Validade externa foi fixada como alta no universo `ipa-dict` e moderada para generalizacao ampla.
+4. Itens metodologicos sem novo experimento foram convertidos em limitacoes explicitas + trabalho futuro.

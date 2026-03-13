@@ -43,6 +43,7 @@ if str(_SRC_DIR) not in sys.path:
     sys.path.insert(0, str(_SRC_DIR))
 
 from inference_light import G2PPredictor
+from inference_light import _get_complete_model_files
 
 
 # ---------------------------------------------------------------------------
@@ -132,7 +133,13 @@ def _thermal_check(latencies: list, frac: float = 0.20):
     return mean_first, mean_last, ratio
 
 
-def _analyze(latencies: list, token_counts: list, loop_overhead_s: float):
+def _analyze(
+    latencies: list,
+    token_counts: list,
+    input_char_counts: list,
+    output_char_counts: list,
+    loop_overhead_s: float,
+):
     """
     Análise completa post-hoc sobre latências brutas.
     Subtrai overhead de calibração antes de qualquer cálculo.
@@ -143,11 +150,25 @@ def _analyze(latencies: list, token_counts: list, loop_overhead_s: float):
 
     n = len(corrected)
     mean_lat = sum(corrected) / n
+    variance = sum((x - mean_lat) ** 2 for x in corrected) / n if n > 1 else 0.0
+    std_lat = math.sqrt(variance)
+    sem_lat = std_lat / math.sqrt(n) if n > 1 else 0.0
+    ci95_lat_low = max(0.0, mean_lat - 1.96 * sem_lat)
+    ci95_lat_high = mean_lat + 1.96 * sem_lat
     total_time = sum(corrected)
     total_tokens = sum(token_counts)
+    total_chars_in = sum(input_char_counts)
+    total_chars_out = sum(output_char_counts)
 
     throughput_wps = n / total_time if total_time > 0 else 0.0
     throughput_tps = total_tokens / total_time if total_time > 0 else 0.0
+    throughput_cps_in = total_chars_in / total_time if total_time > 0 else 0.0
+    throughput_cps_out = total_chars_out / total_time if total_time > 0 else 0.0
+
+    # CI95 aproximado para throughput via inversão do CI da latência média.
+    # w/s = 1 / latência(s) por palavra.
+    wps_ci95_low = (1.0 / ci95_lat_high) if ci95_lat_high > 0 else 0.0
+    wps_ci95_high = (1.0 / ci95_lat_low) if ci95_lat_low > 0 else 0.0
 
     stable_lat, stable_cv, stable_start = _find_stable_window(corrected)
     stable_wps = 1.0 / stable_lat if stable_lat > 0 else 0.0
@@ -165,7 +186,15 @@ def _analyze(latencies: list, token_counts: list, loop_overhead_s: float):
         "p99_ms":              _percentile(corrected_sorted, 0.99) * 1000,
         "throughput_wps":      throughput_wps,
         "throughput_tps":      throughput_tps,
+        "throughput_cps_in":   throughput_cps_in,
+        "throughput_cps_out":  throughput_cps_out,
         "tokens_per_word":     total_tokens / n if n > 0 else 0.0,
+        "chars_in_per_word":   total_chars_in / n if n > 0 else 0.0,
+        "chars_out_per_word":  total_chars_out / n if n > 0 else 0.0,
+        "ci95_lat_low_ms":     ci95_lat_low * 1000,
+        "ci95_lat_high_ms":    ci95_lat_high * 1000,
+        "ci95_wps_low":        wps_ci95_low,
+        "ci95_wps_high":       wps_ci95_high,
         "stable_wps":          stable_wps,
         "stable_cv":           stable_cv,
         "stable_window_start": stable_start,
@@ -182,7 +211,7 @@ def _analyze(latencies: list, token_counts: list, loop_overhead_s: float):
 # ---------------------------------------------------------------------------
 
 def benchmark_model(
-    alias: str,
+    model_ref: str,
     device: torch.device,
     test_words: List[str],
     warmup_runs: int = 20,
@@ -195,9 +224,20 @@ def benchmark_model(
     Loop quente: apenas perf_counter() + predict() + append().
     Toda análise estatística é feita post-hoc por _analyze().
     """
-    print(f"\n  Carregando '{alias}' em {device}...", end=" ", flush=True)
+    print(f"\n  Carregando '{model_ref}' em {device}...", end=" ", flush=True)
     try:
-        predictor = G2PPredictor.load(alias=alias, device=device)
+        model_id = model_ref
+        if model_ref.startswith("index:"):
+            idx = int(model_ref.split(":", 1)[1])
+            predictor = G2PPredictor.load(index=idx, device=device)
+            model_id = f"index:{idx}:{predictor.experiment_name}"
+        elif model_ref.startswith("alias:"):
+            alias = model_ref.split(":", 1)[1]
+            predictor = G2PPredictor.load(alias=alias, device=device)
+            model_id = alias
+        else:
+            predictor = G2PPredictor.load(alias=model_ref, device=device)
+            model_id = model_ref
         print("OK")
     except Exception as e:
         print(f"ERRO ({e})")
@@ -215,6 +255,8 @@ def benchmark_model(
           end=" ", flush=True)
     latencies: list = []
     token_counts: list = []
+    input_char_counts: list = []
+    output_char_counts: list = []
 
     if device.type == "cuda":
         torch.cuda.synchronize()
@@ -226,14 +268,22 @@ def benchmark_model(
             t1 = time.perf_counter()
             latencies.append(t1 - t0)         # único append no loop quente
             token_counts.append(len(result.split()))  # custo: split() ~1µs, aceitável
+            input_char_counts.append(len(word))
+            output_char_counts.append(len(result.replace(" ", "")))
 
     if device.type == "cuda":
         torch.cuda.synchronize()
 
     print("OK")
 
-    stats = _analyze(latencies, token_counts, loop_overhead_s)
-    stats["alias"] = alias
+    stats = _analyze(
+        latencies,
+        token_counts,
+        input_char_counts,
+        output_char_counts,
+        loop_overhead_s,
+    )
+    stats["alias"] = model_id
     stats["device"] = str(device)
     return stats
 
@@ -281,8 +331,8 @@ def print_results(all_results: dict):
         print("-" * 100)
 
         # Cabeçalho
-        print(f"{'Device':<8} {'Global w/s':>11} {'Stable w/s':>11} {'Tok/s':>8} "
-              f"{'Tok/word':>9} {'p50 ms':>8} {'p95 ms':>8} {'p99 ms':>8} {'CV%':>6}")
+        print(f"{'Device':<8} {'Global w/s':>11} {'CI95 w/s':>19} {'Stable w/s':>11} {'Tok/s':>8} "
+              f"{'CharIn/s':>10} {'CharOut/s':>11} {'p50 ms':>8} {'p95 ms':>8} {'CV%':>6}")
         print("-" * 100)
 
         gpu = by_device.get("cuda")
@@ -294,17 +344,21 @@ def print_results(all_results: dict):
             print(
                 f"{label:<8} "
                 f"{s['throughput_wps']:>10.1f}w "
+                f"[{s['ci95_wps_low']:.1f}, {s['ci95_wps_high']:.1f}] "
                 f"{s['stable_wps']:>10.1f}w "
                 f"{s['throughput_tps']:>7.0f}t "
-                f"{s['tokens_per_word']:>9.1f} "
+                f"{s['throughput_cps_in']:>10.0f} "
+                f"{s['throughput_cps_out']:>11.0f} "
                 f"{s['p50_ms']:>7.2f}ms "
                 f"{s['p95_ms']:>7.2f}ms "
-                f"{s['p99_ms']:>7.2f}ms "
                 f"{s['global_cv']*100:>5.1f}%"
             )
             # Detalhe de estabilidade e overhead na linha seguinte
             print(
                 f"{'':8} overhead calibração: {s['loop_overhead_us']:.2f}µs subtracted | "
+                f"lat CI95=[{s['ci95_lat_low_ms']:.2f},{s['ci95_lat_high_ms']:.2f}]ms | "
+                f"tok/word={s['tokens_per_word']:.1f} inChar/word={s['chars_in_per_word']:.1f} "
+                f"outChar/word={s['chars_out_per_word']:.1f} | "
                 f"stable window starts at run {s['stable_window_start']} "
                 f"(CV {s['stable_cv']*100:.1f}%) | "
                 f"thermal: first={s['mean_first_ms']:.2f}ms last={s['mean_last_ms']:.2f}ms "
@@ -338,6 +392,10 @@ def main():
     )
     parser.add_argument("--models",  default="best_per,best_wer",
                         help="Aliases separados por vírgula (padrão: best_per,best_wer)")
+    parser.add_argument("--indices", default="",
+                        help="Índices de modelos separados por vírgula (ver src/inference_light.py --list)")
+    parser.add_argument("--all-models", action="store_true",
+                        help="Benchmark de todos os modelos completos disponíveis em models/")
     parser.add_argument("--warmup",  type=int, default=20,
                         help="Passes de warmup descartados (padrão: 20)")
     parser.add_argument("--runs",    type=int, default=200,
@@ -347,13 +405,23 @@ def main():
                         help="Palavras de teste separadas por vírgula")
     args = parser.parse_args()
 
-    models     = [m.strip() for m in args.models.split(",")]
+    model_refs: List[str] = []
+    if args.all_models:
+        all_models = _get_complete_model_files()
+        model_refs = [f"index:{i}" for i in range(len(all_models))]
+    elif args.indices.strip():
+        idxs = [s.strip() for s in args.indices.split(",") if s.strip()]
+        model_refs = [f"index:{int(i)}" for i in idxs]
+    else:
+        aliases = [m.strip() for m in args.models.split(",") if m.strip()]
+        model_refs = [f"alias:{a}" for a in aliases]
+
     test_words = [w.strip() for w in args.words.split(",")]
 
     print("=" * 100)
     print("G2P Inference Benchmark — GPU vs CPU")
     print("=" * 100)
-    print(f"Modelos : {', '.join(models)}")
+    print(f"Modelos : {', '.join(model_refs)}")
     print(f"Palavras: {', '.join(test_words)}")
     print(f"Warmup  : {args.warmup} passes | Benchmark: {args.runs} passes")
 
@@ -373,20 +441,20 @@ def main():
 
     # Executar benchmarks
     all_results: dict = {}
-    for alias in models:
+    for model_ref in model_refs:
         print(f"\n{'─' * 100}")
-        print(f"Modelo: {alias}")
+        print(f"Modelo: {model_ref}")
         print("─" * 100)
-        all_results[alias] = {}
+        all_results[model_ref] = {}
         for device in devices:
             result = benchmark_model(
-                alias, device, test_words,
+                model_ref, device, test_words,
                 warmup_runs=args.warmup,
                 benchmark_runs=args.runs,
                 loop_overhead_s=overhead,
             )
             if result:
-                all_results[alias][str(device)] = result
+                all_results[model_ref][str(device)] = result
 
     print_results(all_results)
 

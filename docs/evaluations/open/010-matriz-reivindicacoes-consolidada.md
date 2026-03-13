@@ -1,6 +1,6 @@
 # 010 - Matriz Consolidada de Reivindicacoes
 
-Status: em aberto
+Status: respondida
 
 Objetivo desta nota:
 
@@ -17,7 +17,7 @@ Objetivo desta nota:
 | Metodo > arquitetura (BiLSTM > Transformer) | Fragil | Sem controle de variavel de foco (mono vs multi) | Alto | Trocar por formulacao condicional: "neste setup, com estes dados" |
 | Split 60/10/30 supera 70/10/20 | Sustentada | Comparacoes internas com mesmo pipeline e melhoria consistente | Baixo | Manter como contribuicao metodologica |
 | Modelo aprende regras, nao memoriza | Sustentada com ressalva | OOV + estabilidade com menos dados apontam na direcao correta | Medio | Declarar tamanho pequeno do OOV set como limite atual |
-| DA Loss e contribuicao original | Nao verificada | Nao ha revisao de related work fechada nesta trilha | Alto | Abrir revisao dedicada de originalidade com fontes primarias |
+| DA Loss e contribuicao original | Respondida | Delimitacao formal registrada em `docs/article/ORIGINALITY_ANALYSIS.md` (adaptacao vs combinacao nova no recorte G2P) | Baixo-medio | Manter wording prudente: originalidade de mecanismo no recorte, sem alegacao universal |
 | PER_w e WER_g agregam informacao real | Sustentada | Metrica graduada capta severidade alem do PER classico | Baixo | Manter e linkar a `FORMULAS.md` |
 
 ## Ajustes de consistencia com notas anteriores
@@ -34,16 +34,14 @@ Objetivo desta nota:
 
 ## Pontos ainda realmente abertos
 
-1. Originalidade da DA Loss frente a trabalhos proximos (ASR/G2P com distancia fonologica).
-2. Matizacao final da frase "metodo > arquitetura" para evitar causalidade nao isolada.
-3. Validacao perceptual (MOS/ABX) para sustentar afirmacoes de impacto auditivo.
+1. Matizacao final da frase "metodo > arquitetura" para evitar causalidade nao isolada.
+2. Validacao perceptual (MOS/ABX) para sustentar afirmacoes de impacto auditivo.
 
 ## Prioridade de fechamento
 
 1. Alta: remover/ajustar claims frageis em README/ARTICLE (arquitetura, superioridade universal).
-2. Alta: abrir nota de originalidade com checklist de related work e criterio de novidade.
-3. Media: definir plano minimo de validacao perceptual (mesmo que como trabalho futuro formalizado).
-4. Media: transformar esta matriz em secao curta no artigo, com linguagem "evidencia + limite".
+2. Media: definir plano minimo de validacao perceptual (mesmo que como trabalho futuro formalizado).
+3. Media: transformar esta matriz em secao curta no artigo, com linguagem "evidencia + limite".
 
 ## Criterio de aceite para marcar "respondida"
 

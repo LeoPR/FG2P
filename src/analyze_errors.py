@@ -207,13 +207,23 @@ def calculate_per(predictions, references):
     Returns:
         PER em % (float). 0.0 = perfeito.
     """
-    import editdistance  # lazy import — only needed for PER (scientific eval), not inference
     total_errors = 0
     total_phonemes = 0
     for pred, ref in zip(predictions, references):
-        total_errors += editdistance.eval(pred, ref)
+        total_errors += _editdistance_eval(pred, ref)
         total_phonemes += len(ref)
     return (total_errors / total_phonemes * 100) if total_phonemes > 0 else 0.0
+
+
+def _editdistance_eval(pred, ref):
+    """Wrapper lazy para distância de edição com mensagem de erro clara."""
+    try:
+        import editdistance
+    except ImportError as exc:
+        raise RuntimeError(
+            "Dependência ausente: editdistance. Instale com 'pip install editdistance'."
+        ) from exc
+    return editdistance.eval(pred, ref)
 
 
 def calculate_accuracy(predictions, references):
@@ -586,7 +596,7 @@ Exemplos:
     # Calcular Intervalos de Confiança (Wilson 95%)
     # No nível de fonema para PER
     total_fonemas = sum(len(r) for r in references)
-    erros_fonemas = sum(editdistance.eval(p, r) for p, r in zip(predictions, references))
+    erros_fonemas = sum(_editdistance_eval(p, r) for p, r in zip(predictions, references))
     per_ci_low, per_ci_high = wilson_ci(erros_fonemas, total_fonemas, confidence=0.95)
     
     # No nível de palavra para WER

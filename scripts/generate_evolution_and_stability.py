@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Gerar visualizações de evolução, DA Loss gain, e estabilidade.
+Generate evolution, DA Loss gain, and stability visualizations.
 
-Mostra:
-1. Evolução temporal: Exp0_baseline → Exp1 → Exp5 → Exp9 → Exp104b (linha do progresso)
-2. O enigma Exp0_legacy: Por que 0.38% se baseline é 0.59%? (investigação)
-3. DA Loss Gain: Comparison isolado (same capacity, only loss changes)
-4. Estabilidade: FG2P (28.8k words, mantém perf) vs LatPhon (500, menos generalidade)
+Shows:
+1. Timeline evolution: Exp0_baseline -> Exp1 -> Exp5 -> Exp9 -> Exp104b
+2. Exp0_legacy puzzle: why 0.38% if baseline is 0.59%?
+3. DA Loss gain: isolated comparison (same capacity, only loss changes)
+4. Stability: FG2P (28.8k words) vs LatPhon (500 words)
 
-Saída:
-  - evolution_per_wer.png: Timeline de PER/WER pela evolução
-  - exp0_legacy_mystery.png: Comparação exp0_baseline vs exp0_legacy (split estratificado?)
-  - da_loss_gain.png: Isolamento do efeito DA Loss (Exp1 vs Exp7_0.20 vs Exp9)
-  - generalization_stability.png: Tabela FG2P vs LatPhon (dados, estabilidade)
+Output:
+    - evolution_per_wer.png: PER/WER evolution timeline
+    - exp0_legacy_mystery.png: exp0_baseline vs exp0_legacy comparison
+    - da_loss_gain.png: isolated DA Loss effect (Exp1 vs Exp7_0.20 vs Exp9)
+    - generalization_stability.png: FG2P vs LatPhon stability table
 """
 
 import sys
@@ -84,7 +84,7 @@ def plot_evolution_timeline(all_metrics):
     fig, ax1 = plt.subplots(figsize=(12, 7), dpi=FIGURE_DPI)
 
     # PER (left axis)
-    ax1.set_xlabel("Etapa de Evolucao", fontsize=12, fontweight="bold")
+    ax1.set_xlabel("Evolution Stage", fontsize=12, fontweight="bold")
     ax1.set_ylabel("PER (%)", fontsize=12, fontweight="bold", color=COLORS["baseline"])
     ax1.tick_params(axis="y", labelcolor=COLORS["baseline"])
 
@@ -119,7 +119,7 @@ def plot_evolution_timeline(all_metrics):
     ax1.grid(axis="y", alpha=0.3, zorder=1)
 
     # Title
-    title_text = "Evolucao: Baseline → Intermediate → DA Loss → SOTA\nMostrando reducao de PER (0.59% → 0.49%) e WER (5.06% → 5.43%)"
+    title_text = "Evolution: Baseline -> Intermediate -> DA Loss -> SOTA\nShowing PER reduction (0.59% -> 0.49%) and WER behavior (5.06% -> 5.43%)"
     ax1.set_title(title_text, fontsize=13, fontweight="bold", pad=15)
 
     # Legend
@@ -172,8 +172,8 @@ def plot_exp0_legacy_mystery(all_metrics):
             ha="center", fontsize=11, fontweight="bold",
             bbox=dict(boxstyle="round", facecolor="yellow", alpha=0.4))
 
-    ax.set_ylabel("Erro (%)", fontsize=12, fontweight="bold")
-    ax.set_title("Investigacao: exp0_baseline vs exp0_legacy\nQual eh a causa do 0.21pp delta de PER?",
+    ax.set_ylabel("Error (%)", fontsize=12, fontweight="bold")
+    ax.set_title("Investigation: exp0_baseline vs exp0_legacy\nWhat explains the 0.21pp PER delta?",
                  fontsize=13, fontweight="bold")
     ax.set_xticks(x)
     ax.set_xticklabels(models, fontsize=10)
@@ -183,10 +183,10 @@ def plot_exp0_legacy_mystery(all_metrics):
 
     # Anotacao explicativa
     explanation = (
-        "QUESTAO: legacy teve +3.5x atualizacoes de gradiente?\n"
+        "QUESTION: did legacy run with +3.5x gradient updates?\n"
         "- batch_size=36 (legacy) vs batch_size=96 (baseline)\n"
-        "- epochs=120 sem early stop vs com early stop (patience=10)\n"
-        "→ Regime de treino ≠ Split bias"
+        "- epochs=120 without early stop vs with early stop (patience=10)\n"
+        "-> Training regime != split bias"
     )
     ax.text(0.02, 0.05, explanation, transform=ax.transAxes, fontsize=9,
             verticalalignment="bottom", family="monospace",
@@ -234,8 +234,8 @@ def plot_da_loss_gain(all_metrics):
              ha="center", fontsize=10, fontweight="bold",
              bbox=dict(boxstyle="round", facecolor="lightgreen", alpha=0.4))
 
-    ax1.set_ylabel("Erro (%)", fontsize=11, fontweight="bold")
-    ax1.set_title("1. Isolamento Puro: Mesma capacidade\n(256h, 4.3M params, 60% split)",
+    ax1.set_ylabel("Error (%)", fontsize=11, fontweight="bold")
+    ax1.set_title("1. Pure Isolation: Same capacity\n(256h, 4.3M params, 60% split)",
                   fontsize=12, fontweight="bold")
     ax1.set_xticks(x1)
     ax1.set_xticklabels(models1, fontsize=10)
@@ -261,8 +261,8 @@ def plot_da_loss_gain(all_metrics):
              ha="center", fontsize=10, fontweight="bold",
              bbox=dict(boxstyle="round", facecolor="lightblue", alpha=0.4))
 
-    ax2.set_ylabel("Erro (%)", fontsize=11, fontweight="bold")
-    ax2.set_title("2. Com aumento de capacidade\n(384h, 9.7M params, 60% split)",
+    ax2.set_ylabel("Error (%)", fontsize=11, fontweight="bold")
+    ax2.set_title("2. With increased capacity\n(384h, 9.7M params, 60% split)",
                   fontsize=12, fontweight="bold")
     ax2.set_xticks(x2)
     ax2.set_xticklabels(models2, fontsize=10)
@@ -270,7 +270,7 @@ def plot_da_loss_gain(all_metrics):
     ax2.set_ylim([0, 6])
     ax2.grid(axis="y", alpha=0.3)
 
-    plt.suptitle("Isolamento do Ganho: DA Loss vs. Baseline (Cross-Entropy)",
+    plt.suptitle("Gain Isolation: DA Loss vs Baseline (Cross-Entropy)",
                  fontsize=14, fontweight="bold", y=1.00)
     plt.tight_layout()
     plt.savefig("results/da_loss_gain.png", dpi=FIGURE_DPI, bbox_inches="tight")
@@ -290,18 +290,18 @@ def plot_generalization_stability(all_metrics):
 
     # Dados (de STATUS.md)
     data = [
-        ["Metrica", "FG2P", "LatPhon", "Interpretacao"],
+        ["Metric", "FG2P", "LatPhon", "Interpretation"],
         ["", "", "", ""],
-        ["PER", "0.49%", "0.86%", "FG2P eh 43% melhor"],
-        ["Test Set Size", "28,782 words", "~500 words", "FG2P tem 57x mais dados para validar"],
-        ["Erro absoluto", "~141 palavras", "~4 palavras", "Em valor absoluto, FG2P tem mais erros (maior N)"],
+        ["PER", "0.49%", "0.86%", "FG2P is 43% better"],
+        ["Test Set Size", "28,782 words", "~500 words", "FG2P has 57x more validation data"],
+        ["Absolute errors", "~141 words", "~4 words", "In absolute count, FG2P has more errors (larger N)"],
         ["", "", "", ""],
-        ["Wilson 95% CI", "[0.46%, 0.52%]", "[0.57%, 1.22%]", "ICs nao se sobrepem → sig. estatistica"],
-        ["CI Width", "0.06pp", "0.65pp", "FG2P tem CI 10.8x MAIS ESTREITA → mais preciso"],
+        ["Wilson 95% CI", "[0.46%, 0.52%]", "[0.57%, 1.22%]", "CIs do not overlap -> statistical significance"],
+        ["CI Width", "0.06pp", "0.65pp", "FG2P CI is 10.8x narrower -> more precise"],
         ["", "", "", ""],
-        ["Implicacao 1", "Generaliza bem", "Pouco validado", "FG2P testado em dataset 57x maior"],
-        ["Implicacao 2", "Estavel", "Incerto", "MESMA PERFORMANCE com muito mais dados de teste"],
-        ["Implicacao 3", "Robusto", "Questionavel", "Se performance cai com mais dados, modelo eh fragil"],
+        ["Implication 1", "Generalizes well", "Limited validation", "FG2P tested on a 57x larger dataset"],
+        ["Implication 2", "Stable", "Uncertain", "SAME PERFORMANCE with much more test data"],
+        ["Implication 3", "Robust", "Questionable", "If performance drops with more data, the model is fragile"],
     ]
 
     # Cores por linha
@@ -332,19 +332,19 @@ def plot_generalization_stability(all_metrics):
     # Bold para metricas importantes
     for i in [2, 3, 6, 7]:
         for j in range(4):
-            if j < 2:  # Nome da metrica
+            if j < 2:  # Metric name
                 table[(i, j)].set_text_props(weight="bold", fontsize=10)
 
-    plt.title("FG2P vs LatPhon: Estabilidade e Generalizacao\n(Por que mais dados NO TEST SET eh bom, nao ruim)",
+    plt.title("FG2P vs LatPhon: Stability and Generalization\n(Why more TEST SET data is a strength)",
               fontsize=14, fontweight="bold", pad=20)
 
     # Anotacao final
     explanation = (
-        "CONCLUSAO:\n"
-        "1. 28.8k test set ≠ fraqueza; eh prova de robustez\n"
-        "2. MESMA PER em 57x mais dados = modelo generaliza muito bem\n"
-        "3. LatPhon pode ter ~0.5% em amostra maior (desconhecido)\n"
-        "4. Wilson CI nao se sobrepem → diferenca real, nao acaso"
+        "CONCLUSION:\n"
+        "1. 28.8k test set != weakness; it demonstrates robustness\n"
+        "2. SAME PER on 57x more data = strong generalization evidence\n"
+        "3. LatPhon may change on larger samples (unknown)\n"
+        "4. Wilson CIs do not overlap -> real difference, not chance"
     )
     ax.text(0.02, -0.08, explanation, transform=ax.transAxes, fontsize=10,
             verticalalignment="top", family="monospace", fontweight="bold",

@@ -1,0 +1,157 @@
+======================================================================
+ANÁLISE DE ERROS FONÉTICOS (PanPhon)
+======================================================================
+Timestamp: 2026-03-13 02:43:02
+Predições: predictions_exp104d_structural_tokens_correct__20260312_142940.tsv
+Total: 28782 palavras | Corretas: 27249 | Erros: 1533
+Tempo análise: 6.98s
+
+MÉTRICAS CLÁSSICAS
+----------------------------------------
+PER:      0.48%
+WER:      5.33%
+Accuracy: 94.67%
+
+MÉTRICAS GRADUADAS (PanPhon)
+----------------------------------------
+WER Graduado:  0.56%
+PER Ponderado: 0.38%
+
+DISTRIBUIÇÃO DE CLASSES (por fonema)
+----------------------------------------
+Classe A: 351848 (99.13%)
+Classe B:   1073 ( 0.30%)
+Classe C:    280 ( 0.08%)
+Classe D:   1720 ( 0.48%)
+
+WER SEGMENTADO (por pior classe na palavra)
+----------------------------------------
+Classe A:  27249 palavras (94.67%)
+Classe B:   1036 palavras (3.60%)
+Classe C:    249 palavras (0.87%)
+Classe D:    248 palavras (0.86%)
+
+ANOMALIAS COMPORTAMENTAIS
+----------------------------------------
+Length stats: mean=-0.00 std=0.11 median=+0
+Truncated: 9 palavras
+Over-generated: 2 palavras
+Hallucinations: 15 palavras
+
+Top-10 Truncadas:
+  absa            ref=12 pred= 6 (Δ-6)
+  político-administrativas ref=36 pred=32 (Δ-4)
+  derülo          ref=10 pred= 7 (Δ-3)
+  estadunidense-colombiana ref=32 pred=29 (Δ-3)
+  interdenominacional ref=27 pred=24 (Δ-3)
+  interdisciplinariedade ref=32 pred=29 (Δ-3)
+  otorrinolaringologista ref=30 pred=27 (Δ-3)
+  algúem          ref= 9 pred= 6 (Δ-3)
+  científico-tecnológica ref=31 pred=28 (Δ-3)
+
+Top-10 Over-generated:
+  unhcr           ref= 5 pred= 8 (Δ+3)
+  am              ref= 3 pred= 6 (Δ+3)
+
+Top-10 Alucinações:
+  nietzscheana    patterns=[bigram_loop:. n ×2 (palavra: ×1, ref: ×1)]
+    pred: n i . e s s . ʃ e . ˈ . n . n ə
+    ref:  n i . e t z s . ʃ i . ˈ ã . n ə
+  subvariedade    patterns=[bigram_loop:i . ×2 (palavra: ×1, ref: ×1)]
+    pred: s u b . v a . ɾ i . i . ˈ d a . d ʒ ɪ
+    ref:  s u b . v a . ɾ i . e . ˈ d a . d ʒ ɪ
+  cidadanias      patterns=[trigram_loop:. d a ×2 (palavra: ×1, ref: ×1), trigram_loop:d a . ×2 (palavra: ×1, ref: ×1)]
+    pred: s i . d a . d a . ˈ n i . ə s
+    ref:  s i . d a . d ə . ˈ n i . ə s
+  misasagi        patterns=[trigram_loop:. z a ×2 (palavra: ×1, ref: ×1), trigram_loop:z a . ×2 (palavra: ×1, ref: ×1)]
+    pred: m i . z a . z a . ˈ ʒ i
+    ref:  m i . z a . s a . ˈ ʒ i
+  eear            patterns=[bigram_loop:ɛ . ×2 (palavra: ×1, ref: ×1)]
+    pred: ɛ . ɛ . ˈ a x
+    ref:  ɛ . e . ˈ a x
+  aleatoriedade   patterns=[bigram_loop:i . ×2 (palavra: ×1, ref: ×1)]
+    pred: a . l e . a . t o . ɾ i . i . ˈ d a . d ʒ ɪ
+    ref:  a . l e . a . t o . ɾ i . e . ˈ d a . d ʒ ɪ
+  vídeo-documentário patterns=[trigram_loop:. ɾ i ×2 (palavra: ×1, ref: ×1), trigram_loop:ɾ i . ×2 (palavra: ×1, ref: ×1)]
+    pred: ˈ v i . d ʒ e . o . d o . k u . m ẽ . ɾ i . ɾ i . ʊ
+    ref:  ˈ v i . d e . o . d o . k ũ . m ẽ . t a . ɾ i . ʊ
+  teerã           patterns=[bigram_loop:ɛ . ×2 (palavra: ×1, ref: ×1)]
+    pred: t ɛ . ɛ . ˈ ɾ ã
+    ref:  t e . ɛ . ˈ ɾ ã
+  ararajuba       patterns=[trigram_loop:a . ɾ ×2 (palavra: ×1, ref: ×1), trigram_loop:. ɾ a ×2 (palavra: ×1, ref: ×1), trigram_loop:ɾ a . ×2 (palavra: ×1, ref: ×1)]
+    pred: a . ɾ a . ɾ a . ˈ ʒ u . b ə
+    ref:  a . ɾ a . x a . ˈ ʒ u . b ə
+  unhcr           patterns=[bigram_loop:. x ×2 (palavra: ×1, ref: ×1)]
+    pred: ũ ũ . x . x e x
+    ref:  ˈ ʊ ɲ k ɾ
+
+TOP-10 CONFUSÕES FONÉTICAS
+----------------------------------------
+ Ref → Pred  Count    Dist  Class
+   ɛ → e       232  0.0417      B
+   ɔ → o       204  0.0417      B
+   e → ɛ       194  0.0417      B
+   i → e       121  0.0417      B
+   ə → a        74  0.0833      C
+   o → ɔ        66  0.0417      B
+   e → i        65  0.0417      B
+   . → ˈ        57  1.0000      D
+   a → .        53  1.0000      D
+   ˈ → .        50  1.0000      D
+
+EXEMPLOS POR CLASSE (até 10 por classe)
+----------------------------------------
+
+Classe B:
+  eels            score=0.917  pred=ˈ ɛ . ɛ w s  ref=ˈ ɪ . ɪ w s
+  oroz            score=0.917  pred=o . ˈ ɾ ɔ s  ref=ɔ . ˈ ɾ o s
+  riz             score=0.938  pred=ˈ x i z  ref=ˈ x i s
+  uí              score=0.938  pred=u . ˈ i  ref=ũ . ˈ i
+  elr             score=0.938  pred=ˈ e w x  ref=ˈ i w x
+  ilha            score=0.950  pred=ˈ i . ʎ ə  ref=ˈ ĩ . ʎ ə
+  pról            score=0.950  pred=ˈ p ɾ ɔ w  ref=ˈ p ɾ o w
+  refn            score=0.950  pred=ˈ x e f n  ref=ˈ x i f n
+  ilê             score=0.950  pred=i . ˈ l e  ref=i . ˈ l ɛ
+  mecz            score=0.950  pred=ˈ m e k s  ref=ˈ m i k s
+
+Classe C:
+  nús             score=0.812  pred=ˈ n ʊ s  ref=ˈ n u s
+  ias             score=0.850  pred=ˈ ĩ . ə s  ref=ˈ ĩ . a s
+  orim            score=0.850  pred=ɔ . ˈ ɾ ĩ  ref=u . ˈ ɾ ĩ
+  opõe            score=0.875  pred=o . ˈ p õ ỹ  ref=u . ˈ p õ ỹ
+  solá            score=0.875  pred=s o . ˈ l a  ref=s u . ˈ l a
+  quba            score=0.875  pred=ˈ k u . b ə  ref=ˈ k w . b ə
+  toei            score=0.875  pred=t o . ˈ e y  ref=t u . ˈ e y
+  qubi            score=0.875  pred=k u . ˈ b i  ref=k w . ˈ b i
+  voou            score=0.875  pred=v o . ˈ o w  ref=v u . ˈ o w
+  iaque           score=0.893  pred=i . ˈ a . k ɪ  ref=i . ˈ ə . k ɪ
+
+Classe D:
+  derülo          score=0.000  pred=ˈ d ɛ x . l ʊ  ref=d e . ˈ ɾ k s . l ʊ
+  abos            score=0.000  pred=ˈ a . b ʊ s  ref=a . b e . ˈ ɔ s
+  am              score=0.000  pred=ã . m m ã ʊ̃  ref=ˈ ã ʊ̃
+  aba             score=0.000  pred=a . b e . ˈ a  ref=ˈ a . b ə
+  deambulação     score=0.062  pred=d e . ã . b u . l a . ˈ s ã ʊ̃  ref=d ʒ e . ã . b u . l a . ˈ s ã ʊ̃
+  ad-darazi       score=0.077  pred=a d ʒ . d a . ɾ a . ˈ z i  ref=a . d a . ɾ a . ˈ z i
+  ixtapa          score=0.100  pred=i s . ˈ t a . p ə  ref=i k s . ˈ t a . p ə
+  vltavou         score=0.100  pred=v a . t a . ˈ v o w  ref=v l t a . ˈ v o w
+  boiuna          score=0.111  pred=b b o y . ˈ n ə  ref=b o . ˈ i w . n ə
+  oxigenados      score=0.125  pred=o . ʃ i . ʒ e . ˈ n a . d ʊ s  ref=o . k s i . ʒ e . ˈ n a . d ʊ s
+
+TOP-15 SUBSTITUIÇÕES
+----------------------------------------
+   ɛ → e       232
+   ɔ → o       204
+   e → ɛ       194
+   i → e       121
+   ə → a        74
+   o → ɔ        66
+   e → i        65
+   . → ˈ        57
+   a → .        53
+   ˈ → .        50
+   i → .        42
+   i → ĩ        41
+   u → o        35
+   e → ẽ        33
+   . → i        32

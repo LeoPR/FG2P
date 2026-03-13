@@ -1,25 +1,25 @@
 ======================================================================
 G2P LSTM - Evaluation Results
 ======================================================================
-Timestamp: 2026-03-13 03:00:14
-Model: exp104b_intermediate_sep_da_custom_dist_fixed__20260311_022457.pt
-Experiment: exp104b_intermediate_sep_da_custom_dist_fixed
-Training Status: Epoch 88/120 (Complete)
+Timestamp: 2026-03-13 02:43:02
+Model: exp104d_structural_tokens_correct__20260312_142940.pt
+Experiment: exp104d_structural_tokens_correct
+Training Status: Epoch 90/120 (Complete)
 Test set: 28782 words
-Inference time: 907.95s (31.7 samples/s)
+Inference time: 1108.98s (26.0 samples/s)
 
 METRICS
 ----------------------------------------------------------------------
-PER (Phoneme Error Rate): 0.51%
-WER (Word Error Rate):    5.62%
-Accuracy (Word-level):    94.38%
-Correct words: 27165/28782
+PER (Phoneme Error Rate): 0.48%
+WER (Word Error Rate):    5.33%
+Accuracy (Word-level):    94.67%
+Correct words: 27249/28782
 
 BENCHMARK COMPARISON
 ----------------------------------------------------------------------
 Model                        Lang    Dataset          PER%    WER%    Acc%   
 ----------------------------------------------------------------------
-FG2P (este run)              PT-BR   28k (estratificado) 0.51    5.62    94.38  
+FG2P (este run)              PT-BR   28k (estratificado) 0.48    5.33    94.67  
 FG2P Exp0 LEGACY (Simple 70/10/20 — no stratify/early-stop) PT-BR   19.2k (20% test — non-stratified split) 0.38    3.41    96.59  
 FG2P Exp0 (Baseline 70/10/20) PT-BR   19.2k (20% test) 0.59    5.06    94.94  
 FG2P Exp1 (Baseline 60/10/30) PT-BR   28.8k (30% test) 0.64    5.48    94.52  

@@ -1,6 +1,6 @@
 # 003 - Tamanho Minimo de Amostra para Teste e Treino
 
-Status: em aberto
+Status: respondida
 
 ## Problema
 
@@ -59,3 +59,14 @@ Esses pontos sugerem que o projeto esta acima do limiar minimo de treino, mas ai
 2. Escolher um criterio estrutural para tamanho minimo de treino.
 3. Definir a margem multiplicativa desejada e a justificativa conceitual.
 4. Decidir se a conclusao final sera teorica, empirica ou hibrida.
+
+## Fechamento editorial (sem novo experimento)
+
+Decisao adotada para publicacao atual:
+
+1. Conclusao **hibrida**:
+	- teste: criterio estatistico (precisao de IC);
+	- treino: criterio estrutural + evidencia empirica interna de estabilidade.
+2. O trabalho **nao afirma minimo universal** de amostra.
+3. Formula-se apenas um criterio pratico: o regime usado no FG2P esta acima do limiar observado para estabilidade no recorte atual.
+4. A estimativa formal de `N_minimo` (com modelagem dedicada) fica como extensao metodologica futura.

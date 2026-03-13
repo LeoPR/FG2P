@@ -57,11 +57,11 @@ A função de custo adiciona uma penalidade proporcional à distância PanPhon e
 ```
                CE             DA (λ=0.20)
 ────────────────────────────────────────────
-learned     Exp1 (0.66%)       Exp7_0.20 (0.60%)
+learned     Exp1 (0.66%)       Exp7 (lambda=0.20) (0.60%)
 panphon_T   Exp3 (0.66%)       Exp8 (0.65%)
 ```
 
-Este é o único fatorial 2×2 limpo para isolar sinergia entre embedding fonológico e DA Loss. **Conclusão**: Exp8 (panphon + DA) não supera Exp7_0.20 (learned + DA) → sinergia não materializada.
+Este é o único fatorial 2×2 limpo para isolar sinergia entre embedding fonológico e DA Loss. **Conclusão**: Exp8 (panphon + DA) não supera Exp7 (lambda=0.20, learned + DA) → sinergia não materializada.
 
 #### Fatorial 2×2 — Separador × DA Loss (intermediate 9.7M, 60% split)
 
@@ -80,15 +80,26 @@ Isola o trade-off PER/WER dos separadores vs. o ganho de WER da DA Loss. **Concl
 |-----------|-----------|-----------|
 | Exp1 → Exp5 → Exp2 | Capacidade (4.3M → 9.7M → 17.2M) | Sweet spot 9.7M |
 | Exp1 → Exp3 | PanPhon init trainável | Erros levemente mais inteligentes; PER idêntico |
-| Exp1 → Exp6/Exp7_* | DA Loss (λ sweep) | λ=0.20 ótimo empírico |
+| Exp1 → Exp6/Exp7 (varredura lambda) | DA Loss (λ sweep) | λ=0.20 ótimo empírico |
 | Exp5 → Exp9 | DA Loss em 9.7M | -0.05pp PER, -0.42pp WER |
 | Exp2 → Exp10 | DA Loss em 17.2M | DA Loss piora em alta capacidade |
 | Exp1 → Exp101 | Separador silábico (4.3M) | PER −20%, WER +6% |
 | Exp5 → Exp102 | Separador silábico (9.7M) | PER −17%, WER +7.6% |
 | Exp102 → Exp103 | DA Loss com separador | WER −1% marginal; PER +1.9% |
 | Exp9 → Exp103 | Separador com DA Loss | PER −8.6%, WER +15.5% (trade-off persiste) |
+| Exp104b → Exp104d | Ajuste estrutural + tokens estruturais corrigidos | PER/WER pontuais melhoram (0.51->0.48; 5.62->5.33), mas com sobreposicao de IC95 no WER e custo maior de inferencia em CPU |
 | Exp104b → Exp105 | -10% dados treino (60%→50%) | PER +0.05% (robusto) |
-| Exp105 → Exp106 | Remove hífen do charset | PER +0.04%, inferência 2.58x mais rápida |
+| Exp105 → Exp106 | Remove hífen do charset | PER +0.04%, velocidade em auditoria dedicada |
+
+#### Nota de consistencia (ciclo 2026-03-13)
+
+- Baseline valido para comparacao: **Exp104b** (Exp104c excluido por defeito de configuracao).
+- Reavaliacao no mesmo conjunto (`N=28.782`) com IC95 (Wilson):
+  - Exp104b: PER 0.51% [0.48, 0.53], WER 5.62% [5.36, 5.89], Acc 94.38%
+  - Exp104d: PER 0.48% [0.46, 0.51], WER 5.33% [5.07, 5.59], Acc 94.67%
+- Diferenca de WER (aprox. duas proporcoes): delta = -0.292 p.p., z = -1.539, p ~= 0.124.
+- Interpretacao: ganho consistente em estimativa pontual para qualidade media, sem evidencia estatistica forte de superioridade em WER a 95% neste ciclo.
+- Custo computacional: Exp104d aumenta parametros (~17.2M vs ~9.7M) e mostrou throughput CPU inferior no benchmark consolidado.
 
 #### Comparações CONFUNDIDAS — não usar para conclusões diretas
 
@@ -97,7 +108,7 @@ Isola o trade-off PER/WER dos separadores vs. o ganho de WER da DA Loss. **Concl
 | Exp4 vs Exp3 | split diferente (70% vs 60%) + emb_dim diferente (24D vs 128D) + trainability |
 | Exp4 vs Exp0 | split igual, mas emb diferente E dim diferente (24D vs 128D) |
 | Exp0 vs Exp1 | split E tamanho do test set mudam juntos |
-| Exp6 vs Exp8 | λ diferente (0.10 vs 0.20) + embedding diferente — usar Exp7_0.20 vs Exp8 para comparação limpa |
+| Exp6 vs Exp8 | λ diferente (0.10 vs 0.20) + embedding diferente — usar Exp7 (lambda=0.20) vs Exp8 para comparação limpa |
 
 ### Split Design
 
@@ -460,13 +471,13 @@ Distance-Aware Loss **funcionou**! Pequena mas **consistente** melhoria sobre Ex
 
 **Conclusão**: ❌ **Sinergia NÃO materializada.** Exp8 (0.65%) ficou PIOR que Exp6 (0.63%).
 
-Interpretação pelo design fatorial (comparação correta: Exp7_0.20 vs Exp8, mesmo λ=0.20):
-- DA Loss com `learned` (Exp7_0.20) ≥ DA Loss com PanPhon init (Exp8)
+Interpretação pelo design fatorial (comparação correta: Exp7 (lambda=0.20) vs Exp8, mesmo λ=0.20):
+- DA Loss com `learned` (Exp7, lambda=0.20) ≥ DA Loss com PanPhon init (Exp8)
 - **O prior geométrico do embedding é redundante quando DA Loss já estrutura o gradiente fonologicamente**
 - Quando a função de custo penaliza ativamente erros distantes a cada passo, o modelo aprende a preferir erros próximos independentemente da geometria inicial do espaço de embedding
 - O mecanismo A (prior geométrico) e o mecanismo B (sinal de gradiente) não se amplificam — a DA Loss "domina" o sinal de treinamento
 
-**Nota metodológica**: Exp6 (λ=0.10) vs Exp8 (λ=0.20) confunde embedding e λ. A comparação limpa é Exp7_0.20 (learned+DA λ=0.20) vs Exp8 (panphon+DA λ=0.20).
+**Nota metodológica**: Exp6 (λ=0.10) vs Exp8 (λ=0.20) confunde embedding e λ. A comparação limpa é Exp7 (learned+DA, λ=0.20) vs Exp8 (panphon+DA, λ=0.20).
 
 ---
 
@@ -945,23 +956,22 @@ Extended (Exp2) | 17.2M  | 0.60%| 4.98%| -9% PER      | 4×
 | **Accuracy** | 94.13% | 93.88% | -0.25% | Consistente |
 | **CharVocab** | 39 | **38** | -1 char | Hyph removed |
 | **Treino Speed** | — | epoch ~165s | — | Similar a Exp105 |
-| **Inference Speed** | **11.7 w/s** | **30.2 w/s** | **2.58x faster** ✅ |
+| **Inference Speed** | **11.7 w/s** | **30.2 w/s** (run único) | preliminar | ⚠️ Benchmark dedicado pendente |
 | **Class D Errors** | 0.56% | 0.74% | +0.18% | Minor increase |
 
-**🚀 DESCOBERTA CRÍTICA: Speedup de Inferência**
+**Velocidade: leitura prudente (auditoria em andamento)**
 
-Apesar de apenas 1 caractere de diferença (38 vs 39), Exp106 é **2.58x mais rápido** em inferência:
-- Exp105: 1269s / 38,375 words = 30.2 w/s ← **ANTES DA CORREÇÃO**
-- Exp106: 1269s / 38,375 words = 30.2 w/s ← **Confira logs**
+Os números atuais de speed devem ser tratados como exploratórios.
+O texto anterior continha inconsistência interna de cálculo e foi rebaixado para status preliminar.
 
-Nota: Verificar logs de velocidade real. Potencial origem: embedding/encoding operations mais eficiente com CharVocab menor.
+Critério para fechamento: benchmark replicado (CPU+GPU), baseline comparável (Exp9/Exp104b) e IC95 de throughput/latência.
 
 **Análise Comparativa**:
 
 | Comparação | O que testa | Resultado |
 |-----------|-------------|-----------|
 | Exp106 vs Exp105 (sem hífen vs com) | Impacto semântico do hífen | PER +0.04% ✅ mínimo |
-| Inference Performance | Overhead computacional | **2.58x speedup** 🚀 |
+| Inference Performance | Overhead computacional | Em auditoria (sem claim forte) |
 
 **Top erros (analyze_errors)**: `ɛ→e` (369), `e→ɛ` (304), `i→e` (201), `o→ɔ` (173), `ɔ→o` (172), `.→ˈ` (114), `ə→a` (108), `e→i` (95), `ˈ→.` (93), `i→.` (88)
 - `.→ˈ` aumentou +22 (92→114) vs Exp105
@@ -975,15 +985,15 @@ Nota: Verificar logs de velocidade real. Potencial origem: embedding/encoding op
 
 **Descobertas**:
 - ✅ Hipótese confirmada: Hífen tem **mínimo impacto semântico** (+0.04% PER)
-- ✅ **Velocidade ganha dramaticamente** — abre porta para modelos com vocábulos reduzidos
+- ⚠️ Velocidade: evidência preliminar, sem conclusão final de magnitude
 - ⚠️ `.↔ˈ` separator confusions aumentaram ligeiramente (+22) — pode indicar interação com syllable handling
 - ✅ Truncation e hallucinations diminuíram — qualidade de algumas predições melhorou
 
 **Conclusão**:
 - ✅ **Caractere ortográfico (hífen) não afeta fonologia**: +0.04% PER aceitável
-- ✅ **Speedup inesperado**: CharVocab menor (38 vs 39) catalisa 2.58x faster inference — achado prático importante
+- ⚠️ **Speed claim**: manter como preliminar até benchmark dedicado com IC95
 - ⚠️ **Minor trade-off**: +0.25% WER (estrutural, não grave)
-- 🚀 **Recomendação prática**: Para aplicações com **constraint de latência**, Exp106 é viável (30.2 w/s vs 11.7 w/s)
+- 📝 **Status prático**: Exp106 permanece ablação exploratória de eficiência
 - Exp104b permanece **SOTA acurácia (0.49% PER)** para deployment não-latency-critical
 
 ---
@@ -993,7 +1003,7 @@ Nota: Verificar logs de velocidade real. Potencial origem: embedding/encoding op
 | Experimento | Variável | Resultado | Insight |
 |-------------|----------|-----------|---------|
 | **Exp105** | -10K train words (50% vs 60%) | PER +0.05% | ✅ Robusto, escalável |
-| **Exp106** | -1 char (hífen removido) | PER +0.04%, Speed 2.58x | ✅ Ortografia irrelevante, speedup prático |
+| **Exp106** | -1 char (hífen removido) | PER +0.04%, speed preliminar | ✅ Ortografia irrelevante; eficiência em auditoria |
 
 ---
 
@@ -1005,7 +1015,7 @@ Nota: Verificar logs de velocidade real. Potencial origem: embedding/encoding op
 | Raw 9.7M | Exp5 (0.63%) | **Exp9 (0.58%, WER 4.96%)** ← SOTA WER | — |
 | Raw 9.7M + Sep | Exp102 (0.52%) | Exp103 (0.53%, WER 5.73%) | **Exp104b (0.49%, WER 5.43%)** ← **SOTA PER** |
 | Raw 9.7M + Sep (50% data) | **Exp105 (0.54%)** | — | — |
-| Raw 9.7M + Sep (50% data, -hyphen) | **Exp106 (0.58%, 30.2 w/s)** | — | **2.58x faster** 🚀 |
+| Raw 9.7M + Sep (50% data, -hyphen) | **Exp106 (0.58%, speed em auditoria)** | — | Ablação de eficiência (claim final pendente) |
 | Decomposed 4.3M | Exp11 ❌ | — | — |
 | Decomposed 9.7M | Exp14 ❌ CANCELADO | Exp13 ❌ CANCELADO | — |
 
