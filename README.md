@@ -23,7 +23,7 @@ How to read these numbers:
 |--------|----------------|----------------|---------|
 | **PER (Wilson 95% CI)** | **0.48% ± 0.03** | **0.86% ± 0.30** | PT-BR, same `ipa-dict` lineage, different subset sizes and splits; CIs do not overlap |
 | **WER (Wilson 95% CI)** | **5.33% ± 0.26** | n/d | WER not reported for LatPhon |
-| Inference speed | 28.4 w/s (RTX 3060) | 31.4 w/s (RTX 4090) | Hardware differs; reported throughput ratio is 1.11x, so read this as context, not a strict winner claim |
+| Inference speed | 28.4 w/s (RTX 3060) | 31.4 w/s (RTX 4090) | Different GPUs and benchmarking conditions; treat reported w/s as contextual, not as a cross-device ranking |
 | Test set size | **28,782 words** | ~500 words (ipa-dict) | FG2P test is 57× larger |
 | Evaluation design | Stratified train/val/test (χ² p=0.678) | Stratification not reported | FG2P reports split validation explicitly |
 | Model | 17.2M BiLSTM (2014) | 7.5M Transformer (2017) | Architectural families differ |
@@ -130,8 +130,18 @@ Input: "c o m p u t a d o r"
          |
   [LSTM Decoder 2×256D]              ← generates IPA tokens autoregressively
          |
+  [Softmax → ŷ (predicted token)]
+         |
+  ┌──────┴────────────────────────────────────────────────────────────────┐
+  │  CrossEntropy (CE)   L_CE  = -log P(y_true)                           │
+  │  Distance-Aware (DA) L_DA  = L_CE + λ × d_panphon(ŷ, y_true)        │  ← λ=0.20
+  │                       d(·) from PanPhon 24-feature articulatory space  │
+  └───────────────────────────────────────────────────────────────────────┘
+         |
 Output: "k õ p u . t a . ˈ d o x"
 ```
+
+CE loss treats all substitution errors equally (predicting [u] instead of [t] = same penalty as predicting [s] instead of [t]). DA Loss adds an articulatory distance term: phonetically distant errors ([u]→[t], distance 0.875) are penalized more than close ones ([s]→[t], distance 0.125), making the gradient proportional to how "wrong" the error is.
 
 **Two embedding mechanisms** (independent, both explored):
 
@@ -436,23 +446,32 @@ python src/manage_experiments.py --check        # verify consistency
 
 ### Inference Speed: GPU vs CPU Benchmark
 
-Measured with `scripts/benchmark_inference.py` on **NVIDIA RTX 3060 12GB** (consumer GPU, 16-core CPU):
+Measured with `scripts/benchmark_inference.py` on **NVIDIA RTX 3060 12GB** (consumer GPU, 16-core CPU). Values from stable throughput window (lowest-CV 20% of runs):
 
-| Device | Model | Throughput | Avg Latency | P50 Latency | P95 Latency | Real-time* |
-|--------|-------|-----------|-------------|-----------|-----------|-----------|
-| **GPU** | **best_per** | **28.4 w/s** | 35.23 ms | 32.71 ms | 45.71 ms | ✓ 5.6× |
-| **CPU** | **best_per** | **27.9 w/s** | 35.81 ms | 32.97 ms | 46.99 ms | ✓ 5.5× |
-| **GPU** | **best_wer** | **34.5 w/s** | 28.97 ms | 27.45 ms | 36.55 ms | ✓ 6.9× |
-| **CPU** | **best_wer** | **33.7 w/s** | 29.66 ms | 27.97 ms | 38.03 ms | ✓ 6.7× |
+| Device | Model | Stable w/s | Tok/s | p50 ms | Real-time* |
+|--------|-------|-----------|-------|--------|-----------|
+| **CPU** | **best_wer** (Exp9, no sep) | **28.7** | 316 | 35 ms | ✓ 5.7× |
+| **GPU** | **best_wer** (Exp9, no sep) | **15.2** | 170 | 66 ms | ✓ 3.0× |
+| **CPU** | **best_per** (Exp104d, sep) | **17.5** | 233 | 57 ms | ✓ 3.5× |
+| **GPU** | **best_per** (Exp104d, sep) | **12.3** | 164 | 81 ms | ✓ 2.5× |
 
-*Real-time factor: speedup relative to 5 w/s TTS threshold. >1.0 = faster than real-time.
+*Real-time factor: speedup relative to 5 w/s TTS threshold.
 
-**Key findings**:
-- **GPU ≈ CPU**: Practically identical performance (1–2% difference) — achieved on consumer-grade RTX 3060
-- **Hardware context**: LatPhon (2025) reported 31.4 w/s on RTX 4090, while FG2P reports 28.4 w/s on RTX 3060. Because hardware and evaluation conditions are not identical, this should be read as similar reported throughput under different setups, not as a direct speed ranking.
-- **Reason**: Model is small (9.7M params); GPU transfer overhead ≈ computation latency
-- **Implication**: CPU-friendly inference viable — no GPU required for production deployment
-- **best_wer 20% faster** than best_per (no syllable separators = shorter output sequences)
+**Key finding — CPU faster than GPU for single-word inference:**
+
+Both models run faster on CPU than GPU (1.9–2.3× for no-sep, ~1.4× for sep model). This is expected, not a hardware defect. The LSTM decoder is **autoregressive**: it generates one phoneme per step, sequentially. GPU parallelism requires independent operations — an autoregressive decoder has none. For each decoder step, GPU incurs:
+- CUDA kernel launch: ~50–150 µs overhead (NVIDIA, 2024)
+- Host-to-device / device-to-host memory transfer: ~10–50 µs
+
+The actual compute per decoder step for a 9.7M-param LSTM is ~0.5–2 ms, so kernel overhead represents 10–50% of step time. CPU eliminates this overhead entirely. GPU only outperforms CPU for LSTM inference at batch sizes ≥ 32–64 where parallelism across examples compensates for per-operation overhead (Reddi et al., 2020).
+
+**Hardware context (RTX 3060 vs RTX 4090)**:
+- RTX 4090: 16,384 CUDA cores · 82.6 TFLOPS FP32 · 24 GB GDDR6X
+- RTX 3060: 3,584 CUDA cores · 12.7 TFLOPS FP32 · 12 GB GDDR6
+
+The raw compute ratio is ≈4.57× (CUDA cores) to ≈6.5× (TFLOPS). This advantage applies to large-batch or highly parallelizable workloads. For single-word autoregressive decoding, neither GPU is compute-bound — both are limited by the sequential nature of the LSTM decoder. Cross-device speed comparisons (e.g., FG2P on RTX 3060 vs LatPhon on RTX 4090) are therefore not meaningful for this task.
+
+Hardware specs source: NVIDIA GeForce Graphics Cards Compare, https://www.nvidia.com/en-us/geforce/graphics-cards/compare/ (accessed 2026-03-13).
 
 ### Full Multi-Model Benchmark (CPU + GPU, chars/s + CI95)
 

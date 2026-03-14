@@ -53,6 +53,11 @@ class ExperimentArtifacts:
             if path.exists():
                 st = path.stat()
                 found[key] = {"path": path, "size": st.st_size, "mtime": st.st_mtime}
+
+        latest = rec.latest_benchmark_path()
+        if latest is not None:
+            st = latest.stat()
+            found["benchmark_json"] = {"path": latest, "size": st.st_size, "mtime": st.st_mtime}
         return found
 
     def get_metadata(self) -> Optional[dict]:

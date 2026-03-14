@@ -173,23 +173,35 @@ class G2PPredictor:
 
     @classmethod
     def load(cls, alias: str = None, model_path: Path = None, index: int = None,
-             dict_path: Path = None, device: torch.device = None) -> "G2PPredictor":
+             dict_path: Path = None, device: torch.device = None,
+             quantize: bool = False, num_threads: int = 1) -> "G2PPredictor":
         """
         Carrega modelo treinado. Ponto de entrada principal.
 
         Args:
-            alias:      Nome semântico do modelo: "best_per", "best_wer", "fast".
-                        Recomendado para uso externo — resolve via models/model_registry.json.
-            index:      Índice na lista de modelos (0-based). None → mais recente.
-            model_path: Path direto para .pt (alternativa ao index/alias).
-            dict_path:  Dicionário TSV. Padrão: dicts/pt-br.tsv.
-            device:     CPU ou CUDA. Detectado automaticamente se None.
+            alias:       Nome semântico do modelo: "best_per", "best_wer", "fast".
+                         Recomendado para uso externo — resolve via models/model_registry.json.
+            index:       Índice na lista de modelos (0-based). None → mais recente.
+            model_path:  Path direto para .pt (alternativa ao index/alias).
+            dict_path:   Dicionário TSV. Padrão: dicts/pt-br.tsv.
+            device:      CPU ou CUDA. Detectado automaticamente se None.
+            quantize:    INT8 dynamic quantization (CPU only). Padrão: False.
+                         Testado em Xeon+Windows: regressão de ~38% (dequantização por passo
+                         domina para LSTM pequeno). Pode ganhar em ARM (Apple Silicon, mobile)
+                         ou modelos maiores (hidden≥1024). Use --quantize para testar no seu
+                         hardware — ver docs/evaluations/answered/016.
+            num_threads: Threads intra-op do PyTorch para CPU (padrão: 1).
+                         Para inferência unitária sequencial (batch=1), 1 thread elimina
+                         overhead de sincronização entre threads em operações pequenas.
+                         Use None para manter o padrão do sistema.
 
         Exemplos:
-            p = G2PPredictor.load("best_per")   # melhor PER (recomendado para TTS)
-            p = G2PPredictor.load("best_wer")   # melhor WER (recomendado para NLP)
-            p = G2PPredictor.load()             # modelo mais recente
-            p = G2PPredictor.load(index=11)     # modelo por índice (ver --list)
+            p = G2PPredictor.load("best_per")              # melhor PER (recomendado TTS)
+            p = G2PPredictor.load("best_wer")              # melhor WER (recomendado NLP)
+            p = G2PPredictor.load()                        # modelo mais recente
+            p = G2PPredictor.load(index=11)                # modelo por índice (ver --list)
+            p = G2PPredictor.load("best_per", quantize=True)   # testar INT8 no seu hardware
+            p = G2PPredictor.load("best_per", num_threads=4)   # mais threads (batch/throughput)
         """
         global DICT_PATH
         if dict_path is not None:
@@ -254,7 +266,27 @@ class G2PPredictor:
         model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
         model.eval()
 
-        n = sum(p.numel() for p in model.parameters())
+        # INT8 dynamic quantization — CPU only, zero training cost.
+        # Padrão desativado: em Xeon+Windows causou regressão de 38% (dequantização
+        # por passo autoregressivo domina para LSTM hidden=384). Pode ser vantajoso
+        # em ARM (Apple Silicon, mobile) ou modelos com hidden≥1024. Ver doc 016.
+        if device.type == "cpu" and quantize:
+            import torch.nn as nn
+            model = torch.quantization.quantize_dynamic(
+                model, {nn.LSTM, nn.Linear}, dtype=torch.qint8
+            )
+            logger.info("INT8 dynamic quantization applied (CPU)")
+
+        # Threads intra-op — CPU only.
+        # Para inferência unitária sequencial (batch=1, 50 passos autoreg.), operações
+        # são pequenas (~384-dim matmul). Com múltiplos threads, o overhead de
+        # sincronização entre threads supera o ganho de paralelismo.
+        # num_threads=1 elimina esse overhead; num_threads=None mantém padrão do sistema.
+        if device.type == "cpu" and num_threads is not None:
+            torch.set_num_threads(num_threads)
+            logger.info(f"CPU intra-op threads: {num_threads}")
+
+        n = sum(p.numel() for p in model.parameters() if p.requires_grad)
         logger.info(
             f"{metadata.get('experiment_name', model_path.stem)} | "
             f"{n:,}p | enc={grapheme_encoding} sep={'S' if keep_sep else 'N'}"
@@ -909,6 +941,14 @@ Avaliação completa (WER/PER no test set padrão):
     parser.add_argument("--similar-count", type=int, default=5, metavar="N",
                         help="Número de palavras similares a retornar (default: 5). "
                              "Usado com --similar.")
+    parser.add_argument("--quantize", action="store_true",
+                        help="Ativa INT8 dynamic quantization no CPU. "
+                             "ATENCAO: em Xeon+Windows causa regressao de 38%%. "
+                             "Util apenas para teste em ARM — ver docs/evaluations/answered/016.")
+    parser.add_argument("--threads", type=int, default=1, metavar="N",
+                        help="Threads intra-op do PyTorch para CPU (default: 1). "
+                             "Use None=sistema, 1=minimo overhead para inferencia unitaria, "
+                             ">1 para throughput em batch.")
 
     args = parser.parse_args()
 
@@ -921,7 +961,9 @@ Avaliação completa (WER/PER no test set padrão):
 
     model_path = MODELS_DIR / f"{args.model}.pt" if args.model else None
     predictor  = G2PPredictor.load(
-        alias=args.alias, model_path=model_path, index=args.index
+        alias=args.alias, model_path=model_path, index=args.index,
+        quantize=args.quantize,
+        num_threads=args.threads,
     )
 
     if args.info:

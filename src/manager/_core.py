@@ -110,7 +110,7 @@ class ExperimentManager:
               f"Incompletos: {len(by_status[ExperimentStatus.INCOMPLETE])} | "
               f"Orfaos: {len(by_status[ExperimentStatus.ORPHAN])}")
         print("=" * 100)
-        print("\nUso: --show N | --missing | --run [N] | --clean N | --compare EXP\n")
+        print("\nUso: --show N | --missing | --run [N] | --benchmark [N] | --clean N | --compare EXP\n")
 
     # Descrição e origem de cada artefato (para --show)
     _ARTIFACT_INFO = {
@@ -124,6 +124,7 @@ class ExperimentManager:
         "convergence_plot":   ("Gráfico loss treino/validação (PNG)", "--run [N]",         "pipeline"),
         "checkpoint_plot":    ("Plot de checkpoint durante treino",   "train.py (antigo)", "optional"),
         "analysis_plot":      ("Gráfico gap+throughput de análise",   "analysis.py --plot","optional"),
+        "benchmark_json":     ("Benchmark formal de inferência (JSON)", "--benchmark [N]",   "optional"),
     }
 
     def show_experiment(self, index: int):
@@ -141,7 +142,7 @@ class ExperimentManager:
 
         print(f"\n{'='*100}\nDETALHES [{index}]: {exp.base_name}\n{'='*100}")
         print(f"Status: {status.upper()} | Tamanho: {exp.get_total_size()/(1024*1024):.2f} MB"
-              f" | Core: {n_core}/4 | Pipeline: {n_pipeline}/4 | Opcional: {n_opt}/2")
+              f" | Core: {n_core}/4 | Pipeline: {n_pipeline}/4 | Opcional: {n_opt}/3")
         if meta:
             print("\n--- METADADOS ---")
             print(f"Experimento: {meta.get('experiment_name', 'N/A')}")
@@ -279,6 +280,12 @@ class ExperimentManager:
     def train_all(self, dry_run: bool = False):
         from ._pipeline import train_all
         train_all(self, dry_run=dry_run)
+
+    def run_benchmark(self, index=None, dry_run: bool = False, device: str = "auto",
+                      force: bool = False, update_performance: bool = True):
+        from ._pipeline import run_benchmark
+        run_benchmark(self, index=index, dry_run=dry_run,
+                      device=device, force=force, update_performance=update_performance)
 
     def rebuild_registry(self):
         from ._sync import rebuild_registry

@@ -137,7 +137,6 @@ def select_model(args):
 
 def predict_word(model, word, char_vocab, device):
     """Prediz fonemas para uma palavra usando o decoder autoregressivo."""
-    model.eval()
     chars = torch.LongTensor(char_vocab.encode(word)).unsqueeze(0).to(device)
     char_lengths = torch.LongTensor([len(word)]).to(device)
     predictions = model.predict(chars, char_lengths, max_len=50)
@@ -255,6 +254,7 @@ def run_inference_for_model(model_path, verbose=False):
     model_config = metadata['config'] if (metadata and 'config' in metadata) else {}
     model = G2PLSTMModel.from_config(model_config, char_vocab, phoneme_vocab).to(device)
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
+    model.eval()
     logger.info("[OK] Modelo carregado com sucesso")
 
     # ── Inferência ────────────────────────────────────────────────────────────

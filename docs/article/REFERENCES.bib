@@ -34,13 +34,6 @@
   url={https://aclanthology.org/W12-0912/}
 }
 
-@article{vasilевski2012phonologic_extended,
-  title={Phonologic patterns of {B}razilian {P}ortuguese: a grapheme to phoneme converter based study},
-  author={Vasilévski, Vera and Araújo, Márcio José and Blasi, H. F.},
-  journal={Academia.edu},
-  year={2012},
-  url={https://www.academia.edu/81112008/}
-}
 
 @article{chary2025latphon,
   title={{LatPhon}: Multilingual Grapheme-to-Phoneme Conversion with Language-Aware Encoders},
@@ -63,13 +56,6 @@
   url={https://ieeexplore.ieee.org/document/6638947}
 }
 
-@misc{google2016g2p,
-  title={Grapheme-to-Phoneme Conversion Using Long Short-Term Memory Recurrent Neural Networks},
-  author={Google Research Team},
-  howpublished={Technical Report},
-  year={2016},
-  url={https://research.google.com/pubs/archive/43264.pdf}
-}
 
 @inproceedings{yao2015sequence,
   title={Sequence-to-Sequence Models Can Directly Translate Foreign Languages},
@@ -82,16 +68,6 @@
 % SURVEYS E REVIEWS
 % =====================================================================
 
-@article{mdpi2024survey,
-  title={A survey of grapheme-to-phoneme conversion methods},
-  author={Various Authors},
-  journal={MDPI Applied Sciences},
-  volume={14},
-  number={24},
-  pages={11790},
-  year={2024},
-  url={https://www.mdpi.com/2076-3417/14/24/11790}
-}
 
 @inproceedings{sigmorphon2020multilingual,
   title={Frustratingly easy multilingual grapheme-to-phoneme conversion},
@@ -193,11 +169,16 @@
 }
 
 @article{byt5g2p,
-  title={ByT5: a monolithic pre-trained text-to-text transformer for massively multilingual grapheme-to-phoneme conversion},
-  author={Toshniwal, Shubham and Dao, Tuan and Xie, Shuyan and Salimans, Tim and Grattafiori, Brian and Song, Yonghui and Stripelis, Giorgos},
-  journal={arXiv preprint arXiv:2204.03067},
+  title={{ByT5}: Towards a Token-Free Future with Pre-trained Byte-to-Byte Models},
+  author={Xue, Linting and Barua, Aditya and Constant, Noah and Al-Rfou, Rami and Narang, Sharan and Kale, Mihir and Roberts, Adam and Raffel, Colin},
+  journal={Transactions of the Association for Computational Linguistics (TACL)},
+  volume={10},
+  pages={291--306},
   year={2022},
-  url={https://arxiv.org/pdf/2204.03067}
+  doi={10.1162/tacl_a_00461},
+  archivePrefix={arXiv},
+  eprint={2105.13626},
+  note={ByT5-Small (300M) achieves 8.9\% PER on PT-BR in zero-shot multilingual setting. Used as massively-multilingual baseline for comparison with FG2P supervised monolingual approach.}
 }
 
 @inproceedings{vaswani2017attention,
@@ -212,13 +193,6 @@
 % PROCESSAMENTO DE LINGUAGEM NATURAL E FONÉTICA
 % =====================================================================
 
-@misc{liquori2013portuguese,
-  title={Portuguese Phonology},
-  author={Liquori, Matteo and Contributors},
-  howpublished={Wikipedia},
-  year={2013},
-  url={https://en.wikipedia.org/wiki/Portuguese_phonology}
-}
 
 @book{veloso2001linguistic,
   title={Linguistic foundations of natural language processing for {P}ortuguese},
@@ -230,6 +204,40 @@
 % =====================================================================
 % MÉTRICAS E AVALIAÇÃO
 % =====================================================================
+
+@inproceedings{morris2004cer,
+  title={From {WER} and {RIL} to {MER} and {WIL}: improved evaluation measures for connected speech recognition},
+  author={Morris, Andrew Cameron and Maier, Viktoria and Green, Phil},
+  booktitle={Interspeech},
+  pages={2765--2768},
+  year={2004},
+  url={https://www.isca-archive.org/interspeech_2004/morris04_interspeech.pdf},
+  note={Formal definition of Phoneme Error Rate (PER) as ratio of Levenshtein distance to reference length — convention adopted by G2P literature since Bisani \& Ney (2008)}
+}
+
+@article{wilson1927probable,
+  title={Probable Inference, the Law of Succession, and Statistical Inference},
+  author={Wilson, Edwin Bidwell},
+  journal={Journal of the American Statistical Association},
+  volume={22},
+  number={158},
+  pages={209--212},
+  year={1927},
+  doi={10.2307/2276774},
+  note={Proposes the Wilson score interval (score confidence interval for proportions), valid for $\hat{p} \to 0$ where Wald interval underestimates uncertainty}
+}
+
+@article{brown2001interval,
+  title={Interval Estimation for a Binomial Proportion},
+  author={Brown, Lawrence D. and Cai, T. Tony and DasGupta, Anirban},
+  journal={Statistical Science},
+  volume={16},
+  number={2},
+  pages={101--133},
+  year={2001},
+  doi={10.1214/ss/1009213286},
+  note={Comprehensive analysis of coverage properties of confidence intervals for proportions; recommends Wilson interval over Wald for small $\hat{p}$}
+}
 
 @article{mcnamee2005character,
   title={Character error rate and measures of edit distance},
@@ -428,12 +436,6 @@
 % TRABALHOS RELACIONADOS EM PT-BR
 % =====================================================================
 
-@article{voice_research_brazil,
-  title={Voice and Speech Processing for {B}razilian {P}ortuguese: Review and Challenges},
-  author={Various Authors},
-  journal={EURASIP Journal on Audio, Speech, and Music Processing},
-  year={2024}
-}
 
 @phdthesis{batista2023phd,
   title={Processamento de Fala e Tecnologias de Síntese para Português Brasileiro},
@@ -586,17 +588,6 @@
   note={Defines standardized methodology for inference benchmarking: minimum latency, server, offline, and mobile scenarios with statistical validity criteria}
 }
 
-@inproceedings{mattson2020mlperf,
-  title={{MLPerf} Training Benchmark},
-  author={Mattson, Peter and Cheng, Christine and Diamos, Gregory and Coleman, Cody and Micikevicius, Paulius and Patterson, David and Tang, Hanlin and Wei, Gu-Yeon and others},
-  booktitle={Proceedings of Machine Learning and Systems (MLSys)},
-  volume={2},
-  pages={336--349},
-  year={2020},
-  archivePrefix={arXiv},
-  eprint={1910.01500},
-  note={Establishes reproducibility and convergence criteria for DL training benchmarks}
-}
 
 @misc{pochelu2022dlbenchmark,
   author        = {Pierrick Pochelu},
@@ -635,14 +626,6 @@
   note={Standard reference for stratified random sampling, allocation, and variance estimation}
 }
 
-@misc{farias2020similarity,
-  title={Similarity Based Stratified Splitting: An Approach to Train Better Classifiers},
-  author={Farias, Felipe and Ludermir, Tiago and Bastos-Filho, Clodoaldo},
-  year={2020},
-  archivePrefix={arXiv},
-  eprint={2010.06099},
-  note={Proposes similarity-based stratification for ML splits; illustrates risks of purely random splits in heterogeneous datasets}
-}
 
 @misc{tan2021critical,
   title={A Critical Look at the Current Train/Test Split in Machine Learning},
@@ -668,18 +651,6 @@
   note={Establishes convergence conditions for SGD; random shuffling is a sufficient condition for convergence guarantees}
 }
 
-@incollection{bottou2012tricks,
-  title={Stochastic Gradient Descent Tricks},
-  author={Bottou, L{\'e}on},
-  booktitle={Neural Networks: Tricks of the Trade},
-  series={Lecture Notes in Computer Science},
-  volume={7700},
-  pages={421--436},
-  year={2012},
-  publisher={Springer},
-  doi={10.1007/978-3-642-35289-8_25},
-  note={Practical guide to SGD; recommends shuffling training data at each epoch}
-}
 
 @inproceedings{haochenSra2019shuffling,
   title={Random Shuffling Beats {SGD} after Finite Epochs},
@@ -706,18 +677,18 @@
   note={Provides tight convergence bounds for random reshuffling, confirming it as the preferred SGD variant over i.i.d. sampling}
 }
 
-@inproceedings{safran2020sgd,
-  title={How Good is {SGD} with Random Shuffling?},
-  author={Safran, Itay and Shamir, Ohad},
-  booktitle={Proceedings of the 33rd Conference on Learning Theory (COLT)},
-  series={Proceedings of Machine Learning Research},
-  volume={125},
-  pages={3250--3284},
-  year={2020},
-  archivePrefix={arXiv},
-  eprint={1908.00045},
-  url={https://proceedings.mlr.press/v125/safran20a.html},
-  note={Lower and upper bounds for random shuffling SGD; shows when reshuffling is provably better than i.i.d. sampling}
+
+% =====================================================================
+% HARDWARE E ESPECIFICAÇÕES DE GPU
+% =====================================================================
+
+@misc{nvidia2024geforce,
+  title={{GeForce} Graphics Cards Compare},
+  author={{NVIDIA Corporation}},
+  year={2024},
+  howpublished={Web},
+  url={https://www.nvidia.com/en-us/geforce/graphics-cards/compare/},
+  note={Official NVIDIA specifications for RTX 3060 (3,584 CUDA cores, 12.7 TFLOPS FP32, 12 GB GDDR6) and RTX 4090 (16,384 CUDA cores, 82.6 TFLOPS FP32, 24 GB GDDR6X). Accessed 2026-03-13.}
 }
 
-% Última atualização: 2026-03-12
+% Última atualização: 2026-03-13

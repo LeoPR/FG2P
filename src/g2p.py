@@ -1249,8 +1249,8 @@ class G2PLSTMModel(nn.Module):
         """
         Inferência: gera fonemas até EOS ou max_len.
         Retorna lista de listas de índices (sem EOS/PAD).
+        Assume model.eval() já foi chamado pelo caller.
         """
-        self.eval()
         with torch.no_grad():
             mask = (src != 0)
             encoder_out, hidden = self.encoder(src, src_lengths)

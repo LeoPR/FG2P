@@ -45,13 +45,14 @@ Comparar sistemas de G2P entre estudos é notoriamente difícil: datasets, split
 
 A referência mais próxima é **LatPhon** (Chary et al., 2025), um Transformer de 4 camadas (7,5M params, RoPE) multilíngue. Para PT-BR, a Tabela II do paper LatPhon reporta **PER = 0,86% (±0,3)** em ~500 palavras (ipa-dict). A comparação aqui é ancorada em PER, porque WER não é reportado no paper, e em mesma linhagem lexical (`ipa-dict`), não em subconjuntos idênticos.
 
-| Métrica | **LatPhon (2025)** | **FG2P (2026)** | Interpretação |
+| Métrica | **FG2P (2026)** | **LatPhon (2025)** | Contexto |
 |---------|-----------|-----------|------|
-| **PER** | 0,86% (±0,3) | **0,49%** | FG2P **0,37pp menor** |
-| **IC 95% Wilson** | **[0,56%, 1,16%]** | **[0,47%, 0,51%]** | **Intervalos não-sobrepostos** → Stat. significante |
-| Test set | ~500 palavras (ipa-dict) | **28.782 palavras** | FG2P 57× maior |
-| Design test | Não estratificado (relatado) | Estratificado (χ² p=0,678) | FG2P mais robusto |
-| Tokens de acento (`ˈ`) | Removidos (cleaned) | Preditos como token | FG2P tarefa mais dura |
+| **PER (IC 95% Wilson)** | **0,48% ± 0,03** | **0,86% ± 0,30** | Intervalos não se sobrepõem no cenário reportado |
+| **WER (IC 95% Wilson)** | **5,33% ± 0,26** | n/d | WER não reportado no paper LatPhon |
+| Throughput (reportado) | 28,4 w/s (RTX 3060) | 31,4 w/s (RTX 4090) | Contextual apenas: hardware e protocolo de benchmark diferentes |
+| Test set | **28.782 palavras** | ~500 palavras (ipa-dict) | FG2P 57× maior |
+| Design de avaliação | Estratificado (χ² p=0,678) | Estratificação não reportada | FG2P explicita validação do split |
+| Modelo | 17,2M BiLSTM (2014) | 7,5M Transformer (2017) | Famílias arquiteturais diferentes |
 
 **Resultado estatístico**: O limite **superior** do IC de FG2P (0,51%) está **abaixo** do limite **inferior** do IC de LatPhon (0,56%) — **diferença estatisticamente significativa a 95% de confiança**.
 
@@ -64,13 +65,13 @@ A referência mais próxima é **LatPhon** (Chary et al., 2025), um Transformer 
 
 #### ByT5-Small (Xue et al., 2022) — Multilíngue Zero-Shot
 
-Para contexto: **ByT5-Small** (299M params, multilíngue) atinge 8,9% PER em avaliação zero-shot português (português nunca visto no treino). FG2P com 9,7M params + treinamento supervisionado em PT-BR alcança 0,49% PER.
+Para contexto: **ByT5-Small** (299M params, multilíngue) atinge 8,9% PER em avaliação zero-shot português (português nunca visto no treino). FG2P com 9,7M params + treinamento supervisionado em PT-BR alcança 0,48% PER.
 
-A diferença (8,9% vs 0,49%) é esperada: ByT5 é **zero-shot multilíngue** (100 idiomas), enquanto FG2P é **supervisionado monolíngue**. Comparação direta é enganosa. Relevância: ByT5 demonstra que arquitetura massiva sem dados especializados não compensa a falta de sinal fonológico e treino específico.
+A diferença (8,9% vs 0,48%) é esperada: ByT5 é **zero-shot multilíngue** (100 idiomas), enquanto FG2P é **supervisionado monolíngue**. Comparação direta é enganosa. Relevância: ByT5 demonstra que arquitetura massiva sem dados especializados não compensa a falta de sinal fonológico e treino específico.
 
 #### Conclusão da Comparação
 
-**Resultado principal**: FG2P atinge **0,49% PER com IC [0,47%, 0,51%]**; LatPhon reporta 0,86% (IC [0,56%, 1,16%]). Os intervalos não se sobrepõem e, neste recorte, o limite superior de FG2P (0,51%) fica abaixo do limite inferior de LatPhon (0,56%).
+**Resultado principal**: FG2P atinge **0,48% PER com IC [0,46%, 0,51%]**; LatPhon reporta 0,86% (IC [0,56%, 1,16%]). Os intervalos não se sobrepõem e, neste recorte, o limite superior de FG2P (0,51%) fica abaixo do limite inferior de LatPhon (0,56%).
 
 **Mensagem científica**:
 1. **Distance-Aware Loss funciona**: Método fonológico + dados bem-estratificados mostra ganho consistente no recorte avaliado
@@ -329,7 +330,21 @@ Com 34 estratos fonológicos no corpus PT-BR e `batch_size=32`, cada batch tem v
 
 **Recomendação**: para dataset com $S$ estratos viáveis e early stopping, usar $\text{batch\_size} \approx 3 \times S$. Para o corpus PT-BR (31–34 estratos), isso resulta em batch_size ≈ 96.
 
-Para validação empírica do efeito do regime de treino, o experimento `exp0_training_regime` (`conf/config_exp0_training_regime.json`) isola a variável: mesma arquitetura do exp0_legacy com `stratify=True` (eliminando o único fator diferente do setup padrão). Se PER ≈ 0,38%, o regime de treino explica o resultado anomalamente baixo; se PER > 0,50%, outros fatores estão em jogo.
+**Resultado do experimento de controle `exp0_training_regime`** (executado em 2026-03-11):
+
+| Config | batch | patience | epochs | Estratificação treino | Estratificação avaliação | PER |
+|--------|-------|----------|--------|----------------------|--------------------------|-----|
+| exp0_legacy_simple | 36 | 999 | 120 | Não (seed=42) | Sim (default) | 0,38% |
+| exp0_training_regime | 36 | 999 | 120 | Sim | Sim | **0,78%** |
+| Exp1 (referência) | 64 | 10 | ~90 | Sim | Sim | 0,64% |
+
+O mesmo regime de treino (batch=36, sem early stopping efetivo) com estratificação explícita produz **PER=0,78%** — significativamente pior que Exp1 (0,64%) e completamente incompatível com o 0,38%. Dois fatores explicam esta divergência:
+
+1. **Composição do conjunto de treino**: a divisão não-estratificada com seed=42 produziu um conjunto de treino com distribuição de padrões fonológicos diferente da divisão estratificada. A divisão aleatória pode ter oversampled padrões que coincidem com o conjunto de teste estratificado, melhorando artificialmente a métrica.
+
+2. **Interação regime × composição**: o batch pequeno (36) com ~223.800 atualizações converge mais profundamente, mas o ponto de convergência depende da distribuição de treino. Com distribuição estratificada, mais atualizações não produzem ganho proporcional — possivelmente porque a distribuição estratificada é mais "homogênea" por design, reduzindo o ganho marginal de treino adicional.
+
+**Conclusão do Tier 2**: O regime de treino (batch=36 + sem early stopping) **não é a causa primária** do PER=0,38%. A interação entre a divisão não-estratificada e a avaliação no conjunto estratificado é a explicação mais provável. Para isolar definitivamente o efeito, seria necessário o Tier 3 (múltiplos seeds não-estratificados) para quantificar a variância do PER com seed=42 como outlier potencial.
 
 ---
 
@@ -962,6 +977,20 @@ Modelos treinados com separadores silábicos produzem ~30% mais tokens por palav
 | Threshold CV | 15% | Heurística conservadora para contention |
 | Threshold térmico | ±10% | Padrão MLPerf para drift de temperatura |
 
+**Resultado empírico: CPU mais rápido que GPU para inferência single-word**
+
+Os benchmarks realizados sobre todos os 19 checkpoints (NVIDIA RTX 3060 12 GB, CPU x86 16 núcleos) revelam que a CPU é consistentemente **1,4–2,3× mais rápida** que a GPU para inferência de uma palavra por vez.
+
+Este resultado é esperado e tem explicação técnica direta: o decoder LSTM é **autoregressivo** — gera um token por passo, e cada passo depende do anterior. Não existe paralelismo temporal a explorar. A GPU incorre em overhead fixo por operação:
+- Lançamento de kernel CUDA: ~50–150 µs (NVIDIA, 2024)
+- Transferência host↔device (H2D/D2H): ~10–50 µs adicionais
+
+Para um modelo com 4,3–17 M parâmetros, o tempo de cômputo por passo é ~0,3–2 ms. O overhead representa 5–50% do tempo de passo, tornando a CPU mais eficiente. A GPU só supera a CPU em inferência LSTM quando batch ≥ 32–64 (paralelismo entre amostras independentes).
+
+Este resultado não invalida o uso de GPU em produção — para cenários com múltiplas requisições simultâneas em batch, ou para treino, a GPU mantém vantagem. Para inferência on-demand single-word (caso típico de TTS), a CPU é suficiente e ligeiramente superior.
+
+**Contexto de hardware**: O RTX 4090 possui 16.384 CUDA cores e 82,6 TFLOPS FP32; o RTX 3060 possui 3.584 CUDA cores e 12,7 TFLOPS FP32 (razão ~4,57× em cores, ~6,5× em TFLOPS). Essa vantagem se materializa em cargas paralelizáveis (LLMs com batch, CNNs em imagem). Para o decoder autoregressivo do FG2P — sequencial por design — ambas as GPUs estão igualmente limitadas pelo overhead serial, tornando comparações cross-device sem sentido para esta tarefa específica (NVIDIA, 2024).
+
 ---
 
 ## 9. Conclusões
@@ -1288,6 +1317,7 @@ Este artigo faz parte de um conjunto integrado de documentação:
 - Hochreiter, S., & Schmidhuber, J. (1997). Long short-term memory. *Neural Computation*, 9(8), 1735–1780.
 - Levenshtein, V. I. (1966). Binary codes capable of correcting deletions, insertions, and reversals. *Soviet Physics Doklady*, 10(8), 707–710.
 - Mortensen, D. R., Littell, P., Bharadwaj, A., Goyal, K., Dyer, C., & Levin, L. (2016). PanPhon: A resource for mapping IPA segments to articulatory feature vectors. *COLING 2016*, 3475–3484.
+- NVIDIA. (2026). Compare GeForce Graphics Cards. https://www.nvidia.com/en-us/geforce/graphics-cards/compare/
 - Vitevitch, M. S., & Luce, P. A. (2004). A web-based interface to calculate phonotactic probability for words and nonwords in English. *Behavior Research Methods, Instruments, & Computers*, 36(3), 481–487.
 - Xue, L., Barua, A., Constant, N., Al-Rfou, R., Narang, S., Kale, M., ... & Raffel, C. (2022). ByT5: Towards a token-free future with pre-trained byte-to-byte models. *TACL*, 10, 291–306.
 

@@ -122,6 +122,35 @@ class FileRegistry:
     def get_analysis_results_path(self) -> Path:
         """Retorna path do JSON com métricas de análise calculadas"""
         return self._results_exp_dir() / f"{self.base_name}_results.json"
+
+    # ========================================================================
+    # Arquivos de benchmark de inferência (results/{experiment_name}/ e results/benchmarks/)
+    # ========================================================================
+
+    def get_benchmark_path(self, device_tag: str) -> Path:
+        """Retorna path do JSON formal de benchmark de inferência para um device."""
+        safe_device = device_tag.replace(":", "_").replace("/", "_")
+        return self._results_exp_dir() / f"benchmark_{self.base_name}_{safe_device}.json"
+
+    def get_benchmark_raw_csv_path(self, device_tag: str) -> Path:
+        """Retorna path do CSV com medições brutas de benchmark (sidecar do JSON)."""
+        safe_device = device_tag.replace(":", "_").replace("/", "_")
+        return self._results_exp_dir() / f"benchmark_{self.base_name}_{safe_device}_raw.csv"
+
+    @classmethod
+    def get_benchmarks_dir(cls) -> Path:
+        """Retorna (e cria) diretório global para índices agregados de benchmark."""
+        d = RESULTS_DIR / "benchmarks"
+        d.mkdir(exist_ok=True)
+        return d
+
+    @classmethod
+    def get_benchmark_run_path(cls, run_label: str = "all", timestamp: Optional[str] = None) -> Path:
+        """Retorna path do JSON agregado de uma execução de benchmark."""
+        if timestamp is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_label = run_label.replace(" ", "_").replace(":", "_").replace("/", "_")
+        return cls.get_benchmarks_dir() / f"benchmark_run_{safe_label}__{timestamp}.json"
     
     # ========================================================================
     # Métodos auxiliares
@@ -140,6 +169,10 @@ class FileRegistry:
             "analysis_convergence_plot": self.get_analysis_convergence_plot_path(),
             "analysis_metrics_plot": self.get_analysis_metrics_plot_path(),
             "analysis_results": self.get_analysis_results_path(),
+            "benchmark_cpu": self.get_benchmark_path("cpu"),
+            "benchmark_cuda": self.get_benchmark_path("cuda"),
+            "benchmark_raw_cpu": self.get_benchmark_raw_csv_path("cpu"),
+            "benchmark_raw_cuda": self.get_benchmark_raw_csv_path("cuda"),
         }
     
     @classmethod
@@ -229,6 +262,20 @@ class ExperimentRecord:
     @property
     def summary_path(self) -> Path:
         return self._reg._results_exp_dir() / f"{self.base_name}_summary.txt"
+
+    def benchmark_paths(self, device: Optional[str] = None) -> list[Path]:
+        """Retorna todos os benchmarks do run, opcionalmente filtrados por device."""
+        pattern = f"benchmark_{self.base_name}_*.json" if device is None else f"benchmark_{self.base_name}_{device}.json"
+        return sorted(self._reg._results_exp_dir().glob(pattern), key=lambda p: p.stat().st_mtime)
+
+    def latest_benchmark_path(self, device: Optional[str] = None) -> Optional[Path]:
+        """Retorna benchmark mais recente do run, opcionalmente por device."""
+        paths = self.benchmark_paths(device=device)
+        return paths[-1] if paths else None
+
+    def has_benchmark(self, device: Optional[str] = None) -> bool:
+        """True se o run já possui benchmark formal, opcionalmente por device."""
+        return self.latest_benchmark_path(device=device) is not None
 
     # ------------------------------------------------------------------
     # Existência de artefatos
