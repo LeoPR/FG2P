@@ -1,0 +1,55 @@
+{
+  "metadata": {
+    "benchmark_date": "2026-03-14 02:59:38",
+    "devices": [
+      "cpu"
+    ],
+    "test_words": 200,
+    "warmup_runs": 10,
+    "benchmark_runs": 20,
+    "loop_overhead_us": 0.100000761449337,
+    "force": true,
+    "selected_models": 1,
+    "cpu_quantize": false,
+    "cpu_threads": null,
+    "batch_size": 64
+  },
+  "results": [
+    {
+      "model_index": 18,
+      "base_name": "exp104d_structural_tokens_correct__20260312_142940",
+      "experiment": "exp104d_structural_tokens_correct",
+      "params": 17165612,
+      "n": 4000,
+      "total_time_s": 24.244395896908827,
+      "mean_lat_ms": 6.061098974227207,
+      "p50_ms": 5.520812497707084,
+      "p95_ms": 7.294053124496713,
+      "p99_ms": 13.251462500193156,
+      "throughput_wps": 164.98658151799947,
+      "throughput_tps": 2112.653176337983,
+      "throughput_cps_in": 1497.2532272758451,
+      "throughput_cps_out": 2137.401163565683,
+      "tokens_per_word": 12.805,
+      "chars_in_per_word": 9.075,
+      "chars_out_per_word": 12.955,
+      "ci95_lat_low_ms": 6.012349172082567,
+      "ci95_lat_high_ms": 6.109848776371846,
+      "ci95_wps_low": 163.67017197990629,
+      "ci95_wps_high": 166.32433868667317,
+      "stable_wps": 162.65196218652952,
+      "stable_cv": 0.2453507185016457,
+      "stable_window_start": 2392,
+      "global_cv": 0.25953468463415846,
+      "thermal_ratio": 0.9984998045243383,
+      "mean_first_ms": 5.9711384992988314,
+      "mean_last_ms": 5.962180624337634,
+      "loop_overhead_us": 0.100000761449337,
+      "status": "success",
+      "device": "cpu",
+      "batch_size": 64,
+      "artifact_path": "C:/Users/leona/OneDrive/Documents/Projects/Acadêmicos/FG2P/results/exp104d_structural_tokens_correct/benchmark_exp104d_structural_tokens_correct__20260312_142940_cpu.json"
+    }
+  ],
+  "skipped": []
+}

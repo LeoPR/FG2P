@@ -32,6 +32,7 @@ Convencao:
 | 015 | Consistencia e ganho real: Exp104d vs Exp104b | Respondida | Exp104d melhora estimativas pontuais de qualidade, mas nao domina em todos os eixos (IC95 de WER sobreposto e custo maior em CPU) |
 | 016 | Estudo de performance cross-platform (train + inference) | Respondida | Auditoria tecnica sem alteracao de codigo; prioriza AMP, batching real de inferencia e trilha de quantizacao CPU |
 | 017 | Benchmark por regime (latencia unitária vs volume CPU/GPU) | Respondida | Define decomposicao de overhead (Python/H2D/sync/decode), protocolo R1-R4 e plano de otimizacao para aceleracao real |
+| 018 | Guia prático de inferência: CPU, batch e métricas de desempenho | Aberta | Sweep batch=1–128 confirmado (+8.52× em batch=128 vs unitário); GPU com batch pendente; análise de métricas w/s vs chars/s vs tokens/s |
 
 ## Proximas acoes (estado atual)
 

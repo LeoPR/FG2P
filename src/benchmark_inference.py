@@ -259,17 +259,19 @@ def list_models(show_devices: Optional[List[str]] = None) -> List[ExperimentReco
 def benchmark_record(rec: ExperimentRecord, device: torch.device, n_words: int,
                      warmup_runs: int, benchmark_runs: int,
                      loop_overhead_s: float, quantize: bool = False,
-                     num_threads: int = 1) -> tuple:
+                     num_threads: int = None, batch_size: int = 1) -> tuple:
     """Executa benchmark e retorna (stats_dict, raw_records).
 
     Amostra palavras exclusivamente do split de teste do próprio experimento,
     respeitando os mesmos parâmetros (test_ratio, val_ratio, split_seed) usados
     no treino — idêntico ao que inference.py e eval fazem.
 
+    batch_size=1: modo unitário (baseline) — predict() por palavra.
+    batch_size>1: modo batch nativo — predict_batch_native() por chunk.
+      Latência registrada por item = tempo_do_chunk / n_items (throughput médio por palavra).
+
     raw_records — lista de dicts com uma entrada por (run_idx × word_idx):
         run_idx, word_idx, word, latency_s, tokens, chars_in, chars_out
-    Ao preservar os registros brutos, toda a análise pode ser refeita
-    offline com --analyze sem precisar recarregar o modelo.
     """
     try:
         predictor = G2PPredictor.load(model_path=rec.pt_path, device=device,
@@ -289,31 +291,59 @@ def benchmark_record(rec: ExperimentRecord, device: torch.device, n_words: int,
     logger.info(
         f"  split: test_ratio={test_ratio} val_ratio={val_ratio} seed={seed} "
         f"| test={len(test_words_all)} palavras | amostra={len(test_words)}"
+        f" | batch_size={batch_size}"
     )
 
-    for _ in range(warmup_runs):
-        for word in test_words:
-            predictor.predict(word)
+    # Warmup
+    if batch_size > 1:
+        for _ in range(warmup_runs):
+            predictor.predict_batch_native(test_words, batch_size=batch_size)
+    else:
+        for _ in range(warmup_runs):
+            for word in test_words:
+                predictor.predict(word)
 
     raw_records: List[Dict] = []
 
     if device.type == "cuda":
         torch.cuda.synchronize()
 
-    for run_idx in range(benchmark_runs):
-        for word_idx, word in enumerate(test_words):
-            t0 = time.perf_counter()
-            result = predictor.predict(word)
-            t1 = time.perf_counter()
-            raw_records.append({
-                "run_idx":   run_idx,
-                "word_idx":  word_idx,
-                "word":      word,
-                "latency_s": t1 - t0,
-                "tokens":    len(result.split()),
-                "chars_in":  len(word),
-                "chars_out": len(result.replace(" ", "")),
-            })
+    if batch_size > 1:
+        # Medição por batch: latência reportada por item = tempo_chunk / n_items
+        for run_idx in range(benchmark_runs):
+            for chunk_start in range(0, len(test_words), batch_size):
+                chunk = test_words[chunk_start:chunk_start + batch_size]
+                t0 = time.perf_counter()
+                results = predictor.predict_batch_native(chunk, batch_size=batch_size)
+                if device.type == "cuda":
+                    torch.cuda.synchronize()
+                t1 = time.perf_counter()
+                per_item_s = (t1 - t0) / len(chunk)
+                for word_idx, (word, result) in enumerate(zip(chunk, results)):
+                    raw_records.append({
+                        "run_idx":   run_idx,
+                        "word_idx":  chunk_start + word_idx,
+                        "word":      word,
+                        "latency_s": per_item_s,
+                        "tokens":    len(result.split()),
+                        "chars_in":  len(word),
+                        "chars_out": len(result.replace(" ", "")),
+                    })
+    else:
+        for run_idx in range(benchmark_runs):
+            for word_idx, word in enumerate(test_words):
+                t0 = time.perf_counter()
+                result = predictor.predict(word)
+                t1 = time.perf_counter()
+                raw_records.append({
+                    "run_idx":   run_idx,
+                    "word_idx":  word_idx,
+                    "word":      word,
+                    "latency_s": t1 - t0,
+                    "tokens":    len(result.split()),
+                    "chars_in":  len(word),
+                    "chars_out": len(result.replace(" ", "")),
+                })
 
     if device.type == "cuda":
         torch.cuda.synchronize()
@@ -324,7 +354,7 @@ def benchmark_record(rec: ExperimentRecord, device: torch.device, n_words: int,
     output_char_counts = [r["chars_out"]  for r in raw_records]
 
     stats = _analyze(latencies, token_counts, input_char_counts, output_char_counts, loop_overhead_s)
-    stats.update({"status": "success", "device": str(device)})
+    stats.update({"status": "success", "device": str(device), "batch_size": batch_size})
     return stats, raw_records
 
 
@@ -599,10 +629,15 @@ Exemplos:
                         help="Ativa INT8 dynamic quantization no CPU. "
                              "ATENCAO: testado em Xeon+Windows, resultou em regressao de 38%%. "
                              "Util apenas para teste em ARM ou hardware diferente — ver doc 016.")
-    parser.add_argument("--threads", type=int, default=1, metavar="N",
-                        help="Threads intra-op do PyTorch para CPU (default: 1). "
-                             "Para inferencia unitaria sequencial, 1 thread minimiza overhead. "
-                             "Use valores maiores para medir impacto em throughput por batch.")
+    parser.add_argument("--threads", type=int, default=None, metavar="N",
+                        help="Threads intra-op do PyTorch para CPU (default: sistema/MKL). "
+                             "ATENCAO: em Xeon, threads=1 causou regressao de 61%% — MKL "
+                             "multi-thread ja e otimo para LSTM hidden=384. Ver doc 016.")
+    parser.add_argument("--batch-size", type=int, default=1, metavar="N",
+                        help="Batch size para inferencia nativa (default: 1 = unitario/baseline). "
+                             "Valores >1 usam predict_batch_native(): 1 chamada ao encoder "
+                             "+ max_len passos do decoder em paralelo por chunk. "
+                             "Testar: 4, 8, 16, 32, 64. Latencia reportada = tempo_chunk/n_items.")
     args = parser.parse_args()
 
     selected_devices = [str(d) for d in resolve_devices(args.device)]
@@ -665,6 +700,7 @@ Exemplos:
             "selected_models": len(pending),
             "cpu_quantize": args.quantize,
             "cpu_threads": args.threads,
+            "batch_size": args.batch_size,
         },
         "results": [],
         "skipped": skipped,
@@ -690,6 +726,7 @@ Exemplos:
                 loop_overhead_s=overhead,
                 quantize=args.quantize,
                 num_threads=args.threads,
+                batch_size=args.batch_size,
             )
 
             entry = {

@@ -174,7 +174,7 @@ class G2PPredictor:
     @classmethod
     def load(cls, alias: str = None, model_path: Path = None, index: int = None,
              dict_path: Path = None, device: torch.device = None,
-             quantize: bool = False, num_threads: int = 1) -> "G2PPredictor":
+             quantize: bool = False, num_threads: int = None) -> "G2PPredictor":
         """
         Carrega modelo treinado. Ponto de entrada principal.
 
@@ -319,8 +319,62 @@ class G2PPredictor:
         return " ".join(self.corpus.phoneme_vocab.decode(pred_idx))
 
     def predict_batch(self, words: list) -> list:
-        """Lista de palavras → lista de strings de fonemas."""
+        """Lista de palavras → lista de strings de fonemas (loop unitário)."""
         return [self.predict(w) for w in words]
+
+    def predict_batch_native(self, words: list, batch_size: int = 32) -> list:
+        """
+        Batch inference nativo — processa N palavras por chamada ao modelo.
+
+        Mais eficiente que predict() em loop para throughput:
+        1 chamada ao encoder + max_len passos do decoder em paralelo para batch_size items.
+        O pipeline garante a mesma saída que predict() chamado individualmente.
+
+        A arquitetura já suporta batch nativamente:
+        - Encoder: pack_padded_sequence(enforce_sorted=False)
+        - Attention + Decoder: operações batch-first em todos os tensores
+        - model.predict(): rastreia finished[b] por item no batch
+
+        Args:
+            words:      Lista de palavras grafêmicas.
+            batch_size: Items por chamada ao modelo (default: 32).
+                        Valores menores reduzem latência máxima; maiores aumentam throughput.
+
+        Returns:
+            Lista de strings de fonemas, na mesma ordem de words.
+        """
+        results = []
+        for i in range(0, len(words), batch_size):
+            chunk = words[i:i + batch_size]
+
+            # 1. Transformação grafêmica (no-op em 'raw')
+            transformed = [
+                transform_grapheme_word(w, self.corpus.grapheme_encoding)
+                for w in chunk
+            ]
+
+            # 2. Codificação char → índices
+            encoded = [self.corpus.char_vocab.encode(t) for t in transformed]
+            lengths = [len(e) for e in encoded]
+            max_char_len = max(lengths)
+
+            # 3. Tensor padded (batch, max_len) — PAD_IDX=0
+            padded = torch.zeros(
+                len(chunk), max_char_len, dtype=torch.long, device=self.device
+            )
+            for j, enc in enumerate(encoded):
+                padded[j, :len(enc)] = torch.tensor(enc, dtype=torch.long)
+
+            lengths_t = torch.tensor(lengths, dtype=torch.long).to(self.device)
+
+            # 4. Uma chamada ao modelo para todo o chunk
+            predictions = self.model.predict(padded, lengths_t, max_len=50)
+
+            # 5. Decodificar índices → fonemas
+            for pred_idx in predictions:
+                results.append(" ".join(self.corpus.phoneme_vocab.decode(pred_idx)))
+
+        return results
 
     def predict_stripped(self, word: str) -> str:
         """Como predict(), mas remove separadores silábicos '.' da saída."""
@@ -945,10 +999,11 @@ Avaliação completa (WER/PER no test set padrão):
                         help="Ativa INT8 dynamic quantization no CPU. "
                              "ATENCAO: em Xeon+Windows causa regressao de 38%%. "
                              "Util apenas para teste em ARM — ver docs/evaluations/answered/016.")
-    parser.add_argument("--threads", type=int, default=1, metavar="N",
-                        help="Threads intra-op do PyTorch para CPU (default: 1). "
-                             "Use None=sistema, 1=minimo overhead para inferencia unitaria, "
-                             ">1 para throughput em batch.")
+    parser.add_argument("--threads", type=int, default=None, metavar="N",
+                        help="Threads intra-op do PyTorch para CPU (default: sistema/MKL). "
+                             "ATENCAO: em Xeon, threads=1 causou regressao de 61%% — MKL "
+                             "multi-thread ja e otimo para matrizes LSTM hidden=384. "
+                             "Util apenas para teste em hardware sem MKL otimizado.")
 
     args = parser.parse_args()
 

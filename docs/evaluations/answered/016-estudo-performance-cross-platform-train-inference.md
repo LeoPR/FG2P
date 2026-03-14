@@ -155,16 +155,65 @@ Resultado: **quantização tornou o modelo 38% mais lento** (inversão total da 
 - `torch.ao.quantization` com backends FBGEMM/QNNPACK não adiciona VNNI path automaticamente — mesmo com Xeon Scalable que tem VNNI, PyTorch 2.x não usa esse caminho para LSTM quantizado por padrão.
 - O loop autoregressivo em Python (50 passos por palavra) amplia o overhead: cada passo tem custo de dequantização, totalizando 50× o overhead por palavra.
 
+### Experimento de controle de threads intra-op (2026-03-14)
+
+Hipótese: para inferência unitária sequencial (batch=1), `torch.set_num_threads(1)` elimina overhead de sincronização e melhora latência.
+
+| Condição | w/s | p50 ms |
+|----------|-----|--------|
+| Baseline sistema (MKL default) | 21.6 | 45.6 ms |
+| `set_num_threads(1)` | 8.4 | 117.6 ms |
+
+Resultado: **61% mais lento.** O Xeon com MKL otimizado beneficia multi-threading mesmo para LSTM hidden=384. Matrizes W_hh (4×384×384 ≈ 590K params) são suficientemente grandes para MKL distribuir com ganho real. Forçar 1 thread elimina esse paralelismo.
+
+Conclusão análoga à quantização: o sistema padrão (MKL auto-tuning em Xeon) já é ótimo para este hardware. Configurações manuais que beneficiam hardware menor (laptop sem MKL, ARM) causam regressão no Xeon.
+
+### Padrão adotado após ambos os experimentos
+
+| Flag | Padrão | Motivo |
+|------|--------|--------|
+| `quantize=False` | desativado | INT8 piora 38% em Xeon+LSTM hidden=384 |
+| `num_threads=None` | sistema/MKL | threads=1 piora 61% em Xeon |
+
+Ambos os flags permanecem disponíveis como opt-in explícito (`--quantize`, `--threads N`) para desenvolvedores testarem em seu hardware (ARM, x86 sem AVX-512, modelos maiores). A decisão é feita uma única vez no `load()`, sem ramificação no caminho quente de predição.
+
+### Experimento de batch inference nativo (2026-03-14) — POSITIVO
+
+Hipótese: agrupar N palavras em uma chamada ao modelo reduz overhead Python por item e aumenta utilização de MKL via matrizes maiores no batch dimension.
+
+Protocolo: `exp104d` (Exp18), CPU Xeon, 200 palavras, sweep de batch_size.
+
+| batch_size | w/s global | stable w/s | p50 ms | Speedup | Ganho da dobrada |
+|-----------|-----------|-----------|--------|---------|-----------------|
+| 1 (baseline) | 21.5 | 21.6 | 45.9 | 1.0× | — |
+| 4 | 55.4 | 55.8 | 17.9 | 2.58× | 2.58× |
+| 8 | 83.4 | 83.1 | 11.8 | 3.85× | 1.50× |
+| 16 | 114.6 | 115.5 | 8.68 | 5.35× | 1.37× |
+| 32 | 143.2 | 142.9 | 6.85 | 6.63× | 1.24× |
+| 64 | 165.0 | 162.7 | 5.52 | 7.67× | 1.16× |
+| 128 | 183.0 | 184.0 | 5.54 | **8.52×** | 1.11× |
+
+Resultado: **ganho real e significativo, escalamento sub-linear com saturação confirmada em batch≥64.**
+
+Mecanismo confirmado: o encoder (`pack_padded_sequence(enforce_sorted=False)`) processa o batch inteiro em uma passagem; cada passo do decoder roda matmul sobre `(batch, hidden)` em vez de `(1, hidden)`, melhorando utilização de MKL. O decoder autoregressivo continua sequencial (até `max_len` passos), limitando o escalamento.
+
+Saturação observada em p50: batch=64 → 5.52ms, batch=128 → 5.54ms (idêntico). O gargalo a partir de batch≥64 migrou de operação matricial para overhead Python (alocação de tensores, loop de decodificação de índices).
+
+Ponto de operação recomendado: **batch=32** para throughput com latência controlada; batch=128 para throughput máximo sem restrição de latência.
+
 ### Decisão sobre o código
 
-A implementação atual (flag `quantize` no `G2PPredictor.load()`, sem `if quantize` no loop de predição) é tecnicamente limpa: a decisão acontece uma vez no load, e o objeto `model` resultante é idêntico na interface. Não há ramificação no caminho quente.
-
-Porém, o valor padrão `quantize=True` está errado para o hardware atual e pode causar regressão silenciosa.
-
-**Ação a executar:** alterar padrão para `quantize=False` e manter o mecanismo desativado por padrão, com documentação clara de quando habilitá-lo (ARM, modelos maiores, após validação A/B positiva).
+Padrões ajustados:
+- `quantize=False`, `num_threads=None` — experimentos negativos revertidos
+- `predict_batch_native(words, batch_size=32)` adicionado como API de throughput
+- `--batch-size N` adicionado ao benchmark para sweep controlado
+- Nenhuma ramificação no hot path — todas as decisões ocorrem no `load()` ou no agrupamento de entrada
 
 ## Status
 
 Respondida.
-Documento de estudo técnico consolidado para orientar a próxima rodada de decisão.
-Atualizado com resultado negativo do experimento de quantização dinâmica INT8 (2026-03-14).
+Atualizado em 2026-03-14 com resultados completos de três experimentos de otimização CPU:
+- INT8 quantization: −38% (falsificada para Xeon+LSTM hidden=384)
+- threads=1: −61% (falsificada — MKL multi-thread já é ótimo)
+- Batch inference nativo: +8.52× em batch=128 (confirmada, implementada)
+Ver doc 018 para guia prático de uso e análise de métricas.
