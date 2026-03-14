@@ -260,6 +260,50 @@ def train_all(manager, dry_run: bool = False):
         train_experiment(manager, cfg.stem, dry_run=False)
 
 
+def run_benchmark(manager, index=None, dry_run: bool = False,
+                  device: str = "auto", force: bool = False,
+                  update_performance: bool = True):
+    """Executa benchmark formal de inferência como etapa opcional do manager."""
+    manager.index_map = manager._build_index_map(filter_status=ExperimentStatus.COMPLETE)
+
+    if not manager.index_map:
+        print("\nNenhum experimento completo disponível para benchmark.")
+        return
+
+    cmd = [sys.executable, "src/benchmark_inference.py", "--device", device]
+    label = "todos os experimentos completos"
+
+    if index is not None:
+        if index not in manager.index_map:
+            print(f"\nIndice {index} nao encontrado. Use --list para ver indices.")
+            return
+        cmd.extend(["--index", str(index)])
+        label = f"experimento [{index}]"
+
+    if force:
+        cmd.append("--force")
+
+    if update_performance:
+        cmd.append("--update-performance")
+
+    print("\n" + "=" * 100)
+    print(f"BENCHMARK FORMAL — {label.upper()}")
+    print("=" * 100)
+
+    if dry_run:
+        print("[DRY RUN] Comando que seria executado:")
+        print("  " + " ".join(cmd))
+        return
+
+    confirm = input("\nContinuar? (yes/no): ")
+    if confirm.lower() != "yes":
+        print("Cancelado.")
+        return
+
+    ok, err = _run(cmd, "benchmark_inference", 0, 0, timeout=3600)
+    print(f"\nRESUMO BENCHMARK: {ok} OK | {err} erro(s)\n")
+
+
 def _dry_run_summary(tasks, needs_report, force_inference, verify):
     print("\n[DRY RUN] Comandos que seriam executados:\n")
     if tasks["inference"]:

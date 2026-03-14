@@ -30,6 +30,8 @@ Convencao:
 | 013 | Checklist final de submissao (Ciclo 3.2) | Respondida | Coerencia final validada; consistencia numerica e referencias quebradas ajustadas |
 | 014 | Auditoria da narrativa de velocidade (Exp106) | Aberta | Revisar claim de speedup 2,58x, baseline comparavel e CI95 de throughput/latencia antes de recomendacao forte |
 | 015 | Consistencia e ganho real: Exp104d vs Exp104b | Respondida | Exp104d melhora estimativas pontuais de qualidade, mas nao domina em todos os eixos (IC95 de WER sobreposto e custo maior em CPU) |
+| 016 | Estudo de performance cross-platform (train + inference) | Respondida | Auditoria tecnica sem alteracao de codigo; prioriza AMP, batching real de inferencia e trilha de quantizacao CPU |
+| 017 | Benchmark por regime (latencia unitária vs volume CPU/GPU) | Respondida | Define decomposicao de overhead (Python/H2D/sync/decode), protocolo R1-R4 e plano de otimizacao para aceleracao real |
 
 ## Proximas acoes (estado atual)
 

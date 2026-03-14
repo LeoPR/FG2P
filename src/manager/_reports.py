@@ -29,6 +29,7 @@ def show_missing(manager):
         ("eval",   ("evaluation_txt", "predictions_tsv")),
         ("err_an", ("error_analysis_txt",)),
         ("plot",   ("convergence_plot",)),
+        ("bench",  ("benchmark_json",)),
     ]
 
     complete     = [(idx, exp) for idx, exp in manager.index_map.items()
@@ -38,7 +39,7 @@ def show_missing(manager):
 
     max_name = max((len(e.base_name) for _, e in complete), default=40)
     max_name = max(max_name, 40)
-    header   = f"{'idx':>4}  {'experimento':<{max_name}}  {'eval':^6}  {'err_an':^6}  {'plot':^6}"
+    header   = f"{'idx':>4}  {'experimento':<{max_name}}  {'eval':^6}  {'err_an':^6}  {'plot':^6}  {'bench':^6}"
     sep      = "-" * len(header)
 
     print(f"\n{'='*len(header)}\nCOBERTURA DE ARTEFATOS — EXPERIMENTOS COMPLETOS\n{'='*len(header)}")
@@ -58,7 +59,7 @@ def show_missing(manager):
             if not present:
                 has_gap = True
                 gap_lists[label].append((idx, exp.base_name))
-        row    = f"{idx:>4}  {exp.base_name:<{max_name}}  {cells[0]:^6}  {cells[1]:^6}  {cells[2]:^6}"
+        row    = f"{idx:>4}  {exp.base_name:<{max_name}}  {cells[0]:^6}  {cells[1]:^6}  {cells[2]:^6}  {cells[3]:^6}"
         marker = " <" if has_gap else ""
         print(row + marker)
         if not has_gap:
@@ -272,10 +273,11 @@ def check_consistency(manager):
     """
     Verifica se todos os dados de publicação estão consistentes.
 
-    Checa três camadas:
+        Checa quatro camadas:
       1. Disco     — experimentos completos têm evaluation_*.txt
       2. Sync      — evaluation_*.txt bate com performance.json (mesmas métricas)
       3. Registry  — model_registry.json reflete o estado atual
+            4. Benchmark — benchmark formal existe e não aponta para artefato quebrado
 
     Se tudo passar: os dados em performance.json são publicáveis.
     """
@@ -370,6 +372,38 @@ def check_consistency(manager):
     else:
         print("  [!] model_registry.json nao encontrado — rode --registry")
         issues.append("model_registry.json ausente")
+
+    # --- Camada 4: benchmark formal ---
+    print("\n[4/4] BENCHMARK FORMAL")
+    print(f"  {'idx':>4}  {'experimento':<50}  {'artifact':^10}  {'perf.json':^10}  {'delta'}")
+    print(f"  {'-'*90}")
+    for idx, exp in complete_exps:
+        meta = exp.get_metadata() or {}
+        exp_name = meta.get("experiment_name", "")
+        perf_name = map_experiment_to_name(exp_name) if exp_name else None
+        perf_entry = perf_index.get(perf_name) if perf_name else None
+        bench_info = exp.artifacts.get("benchmark_json")
+        has_artifact = bench_info is not None
+        summary = perf_entry.get("benchmark_summary") if perf_entry else None
+        has_perf_summary = bool(summary)
+        delta = ""
+        if not has_artifact:
+            delta = "pendente"
+            issues.append(f"[{idx}] {exp.base_name}: sem benchmark formal — rode --benchmark {idx}")
+        elif has_artifact and not has_perf_summary:
+            delta = "artifact existe, sem sync em performance.json"
+            issues.append(f"[{idx}] {exp.base_name}: benchmark sem resumo em performance.json")
+        elif has_artifact and has_perf_summary:
+            artifact_path = bench_info["path"].as_posix()
+            devices = (summary.get("devices") or {}) if isinstance(summary, dict) else {}
+            known_paths = {str(v.get("artifact_path")) for v in devices.values() if isinstance(v, dict)}
+            delta = "match" if artifact_path in known_paths else "artifact fora do summary"
+            if delta != "match":
+                issues.append(f"[{idx}] {exp.base_name}: benchmark artifact não referenciado em performance.json")
+
+        artifact_ok = "[OK]" if has_artifact else "[--]"
+        perf_ok = "[OK]" if has_perf_summary else "[--]"
+        print(f"  {idx:>4}  {exp.base_name:<50}  {artifact_ok:^10}  {perf_ok:^10}  {delta}")
 
     # --- Resumo ---
     print(f"\n{'='*W}")

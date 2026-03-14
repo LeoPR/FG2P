@@ -12,6 +12,7 @@ Exemplos:
     manage.py --run 13                Roda pipeline pendente do exp 13
     manage.py --run 13 --force        Re-roda TUDO do exp 13
     manage.py --run                   Roda pipeline de TODOS
+    manage.py --benchmark 13          Roda benchmark formal do exp 13
     manage.py --check                 Verifica consistencia (publicavel?)
     manage.py --clean 14              Apaga exp 14 (pede confirmacao)
     manage.py --clean-broken          Apaga todos incompletos/orfaos
@@ -38,10 +39,16 @@ def build_parser() -> argparse.ArgumentParser:
     # ----- Pipeline -----
     parser.add_argument("--run",     nargs="?", const=-1, type=int, metavar="N",
                         help="Roda pipeline (N=indice, sem N=todos)")
+    parser.add_argument("--benchmark", nargs="?", const=-1, type=int, metavar="N",
+                        help="Roda benchmark formal (N=indice, sem N=todos os completos)")
     parser.add_argument("--force",   action="store_true",
-                        help="Com --run: re-roda TODAS as etapas (inference incluso)")
+                        help="Com --run ou --benchmark: re-executa mesmo que artefatos já existam")
     parser.add_argument("--dry-run", action="store_true",
                         help="Simula sem executar")
+    parser.add_argument("--benchmark-device", choices=["auto", "cpu", "cuda", "both"], default="auto",
+                        help="Device do benchmark formal")
+    parser.add_argument("--no-benchmark-sync", action="store_true",
+                        help="Nao sincroniza performance.json apos benchmark")
 
     # ----- Cleanup -----
     parser.add_argument("--clean",         type=int, metavar="N",
@@ -77,6 +84,15 @@ def main():
             force=args.force,
             force_inference=args.force,   # --force faz tudo
             index=index,
+        )
+    elif args.benchmark is not None:
+        index = args.benchmark if args.benchmark != -1 else None
+        manager.run_benchmark(
+            index=index,
+            dry_run=args.dry_run,
+            device=args.benchmark_device,
+            force=args.force,
+            update_performance=not args.no_benchmark_sync,
         )
 
     # --- Cleanup ---
