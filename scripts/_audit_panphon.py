@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 """Audit PanPhon feature vectors for PT-BR phoneme vocabulary."""
-import sys, io
+import sys
+import io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.path.insert(0, 'src')
 
 # Must import phonetic_features first to trigger Windows patch
-import phonetic_features  # noqa: F401
-import panphon.featuretable
+import phonetic_features  # noqa: F401, E402
+import panphon.featuretable  # noqa: E402
 
 ft = panphon.featuretable.FeatureTable()
 FEAT = ['syl','son','cons','cont','delrel','lat','nas','strid','voi','sg','cg',
@@ -27,7 +28,7 @@ def cmp(a, b, label):
     dist_hamming = ham / 24
     print(f"  {label}: hamming={ham}/24 ({dist_hamming:.3f}) | diff features={[d[0] for d in diffs]}")
     if va == vb:
-        print(f"    WARNING: IDENTICAL VECTORS — PanPhon cannot distinguish these phonemes!")
+        print("    WARNING: IDENTICAL VECTORS — PanPhon cannot distinguish these phonemes!")
 
 print("=" * 70)
 print("PanPhon Audit — PT-BR Phoneme Feature Vectors")
@@ -102,8 +103,8 @@ print("\n--- Potential ambiguity check: x (sibilant) vs x (velar fricative) ---"
 # PanPhon treats ASCII 'x' as... what?
 vx = vec('x')
 print(f"  x (U+0078): vec={vx}")
-print(f"  Expected: velar fricative (like ɣ but voiceless)")
-print(f"  In PT-BR tsv: x = velar fricative (r-coda before voiceless)")
+print("  Expected: velar fricative (like ɣ but voiceless)")
+print("  In PT-BR tsv: x = velar fricative (r-coda before voiceless)")
 vchi = vec('\u03C7')  # χ (Greek chi) = IPA voiceless uvular fricative
 if vchi:
     print(f"  χ (U+03C7, uvular): {vchi}")

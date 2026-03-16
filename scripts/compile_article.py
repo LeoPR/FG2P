@@ -66,8 +66,8 @@ def adjust_headings(content, offset):
 def strip_metadata(content):
     lines = content.split("\n")
     return "\n".join(
-        l for l in lines
-        if not any(re.match(p, l.strip()) for p in STRIP_PATTERNS)
+        line for line in lines
+        if not any(re.match(p, line.strip()) for p in STRIP_PATTERNS)
     )
 
 

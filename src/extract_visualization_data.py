@@ -16,7 +16,6 @@ import re
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 from dataclasses import dataclass, asdict
-import sys
 
 
 @dataclass
@@ -209,7 +208,7 @@ class ExperimentDataExtractor:
                 val_size=data["dataset"]["val_size"],
                 test_size=data["dataset"]["test_size"],
             )
-        except Exception as e:
+        except Exception:
             # Skip silently for older files - just log at verbose level
             return None
 

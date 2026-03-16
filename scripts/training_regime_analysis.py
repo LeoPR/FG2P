@@ -281,7 +281,7 @@ def main() -> None:
         ratio = legacy["total_updates"] / max(baseline["total_updates"], 1)
         per_diff = baseline["per"] - legacy["per"]
         print(
-            f"\n--- Comparacao direta (mesma arquitetura, mesmo split 70/10/20) ---"
+            "\n--- Comparacao direta (mesma arquitetura, mesmo split 70/10/20) ---"
         )
         print(
             f"  exp0_legacy:   batch={legacy['batch_size']:>3}, epochs={legacy['n_epochs']}, "
@@ -315,7 +315,7 @@ def main() -> None:
         # --- Split bias assessment from existing metadata ---
         if legacy["min_chi2"] is not None and baseline["min_chi2"] is not None:
             print(
-                f"\n--- Qualidade do split (ja calculado em metadata, sem codigo extra) ---"
+                "\n--- Qualidade do split (ja calculado em metadata, sem codigo extra) ---"
             )
             print(f"  {'Experimento':<30} {'min chi2-p':>10}  {'max CramerV':>12}  {'veredicto'}")
             print(f"  {'-'*66}")
@@ -325,7 +325,7 @@ def main() -> None:
                     f"  {label:<30} {row['min_chi2']:>10.4f}  {row['max_cv']:>12.5f}  {verdict}"
                 )
             print(
-                f"\n  Limiar Cramer V: pequeno=0.10, medio=0.30 (ambos << 0.01 -> bias negligenciavel)"
+                "\n  Limiar Cramer V: pequeno=0.10, medio=0.30 (ambos << 0.01 -> bias negligenciavel)"
             )
             delta_cv = abs((legacy["max_cv"] or 0) - (baseline["max_cv"] or 0))
             print(f"  Delta max CramerV entre splits: {delta_cv:.5f} (praticamente zero)")

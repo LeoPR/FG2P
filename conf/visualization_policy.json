@@ -1,0 +1,12 @@
+{
+  "exclude_patterns": ["legacy", "107"],
+  "strategy_groups": [
+    { "group": "Core baseline", "prefix": "exp1_" },
+    { "group": "No-sep + DA", "prefix": "exp9_" },
+    { "group": "Sep + CE", "prefix": "exp102_" },
+    { "group": "Sep + DA", "prefix": "exp103_" },
+    { "group": "Sep + DA + dist", "prefix": "exp104b_" },
+    { "group": "Full corrected", "prefix": "exp104d_" },
+    { "group": "Ablation/errata", "prefix": "exp104c_" }
+  ]
+}

@@ -5,7 +5,6 @@ Generate comparative visualizations: FG2P vs LatPhon + A-D class distribution.
 Output:
     - class_distribution_all_experiments.png: A/B/C/D distribution for all experiments
     - baseline_comparison.png: FG2P vs LatPhon, WFST, ByT5-Small (PER with CI)
-    - top_5_models_metrics.png: Top 5 models with detailed metrics
     - class_distribution_top5.png: A/B/C/D distribution for top 5 models
 """
 
@@ -13,12 +12,12 @@ import re
 import sys
 from pathlib import Path
 from typing import Optional, Tuple
+import json
 
 # Adicionar src ao path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
 from extract_visualization_data import ExperimentDataExtractor
 
@@ -82,6 +81,45 @@ LATPHON_CI_HIGH = BASELINES[1]["ci_high"]
 LATPHON_TEST_SIZE = 500
 
 
+DEFAULT_VIS_POLICY = {
+    "exclude_patterns": ["legacy", "107"],
+    "strategy_groups": [
+        {"group": "Core baseline", "prefix": "exp1_"},
+        {"group": "No-sep + DA", "prefix": "exp9_"},
+        {"group": "Sep + CE", "prefix": "exp102_"},
+        {"group": "Sep + DA", "prefix": "exp103_"},
+        {"group": "Sep + DA + dist", "prefix": "exp104b_"},
+        {"group": "Full corrected", "prefix": "exp104d_"},
+        {"group": "Ablation/errata", "prefix": "exp104c_"},
+    ],
+}
+
+
+def _load_visualization_policy() -> dict:
+    """Carrega policy de visualização (com fallback seguro para defaults)."""
+    policy_path = Path("conf/visualization_policy.json")
+    if not policy_path.exists():
+        return dict(DEFAULT_VIS_POLICY)
+
+    try:
+        loaded = json.loads(policy_path.read_text(encoding="utf-8"))
+    except Exception:
+        return dict(DEFAULT_VIS_POLICY)
+
+    policy = dict(DEFAULT_VIS_POLICY)
+    if isinstance(loaded, dict):
+        if isinstance(loaded.get("exclude_patterns"), list):
+            policy["exclude_patterns"] = loaded["exclude_patterns"]
+        if isinstance(loaded.get("strategy_groups"), list):
+            valid_groups = [
+                g for g in loaded["strategy_groups"]
+                if isinstance(g, dict) and isinstance(g.get("group"), str) and isinstance(g.get("prefix"), str)
+            ]
+            if valid_groups:
+                policy["strategy_groups"] = valid_groups
+    return policy
+
+
 def load_data():
     """Carrega dados de todos os experimentos."""
     extractor = ExperimentDataExtractor(".")
@@ -108,7 +146,8 @@ def plot_baseline_comparison(all_metrics):
 
     fig, ax = plt.subplots(figsize=(12, 7), dpi=FIGURE_DPI)
 
-    valid = _valid_metrics(all_metrics)
+    policy = _load_visualization_policy()
+    valid = _valid_metrics(all_metrics, policy)
     best_per_exp, _ = _best_by_metrics(valid)
     fg2p_per = valid[best_per_exp].per if best_per_exp else BASELINES[0]["per"]
     fg2p_words = valid[best_per_exp].total_words if best_per_exp else FG2P_TEST_SIZE
@@ -121,7 +160,8 @@ def plot_baseline_comparison(all_metrics):
     fg2p_ci_low = None
     fg2p_ci_high = None
     if best_per_exp:
-        error_file = _latest_error_file_for_exp(best_per_exp)
+        best_run_id = valid[best_per_exp].run_id
+        error_file = _error_file_for_exp_run(best_per_exp, best_run_id)
         if error_file:
             fg2p_ci_low, fg2p_ci_high = _estimate_per_ci_from_error_file(error_file, fg2p_per)
 
@@ -180,70 +220,6 @@ def plot_baseline_comparison(all_metrics):
     plt.close()
 
 
-def plot_top_5_models(all_metrics, all_metadata):
-    """
-    Chart 3: Top 5 models (by PER) with detailed metrics.
-    Table with: PER, WER, Accuracy, Params, Class A/B/C/D.
-    """
-    safe_print("[3/4] Plotting top 5 models...")
-
-    # Obter top 5 por PER
-    sorted_by_per = sorted(all_metrics.items(), key=lambda x: x[1].per)
-    top_5 = dict(sorted_by_per[:5])
-
-    # Preparar dados para tabela
-    rows = []
-    for exp_name, metrics in top_5.items():
-        exp_short = exp_name.replace("exp", "E")
-        metadata = all_metadata.get(exp_name, None)
-        params = f"{metadata.total_params_m:.1f}M" if metadata else "N/A"
-
-        row = [
-            exp_short,
-            f"{metrics.per:.2f}%",
-            f"{metrics.wer:.2f}%",
-            f"{metrics.accuracy:.2f}%",
-            params,
-            f"{metrics.class_a_pct:.1f}%",
-            f"{metrics.class_b_pct:.1f}%",
-            f"{metrics.class_c_pct:.1f}%",
-            f"{metrics.class_d_pct:.1f}%",
-        ]
-        rows.append(row)
-
-    # Figura
-    fig, ax = plt.subplots(figsize=(14, 5), dpi=FIGURE_DPI)
-    ax.axis("off")
-
-    columns = ["Exp", "PER", "WER", "Acc", "Params", "Class A", "Class B", "Class C", "Class D"]
-
-    table = ax.table(cellText=rows, colLabels=columns, cellLoc="center", loc="center",
-                     colWidths=[0.08, 0.08, 0.08, 0.08, 0.10, 0.10, 0.10, 0.10, 0.10])
-
-    table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.scale(1, 2.5)
-
-    # Estilo header
-    for i in range(len(columns)):
-        table[(0, i)].set_facecolor("#34495e")
-        table[(0, i)].set_text_props(weight="bold", color="white")
-
-    # Estilo dados
-    for i in range(1, len(rows) + 1):
-        for j in range(len(columns)):
-            if i % 2 == 0:
-                table[(i, j)].set_facecolor("#ecf0f1")
-            else:
-                table[(i, j)].set_facecolor("#ffffff")
-
-    plt.title("Top 5 Models by PER (with Class Distribution)", fontsize=14, fontweight="bold", pad=20)
-    plt.tight_layout()
-    plt.savefig("results/top_5_models_metrics.png", dpi=FIGURE_DPI, bbox_inches="tight")
-    safe_print("   [OK] Saved: results/top_5_models_metrics.png")
-    plt.close()
-
-
 def _short_label(exp_name):
     """Extrai label curto robusto: exp104b_... -> Exp104b, exp200xxx_... -> Exp200xxx."""
     if not exp_name:
@@ -267,6 +243,20 @@ def _latest_error_file_for_exp(exp_name: str) -> Optional[Path]:
     pattern = f"*/error_analysis_{exp_name}__*.txt"
     candidates = sorted(results_dir.glob(pattern))
     return candidates[-1] if candidates else None
+
+
+def _error_file_for_exp_run(exp_name: str, run_id: str) -> Optional[Path]:
+    """Retorna error_analysis do run exato; fallback para o mais recente do experimento."""
+    results_dir = Path("results")
+    if not results_dir.exists():
+        return None
+
+    pattern_exact = f"*/error_analysis_{exp_name}__{run_id}.txt"
+    exact = list(results_dir.glob(pattern_exact))
+    if exact:
+        return exact[0]
+
+    return _latest_error_file_for_exp(exp_name)
 
 
 def _estimate_per_ci_from_error_file(error_file: Path, per_pct: float) -> Tuple[Optional[float], Optional[float]]:
@@ -306,12 +296,10 @@ def _wilson_interval_pct(error_count: int, n: int, z: float = 1.96) -> Tuple[flo
     return max(0.0, (center - radius) * 100.0), min(100.0, (center + radius) * 100.0)
 
 
-# Experimentos com vantagem artificial: split viciado (legacy/exp0) ou 95% de treino (exp107)
-_BIASED_PATTERNS = ("legacy", "107")
-
-def _valid_metrics(all_metrics):
+def _valid_metrics(all_metrics, policy):
+    patterns = tuple(policy.get("exclude_patterns", []))
     return {k: v for k, v in all_metrics.items()
-            if not any(p in k for p in _BIASED_PATTERNS)}
+            if not any(p in k for p in patterns)}
 
 
 def _best_by_metrics(valid_metrics):
@@ -341,18 +329,13 @@ def plot_class_distribution_top5(all_metrics):
     """
     safe_print("[3/3] Plotting class distribution (strategy-grouped)...")
 
-    valid = _valid_metrics(all_metrics)
+    policy = _load_visualization_policy()
+    valid = _valid_metrics(all_metrics, policy)
     best_per_exp, best_wer_exp = _best_by_metrics(valid)
 
     # Seleção determinística por estratégia (vitrine) + uma linha de ablação.
     grouped_specs = [
-        ("Core baseline", "exp1_"),
-        ("No-sep + DA", "exp9_"),
-        ("Sep + CE", "exp102_"),
-        ("Sep + DA", "exp103_"),
-        ("Sep + DA + dist", "exp104b_"),
-        ("Full corrected", "exp104d_"),
-        ("Ablation/errata", "exp104c_"),
+        (g["group"], g["prefix"]) for g in policy.get("strategy_groups", [])
     ]
 
     selected = []
@@ -483,11 +466,10 @@ def main():
     safe_print("="*70 + "\n")
 
     try:
-        extractor, all_metrics, all_metadata = load_data()
+        extractor, all_metrics, _all_metadata = load_data()
         safe_print(f"[OK] Loaded {len(all_metrics)} experiments with metrics\n")
 
         plot_baseline_comparison(all_metrics)
-        plot_top_5_models(all_metrics, all_metadata)
         plot_class_distribution_top5(all_metrics)
 
         safe_print("\n" + "="*70)
@@ -495,8 +477,7 @@ def main():
         safe_print("="*70)
         safe_print("\nFiles generated in results/:")
         safe_print("  1. baseline_comparison.png")
-        safe_print("  2. top_5_models_metrics.png")
-        safe_print("  3. class_distribution_top5.png")
+        safe_print("  2. class_distribution_top5.png")
         safe_print("")
 
     except Exception as e:

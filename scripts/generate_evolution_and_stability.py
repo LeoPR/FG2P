@@ -6,13 +6,11 @@ Shows:
 1. Timeline evolution: Exp0_baseline -> Exp1 -> Exp5 -> Exp9 -> Exp104b
 2. Exp0_legacy puzzle: why 0.38% if baseline is 0.59%?
 3. DA Loss gain: isolated comparison (same capacity, only loss changes)
-4. Stability: FG2P (28.8k words) vs LatPhon (500 words)
 
 Output:
     - evolution_per_wer.png: PER/WER evolution timeline
     - exp0_legacy_mystery.png: exp0_baseline vs exp0_legacy comparison
     - da_loss_gain.png: isolated DA Loss effect (Exp1 vs Exp7_0.20 vs Exp9)
-    - generalization_stability.png: FG2P vs LatPhon stability table
 """
 
 import sys
@@ -21,7 +19,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 import numpy as np
 from extract_visualization_data import ExperimentDataExtractor
 
@@ -71,7 +68,7 @@ def plot_evolution_timeline(all_metrics):
     Gráfico 1: Timeline de evolução PER/WER
     Mostra caminho: Exp0_baseline → Exp1 → Exp5 → Exp9 → Exp104b
     """
-    safe_print("[1/4] Plotando timeline evolutiva...")
+    safe_print("[1/3] Plotando timeline evolutiva...")
 
     final_exp = _select_sota_per_exp(all_metrics)
     if final_exp is None:
@@ -150,7 +147,7 @@ def plot_evolution_timeline(all_metrics):
 
     # Legend
     lines = line_per + line_wer
-    labels_legend = [l.get_label() for l in lines]
+    labels_legend = [ln.get_label() for ln in lines]
     ax1.legend(lines, labels_legend, loc="upper left", fontsize=10)
 
     plt.tight_layout()
@@ -165,7 +162,7 @@ def plot_exp0_legacy_mystery(all_metrics):
     Compara exp0_baseline_70split (0.59%) vs exp0_legacy_simple (0.38%)
     Documenta a investigacao sobre split estratificado
     """
-    safe_print("[2/4] Plotando investigacao exp0_legacy...")
+    safe_print("[2/3] Plotando investigacao exp0_legacy...")
 
     exp0_baseline = all_metrics.get("exp0_baseline_70split")
     exp0_legacy = all_metrics.get("exp0_legacy_simple")
@@ -184,8 +181,8 @@ def plot_exp0_legacy_mystery(all_metrics):
     x = np.arange(len(models))
     width = 0.35
 
-    bars1 = ax.bar(x - width/2, pers, width, label="PER", color=COLORS["baseline"], alpha=0.8)
-    bars2 = ax.bar(x + width/2, wers, width, label="WER", color=COLORS["sota"], alpha=0.8)
+    ax.bar(x - width/2, pers, width, label="PER", color=COLORS["baseline"], alpha=0.8)
+    ax.bar(x + width/2, wers, width, label="WER", color=COLORS["sota"], alpha=0.8)
 
     # Anotacoes
     for i, (per, wer) in enumerate(zip(pers, wers)):
@@ -230,7 +227,7 @@ def plot_da_loss_gain(all_metrics):
     Compara: Exp1 (baseline) vs Exp7_0.20 (DA loss) vs Exp9 (DA loss + capacidade maior)
     Mesma split (60%), mostrando ganho APENAS da loss
     """
-    safe_print("[3/4] Plotando isolamento do ganho DA Loss...")
+    safe_print("[3/3] Plotando isolamento do ganho DA Loss...")
 
     exp1 = all_metrics.get("exp1_baseline_60split")
     exp7_020 = all_metrics.get("exp7_lambda_mid_candidate_0.20")
@@ -248,8 +245,8 @@ def plot_da_loss_gain(all_metrics):
     wers1 = [exp1.wer, exp7_020.wer]
     x1 = np.arange(len(models1))
 
-    bars1_per = ax1.bar(x1 - 0.2, pers1, 0.4, label="PER", color=COLORS["baseline"], alpha=0.8)
-    bars1_wer = ax1.bar(x1 + 0.2, wers1, 0.4, label="WER", color=COLORS["da_loss"], alpha=0.8)
+    ax1.bar(x1 - 0.2, pers1, 0.4, label="PER", color=COLORS["baseline"], alpha=0.8)
+    ax1.bar(x1 + 0.2, wers1, 0.4, label="WER", color=COLORS["da_loss"], alpha=0.8)
 
     for i, (per, wer) in enumerate(zip(pers1, wers1)):
         ax1.text(i - 0.2, per + 0.02, f"{per:.2f}%", ha="center", fontsize=9, fontweight="bold")
@@ -275,8 +272,8 @@ def plot_da_loss_gain(all_metrics):
     wers2 = [exp1.wer, exp9.wer]
     x2 = np.arange(len(models2))
 
-    bars2_per = ax2.bar(x2 - 0.2, pers2, 0.4, label="PER", color=COLORS["baseline"], alpha=0.8)
-    bars2_wer = ax2.bar(x2 + 0.2, wers2, 0.4, label="WER", color=COLORS["sota"], alpha=0.8)
+    ax2.bar(x2 - 0.2, pers2, 0.4, label="PER", color=COLORS["baseline"], alpha=0.8)
+    ax2.bar(x2 + 0.2, wers2, 0.4, label="WER", color=COLORS["sota"], alpha=0.8)
 
     for i, (per, wer) in enumerate(zip(pers2, wers2)):
         ax2.text(i - 0.2, per + 0.02, f"{per:.2f}%", ha="center", fontsize=9, fontweight="bold")
@@ -304,87 +301,9 @@ def plot_da_loss_gain(all_metrics):
     plt.close()
 
 
-def plot_generalization_stability(all_metrics):
-    """
-    Gráfico 4: Estabilidade e generalizacao
-    Mostra por que 28.8k test set com perf mantida é MELHOR que 500 test set
-    """
-    safe_print("[4/4] Plotando analise de estabilidade...")
-
-    fig, ax = plt.subplots(figsize=(12, 7), dpi=FIGURE_DPI)
-    ax.axis("off")
-
-    # Dados (de STATUS.md)
-    data = [
-        ["Metric", "FG2P", "LatPhon", "Interpretation"],
-        ["", "", "", ""],
-        ["PER", "0.49%", "0.86%", "FG2P is 43% better"],
-        ["Test Set Size", "28,782 words", "~500 words", "FG2P has 57x more validation data"],
-        ["Absolute errors", "~141 words", "~4 words", "In absolute count, FG2P has more errors (larger N)"],
-        ["", "", "", ""],
-        ["Wilson 95% CI", "[0.46%, 0.52%]", "[0.57%, 1.22%]", "CIs do not overlap -> statistical significance"],
-        ["CI Width", "0.06pp", "0.65pp", "FG2P CI is 10.8x narrower -> more precise"],
-        ["", "", "", ""],
-        ["Implication 1", "Generalizes well", "Limited validation", "FG2P tested on a 57x larger dataset"],
-        ["Implication 2", "Stable", "Uncertain", "SAME PERFORMANCE with much more test data"],
-        ["Implication 3", "Robust", "Questionable", "If performance drops with more data, the model is fragile"],
-    ]
-
-    # Cores por linha
-    colors = []
-    for i, row in enumerate(data):
-        if i == 0:
-            colors.append(["#34495e"] * 4)  # header
-        elif i == 1 or i == 5 or i == 8:
-            colors.append(["#ecf0f1"] * 4)  # spacer
-        elif "FG2P" in row[1]:
-            colors.append(["#e8f8f5", "#e8f8f5", "#e8f8f5", "#e8f8f5"])  # FG2P rows (verde claro)
-        else:
-            colors.append(["#fdeef4", "#fdeef4", "#fdeef4", "#fdeef4"])  # LatPhon rows (vermelho claro)
-
-    table = ax.table(cellText=data, cellLoc="left", loc="center",
-                     cellColours=colors,
-                     colWidths=[0.20, 0.25, 0.25, 0.30])
-
-    table.auto_set_font_size(False)
-    table.set_fontsize(10)
-    table.scale(1, 2.2)
-
-    # Header styling
-    for i in range(4):
-        table[(0, i)].set_text_props(weight="bold", color="white", fontsize=11)
-        table[(0, i)].set_facecolor("#34495e")
-
-    # Bold para metricas importantes
-    for i in [2, 3, 6, 7]:
-        for j in range(4):
-            if j < 2:  # Metric name
-                table[(i, j)].set_text_props(weight="bold", fontsize=10)
-
-    plt.title("FG2P vs LatPhon: Stability and Generalization\n(Why more TEST SET data is a strength)",
-              fontsize=14, fontweight="bold", pad=20)
-
-    # Anotacao final
-    explanation = (
-        "CONCLUSION:\n"
-        "1. 28.8k test set != weakness; it demonstrates robustness\n"
-        "2. SAME PER on 57x more data = strong generalization evidence\n"
-        "3. LatPhon may change on larger samples (unknown)\n"
-        "4. Wilson CIs do not overlap -> real difference, not chance"
-    )
-    ax.text(0.02, -0.08, explanation, transform=ax.transAxes, fontsize=10,
-            verticalalignment="top", family="monospace", fontweight="bold",
-            bbox=dict(boxstyle="round", facecolor="lightyellow", alpha=0.5))
-
-    plt.tight_layout()
-    plt.savefig("results/generalization_stability.png", dpi=FIGURE_DPI, bbox_inches="tight")
-    safe_print("   [OK] Salvo: results/generalization_stability.png")
-    plt.close()
-
-
 def main():
     safe_print("\n" + "="*70)
-    safe_print("GERANDO VISUALIZACOES DE EVOLUCAO E ESTABILIDADE")
+    safe_print("GERANDO VISUALIZACOES DE EVOLUCAO")
     safe_print("="*70 + "\n")
 
     try:
@@ -394,7 +313,6 @@ def main():
         plot_evolution_timeline(all_metrics)
         plot_exp0_legacy_mystery(all_metrics)
         plot_da_loss_gain(all_metrics)
-        plot_generalization_stability(all_metrics)
 
         safe_print("\n" + "="*70)
         safe_print("[OK] VISUALIZACOES DE EVOLUCAO GERADAS")
@@ -403,7 +321,6 @@ def main():
         safe_print("  1. evolution_per_wer.png           (timeline de progresso)")
         safe_print("  2. exp0_legacy_mystery.png         (investigacao split)")
         safe_print("  3. da_loss_gain.png                (efeito da loss isolado)")
-        safe_print("  4. generalization_stability.png    (por que 28.8k eh bom)")
         safe_print("")
 
     except Exception as e:

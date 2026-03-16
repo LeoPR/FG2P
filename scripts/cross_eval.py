@@ -219,9 +219,9 @@ def main() -> None:
 
     # Contexto de comparacao
     print("\nContexto:")
-    print(f"  Performance.json (treino original):  ver docs/report/performance.json")
-    print(f"  Se PER aqui ~= PER original: split nao introduziu bias no modelo")
-    print(f"  Se PER aqui >> PER original: modelo overfittado ao seu split especifico")
+    print("  Performance.json (treino original):  ver docs/report/performance.json")
+    print("  Se PER aqui ~= PER original: split nao introduziu bias no modelo")
+    print("  Se PER aqui >> PER original: modelo overfittado ao seu split especifico")
 
 
 if __name__ == "__main__":

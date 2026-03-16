@@ -63,7 +63,7 @@ A referência mais próxima é **LatPhon** (Chary et al., 2025), um Transformer 
 | Design de avaliação | Estratificado (χ² p=0,678) | Estratificação não reportada | FG2P explicita validação do split |
 | Modelo | 17,2M BiLSTM (2014) | 7,5M Transformer (2017) | Famílias arquiteturais diferentes |
 
-*Metodologia de throughput e hardware de referência: [BENCHMARK.md](../../benchmarks/BENCHMARK.md).* 
+*Metodologia de throughput e hardware de referência: [BENCHMARK.md](../benchmarks/BENCHMARK.md).* 
 
 **Resultado estatístico**: O limite **superior** do IC de FG2P (0,51%) está **abaixo** do limite **inferior** do IC de LatPhon (0,56%) — **diferença estatisticamente significativa a 95% de confiança**.
 
@@ -962,7 +962,7 @@ As ablações da Fase 7 quantificam dois trade-offs práticos com impacto direto
 | Exp104d | 0,48% | ~34 w/s | ~1.106 w/s | Referência PER consolidada |
 | Exp106 | 0,58% | ~43 w/s | ~1.500 w/s | Ablação de eficiência (evidência preliminar) |
 
-† GPU pico = batch=512 (ponto de saturação RTX 3060). Range de todos os 19 experimentos: batch=1: 31–43 w/s; batch=512: 1.081–1.500 w/s. Sweep formal 2026-03-14, warmup=20, words=1.000. Detalhes: [BENCHMARK.md](../../benchmarks/BENCHMARK.md).
+† GPU pico = batch=512 (ponto de saturação RTX 3060). Range de todos os 19 experimentos: batch=1: 31–43 w/s; batch=512: 1.081–1.500 w/s. Sweep formal 2026-03-14, warmup=20, words=1.000. Detalhes: [BENCHMARK.md](../benchmarks/BENCHMARK.md).
 
 ### 8.6 Metodologia de Benchmark de Velocidade
 
@@ -1027,7 +1027,7 @@ O sweep formal (CPU: 2026-03-15, adaptativo, 19 modelos · GPU: 2026-03-14, over
 - CPU: p50 estabiliza em ~5,2 ms a partir de batch≈64 — gargalo migra de compute BLAS para overhead Python (alocação de tensores, loop de decodificação de índices). Pico: **~190 w/s** (Exp104d); range 190–736 w/s entre modelos.
 - GPU: p50 estabiliza em ~0,9 ms a partir de batch≈512 — paralelismo CUDA esgotado; throughput pico **~1.106 w/s** (Exp104d); range 1.081–1.500 w/s entre modelos.
 
-**Contexto de hardware**: O RTX 3060 possui 3.584 CUDA cores e 12,7 TFLOPS FP32. A vantagem de GPU escala com batch (paralelismo entre amostras) mas não com comprimento de sequência (decoder autoregressivo é serial por definição). Comparações cross-device (RTX 3060 vs RTX 4090) sem paridade de batch size e modelo são inválidas. Detalhes metodológicos e análise de variância em [docs/benchmarks/BENCHMARK.md](../../benchmarks/BENCHMARK.md).
+**Contexto de hardware**: O RTX 3060 possui 3.584 CUDA cores e 12,7 TFLOPS FP32. A vantagem de GPU escala com batch (paralelismo entre amostras) mas não com comprimento de sequência (decoder autoregressivo é serial por definição). Comparações cross-device (RTX 3060 vs RTX 4090) sem paridade de batch size e modelo são inválidas. Detalhes metodológicos e análise de variância em [docs/benchmarks/BENCHMARK.md](../benchmarks/BENCHMARK.md).
 
 ---
 
