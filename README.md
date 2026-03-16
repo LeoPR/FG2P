@@ -163,12 +163,12 @@ Input: "c o m p u t a d o r"
   [Softmax → ŷ (predicted token)]
          |
   ┌──────┴────────────────────────────────────────────────────────────────┐
-  │  CrossEntropy (CE)   L_CE  = -log P(y_true)                           │
-  │  Distance-Aware (DA) L_DA  = L_CE + λ × d_panphon(ŷ, y_true)        │  ← λ=0.20
-  │                       d(·) from PanPhon 24-feature articulatory space  │
+  │  CrossEntropy (CE)   L_CE = -log P(y_true)                            │
+  │  Distance-Aware (DA) L_DA = L_CE + λ × d_panphon(ŷ, y_true) × P(ŷ)    │  ← λ=0.20
+  │                       d(·) from PanPhon 24-feature articulatory space │
   └───────────────────────────────────────────────────────────────────────┘
          |
-Output: "k õ p u . t a . ˈ d o x"
+Output: "k õ . p u . t a . ˈ d o x"
 ```
 
 CE loss treats all substitution errors equally (predicting [u] instead of [t] = same penalty as predicting [s] instead of [t]). DA Loss adds an articulatory distance term: phonetically distant errors ([u]→[t], distance 0.875) are penalized more than close ones ([s]→[t], distance 0.125), making the gradient proportional to how "wrong" the error is.
@@ -421,31 +421,6 @@ FG2P uses internal experiment IDs in the form `ExpN` or `ExpN[a-z]` to track eac
 - **Syllable separators**: PER ↓0.09pp, WER ↑0.47pp (Exp9 vs Exp104b — use for TTS, avoid for NLP)
 - **Stability**: Exp104d shows stable behavior in long-word and compound-name stress tests
 - **Generalization**: Model generalizes beyond training vocabulary to new word constructions
-
----
-
-## Architecture Diagram
-
-```
-Input: "c o m p u t a d o r"
-         |
-  [Character Embedding 128D]
-         |
-  [BiLSTM Encoder 2x256D]
-         |
-  [Bahdanau Attention]
-         |
-  [LSTM Decoder 2x256D]          Loss = CE + lambda * d(pred, target) * p(pred)
-         |                              |
-Output: "k o~ p u t a . 'do x ."       [PanPhon: 24D articulatory features]
-                                        [place, manner, voicing, height, backness, nasality...]
-```
-
-- **Encoder**: Bidirectional LSTM processes grapheme sequence
-- **Attention**: Bahdanau additive attention aligns graphemes to phonemes
-- **Decoder**: Autoregressive LSTM generates IPA phoneme sequence
-- **DA Loss**: Penalizes errors proportionally to articulatory distance (PanPhon 24 features)
-- **Training**: Adam optimizer, early stopping (patience=10), stratified train/val/test split
 
 ---
 
