@@ -762,14 +762,7 @@ Uma propriedade científica frequentemente subestimada das métricas PER/WER cl�
 
 **Consequência prática**: o regime de erros muda de *erros aleatoriamente distribuídos por probabilidade* para *erros sistematicamente agrupados próximos ao fonema correto*. Isso pode ter valor em aplicações downstream como TTS (síntese de voz), onde um erro de vogal média (ɛ↔e) tende a ser menos saliente que um erro de classe (vogal↔fricativa).
 
-**Métrica proposta para quantificar essa propriedade**:
-
-| Classe | Distância fonológica | Exemplo típico | Perceptibilidade |
-|--------|---------------------|---------------|-----------------|
-| A | 0.0–0.15 | ɛ↔e, ɔ↔o (neutralização) | Baixa saliência auditiva |
-| B | 0.15–0.40 | i↔e, u↔o (altura vocálica) | Saliência auditiva geralmente baixa |
-| C | 0.40–0.70 | vogal↔semivogal | Perceptível |
-| D | 0.70–1.0 | vogal↔fricativa, EOS prematuro | Claramente errado |
+As classes A–D definidas em §5.1 (distância de Hamming normalizada: A = 0; B ≤ 0,050; C ≤ 0,150; D > 0,150) constituem a métrica para quantificar essa propriedade.
 
 **Predição**: DA Loss deve aumentar a proporção de erros Classe A+B em detrimento de C+D, mesmo mantendo a mesma contagem total de erros. Isso constitui uma vantagem qualitativa independente da melhora em PER/WER.
 

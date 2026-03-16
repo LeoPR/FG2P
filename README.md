@@ -70,8 +70,19 @@ FG2P compared against both classical (WFST) and modern neural baselines on Portu
 Standard G2P training with **CrossEntropy (CE)** counts errors, but not their phonetic severity. FG2P keeps CE and adds one extra term to make severe phonetic substitutions cost more during training.
 
 ```
-L = L_CE + λ × d_panphon(predicted, target) × p(predicted)
+L_CE = -log P(y_true)
+L = L_CE + λ × d_panphon(ŷ, y_true) × p(ŷ)
 ```
+
+**Breaking down each term:**
+
+- **P(y_true)** — the model's predicted probability for the correct phoneme. CrossEntropy already minimizes this term by itself.
+- **ŷ** — the phoneme the model actually predicted (the wrong one). This is what we're penalizing.
+- **d_panphon(ŷ, y_true)** — articulatory distance between predicted and correct phonemes, computed from 24 PanPhon features. Range: 0 (identical) to 1.0 (maximally different). Examples: vowel closeness ≈ 0.04, centralization ≈ 0.08, vowel-to-consonant ≈ 0.70.
+- **p(ŷ)** — the model's confidence (probability) in the wrong prediction. High confidence in a wrong answer is worse than low-confidence guessing.
+- **λ** — weighting parameter (default: 0.20). Controls how much the phonetic penalty influences the gradient. Empirically optimal at λ=0.20 across 600+ experiments.
+
+**Effect**: the penalty term only activates when the model is confident in a wrong answer that is phonetically distant. This guides the gradient to favor phonetically-close errors over catastrophic phonetic confusions.
 
 In practice, `d_panphon` comes from PanPhon articulatory features (24D). We used this as a **training signal**, not as a claim about full speech perception or semantics.
 
