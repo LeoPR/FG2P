@@ -36,13 +36,52 @@ __all__ = ["G2PPredictor"]
 
 
 if __name__ == "__main__":
-    predictor = G2PPredictor.load("best_per")
+    # ─────────────────────────────────────────────────────────────────────────
+    # PASSO 1 — Carregar o modelo (operação cara: ~1–2s, feita UMA VEZ)
+    #
+    # load() faz: lê dicionário (95k palavras), constrói vocabulários,
+    # carrega pesos (~9–17M params) e move para o device (CPU/GPU).
+    #
+    # ❌ Errado — chamar load() antes de cada palavra:
+    #       for word in words:
+    #           predictor = G2PPredictor.load(...)  # ~1s de overhead por palavra!
+    #           predictor.predict(word)
+    #
+    # ✅ Correto — carregar UMA VEZ, reutilizar o predictor:
+    # ─────────────────────────────────────────────────────────────────────────
+    predictor = G2PPredictor.load("best_per")   # best_per = Exp104d (TTS, fonética)
+    # predictor = G2PPredictor.load("best_wer") # best_wer = Exp9    (NLP, busca)
 
-    # Palavra única — TTS, consulta interativa (p50: ~42ms CPU / ~28ms GPU)
-    test_words = ["computador", "português", "inteligência"]
-    for word in test_words:
-        phonemes = predictor.predict(word)
-        print(f"{word:20} → {phonemes}")
+    words = ["computador", "português", "inteligência", "extraordinariamente"]
 
-    # Batch — corpus, pipeline (CPU: ~155 w/s em batch=32; GPU: ~406 w/s)
-    # results = predictor.predict_batch_native(test_words, batch_size=32)
+    # ─────────────────────────────────────────────────────────────────────────
+    # PASSO 2a — Palavra por vez (TTS em tempo real, consulta interativa)
+    #
+    # predict() processa uma palavra: encoder → decoder autoregressivo.
+    # Latência p50: ~42ms CPU / ~28ms GPU — adequado para resposta em tempo real.
+    # Throughput: ~24 w/s CPU / ~34 w/s GPU (limitado pelo overhead por chamada).
+    # ─────────────────────────────────────────────────────────────────────────
+    print("── Palavra por vez ──")
+    for word in words:
+        print(f"  {word:24} → {predictor.predict(word)}")
+
+    # ─────────────────────────────────────────────────────────────────────────
+    # PASSO 2b — Batch (corpus, pipeline, pré-processamento de texto)
+    #
+    # predict_batch_native() agrupa N palavras em uma única chamada ao modelo:
+    # o encoder processa o batch de uma vez e o decoder roda em paralelo.
+    # O resultado é idêntico ao predict() chamado individualmente.
+    #
+    # Throughput (Exp104d, sweep formal):
+    #   CPU batch=32  → ~155 w/s   (+6.5× vs palavra por vez)
+    #   CPU batch=128 → ~190 w/s   (pico CPU)
+    #   GPU batch=32  → ~406 w/s   (+11.8×)
+    #   GPU batch=512 → ~1.106 w/s (pico GPU)
+    #
+    # Quando usar: qualquer lista de palavras conhecida de antemão —
+    # pré-processamento de corpus, normalização de texto, geração de legendas.
+    # ─────────────────────────────────────────────────────────────────────────
+    print("\n── Batch (mesma saída, maior throughput) ──")
+    results = predictor.predict_batch_native(words, batch_size=32)
+    for word, phonemes in zip(words, results):
+        print(f"  {word:24} → {phonemes}")
