@@ -245,6 +245,8 @@ Comparing Exp1 vs Exp9 — **identical output structure** (phonemes + ˈ only), 
 
 **What DA Loss achieves**: In the matched comparison Exp1 vs Exp9, catastrophic errors (Class D) fall by 0.39pp while phonetically adjacent errors (Class B) increase by 0.19pp. This supports the claim that DA Loss changes error quality; direct perceptual impact still requires listening-based validation.
 
+**PER_w (weighted PER)**: The class distribution captures *which kind* of errors occur, but not their average severity. PER_w complements it: each phoneme substitution is weighted by its articulatory distance in PanPhon 24-feature space, so a vowel-for-stop error (distance ≈ 0.9) contributes more than a near-vowel confusion (distance ≈ 0.1). For Exp9 (DA Loss, 9.7M): PER_w = **0.27%** vs Exp1 baseline PER_w = 0.34% — a **−21% reduction in error severity**, while PER itself fell only −12%. DA Loss disproportionately reduces the *weight* of remaining errors, not just their count. Full PER_w analysis in [ARTICLE.md §5.3](docs/article/ARTICLE.md).
+
 ### Real Exp104d Examples (A-D, plus future E)
 
 The table below uses **real outputs from Exp104d**, not invented toy pairs.

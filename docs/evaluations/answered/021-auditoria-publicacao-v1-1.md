@@ -245,6 +245,16 @@ resolvidos antes.
 
 ---
 
+## Resolução dos itens principais (2026-03-16)
+
+| Item | Resolução |
+|------|-----------|
+| A1 | `best_wer` atualizado para `exp9_intermediate_distance_aware` run_id=20260310_193733 (model_index=14, checkpoint canônico). Documentado em `models/model_registry.json` com nota sobre o checkpoint mais antigo (model_index=6). |
+| A2 | Checkpoint canônico do Exp9 confirmado pelo usuário: run_id=20260310_193733 (mais recente). PER=0.58%, WER=4.96%. Registry atualizado. |
+| A3 | Documentado via política de aliases: Exp104d = `best_per` por ter vocabulário IPA completo (sep + ˈ) e melhor PER. Exp104c é precursor sem um dos dois tokens estruturais — útil como grupo comparativo, mas não elegível para `best_per`. `best_per` → Exp104d exclusivamente (output com sep + ˈ é a entrega completa para TTS). |
+| A4 | Citações em prosa convertidas para `[@key]` (Pandoc) em ARTICLE.md. Mapeamento: Chary→chary2025latphon, Wilson/Brown→wilson1927probable/brown2001interval, Morris/Bisani→morris2004cer/bisani2008joint, Mortensen→mortensen2016panphon, Bahdanau→bahdanau2014neural, Kohavi/Arlot→kohavi1995crossvalidation/arlot2010survey, Neyman/Cochran→neyman1934two/cochran1977sampling, Bottou→bottou2010large (Bottou 2012 removido: não está no .bib), Farias→removido (não está no .bib; mantido Tan→tan2021critical), HaoChen/Mishchenko→haochenSra2019shuffling/mishchenko2020reshuffling, Barbosa→barbosa2004brazilian, ByT5/Xue→byt5g2p, Reddi→reddi2020mlperf. Birkholz 2024 marcado como "em preparação" (não publicado). |
+| M1 | PER_w documentado no README §DA Loss Effect, com definição, valores para Exp1/Exp9, e link para ARTICLE.md §5.3. |
+
 ## Status desta avaliação
 
-Aberta — itens A1-A4 requerem decisão ou verificação do usuário.
+Fechada — todos os itens de alta prioridade (A1–A4) e M1 resolvidos. Itens M2–M6 permanecem como polish opcional.

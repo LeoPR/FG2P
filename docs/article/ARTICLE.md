@@ -51,7 +51,7 @@ Comparar sistemas de G2P entre estudos é notoriamente difícil: datasets, split
 
 #### LatPhon (2025) — Transformer Moderno
 
-A referência mais próxima é **LatPhon** (Chary et al., 2025), um Transformer de 4 camadas (7,5M params, RoPE) multilíngue. Para PT-BR, a Tabela II do paper LatPhon reporta **PER = 0,86% (±0,3)** em ~500 palavras (ipa-dict). A comparação aqui é ancorada em PER, porque WER não é reportado no paper, e em mesma linhagem lexical (`ipa-dict`), não em subconjuntos idênticos.
+A referência mais próxima é **LatPhon** [@chary2025latphon], um Transformer de 4 camadas (7,5M params, RoPE) multilíngue. Para PT-BR, a Tabela II do paper LatPhon reporta **PER = 0,86% (±0,3)** em ~500 palavras (ipa-dict). A comparação aqui é ancorada em PER, porque WER não é reportado no paper, e em mesma linhagem lexical (`ipa-dict`), não em subconjuntos idênticos.
 
 | Métrica | **FG2P (2026)** | **LatPhon (2025)** | Contexto |
 |---------|-----------|-----------|------|
@@ -74,7 +74,7 @@ A referência mais próxima é **LatPhon** (Chary et al., 2025), um Transformer 
 - FG2P: BiLSTM monolíngue PT-BR, Bahdanau attention, Distance-Aware Loss, test 28.8k estratificado
 - Conclusão: No escopo reportado, os resultados indicam vantagem de PER para FG2P, com interpretação restrita ao setup e aos dados documentados.
 
-#### ByT5-Small (Xue et al., 2022) — Multilíngue Zero-Shot
+#### ByT5-Small [@byt5g2p] — Multilíngue Zero-Shot
 
 Para contexto: **ByT5-Small** (299M params, multilíngue) atinge 9,1% PER em avaliação zero-shot português (português nunca visto no treino). FG2P com **17,2M params** na configuração de referência **Exp104d** + treinamento supervisionado em PT-BR alcança 0,48% PER.
 
@@ -111,7 +111,7 @@ O corpus de treinamento consiste em **95.937 pares (palavra, transcrição IPA)*
 
 ### 2.2 Divisão e Estratificação
 
-O corpus é dividido em três subconjuntos com **estratificação por características fonológicas**, prática recomendada para assegurar representatividade proporcional em datasets heterogêneos (Kohavi, 1995; Arlot & Celisse, 2010).
+O corpus é dividido em três subconjuntos com **estratificação por características fonológicas**, prática recomendada para assegurar representatividade proporcional em datasets heterogêneos [@kohavi1995crossvalidation; @arlot2010survey].
 
 | Subconjunto | Proporção | Palavras |
 |-------------|-----------|---------|
@@ -181,15 +181,15 @@ Um ponto frequentemente mal compreendido é que a estratificação e o embaralha
 
 **Nível 1 — Estratificação do Split (teoria de amostragem clássica)**
 
-A estratificação no momento da divisão treino/validação/teste tem origem na teoria clássica de amostragem (Neyman, 1934; Cochran, 1977). O objetivo é garantir **representatividade proporcional**: cada subconjunto deve refletir a distribuição real do corpus em todas as variáveis relevantes. Sem estratificação, um split puramente aleatório pode resultar em subrepresentação de classes raras no conjunto de teste — especialmente relevante em G2P, onde a distribuição de padrões fonológicos é altamente não-uniforme (proparoxítonas são raras; anglicismos com clusters consonantais atípicos são sub-10%).
+A estratificação no momento da divisão treino/validação/teste tem origem na teoria clássica de amostragem [@neyman1934two; @cochran1977sampling]. O objetivo é garantir **representatividade proporcional**: cada subconjunto deve refletir a distribuição real do corpus em todas as variáveis relevantes. Sem estratificação, um split puramente aleatório pode resultar em subrepresentação de classes raras no conjunto de teste — especialmente relevante em G2P, onde a distribuição de padrões fonológicos é altamente não-uniforme (proparoxítonas são raras; anglicismos com clusters consonantais atípicos são sub-10%).
 
 A justificativa para estratificação no split é estritamente **estatística**: queremos que a medição de PER/WER seja não-viesada, com intervalo de confiança interpretável. O critério clássico de Neyman-Cochran para alocação ótima de amostras minimiza a variância da estimativa para um tamanho de amostra fixo — e a estratificação é o mecanismo que realiza essa minimização.
 
 **Nível 2 — Embaralhamento Aleatório no Treino (teoria de otimização estocástica)**
 
-Uma vez que os dados de treino são fixados pelo split estratificado, cada época de treinamento embaralha aleatoriamente a **ordem** em que os exemplos são apresentados ao modelo. Este embaralhamento tem justificativa completamente diferente: é condição suficiente para convergência do SGD (Bottou, 2010; Bottou, 2012).
+Uma vez que os dados de treino são fixados pelo split estratificado, cada época de treinamento embaralha aleatoriamente a **ordem** em que os exemplos são apresentados ao modelo. Este embaralhamento tem justificativa completamente diferente: é condição suficiente para convergência do SGD [@bottou2010large].
 
-Resultados teóricos recentes demonstram que o embaralhamento aleatório sem reposição — chamado *random reshuffling* — **converge mais rápido** que o SGD com amostragem com reposição (HaoChen & Sra, 2019; Mishchenko et al., 2020). A intuição é que, ao longo de uma época completa, o *random reshuffling* garante que todo exemplo seja visto exatamente uma vez, reduzindo a variância do estimador do gradiente em comparação com amostragem independente. PyTorch DataLoader usa *random reshuffling* por padrão (`shuffle=True`).
+Resultados teóricos recentes demonstram que o embaralhamento aleatório sem reposição — chamado *random reshuffling* — **converge mais rápido** que o SGD com amostragem com reposição [@haochenSra2019shuffling; @mishchenko2020reshuffling]. A intuição é que, ao longo de uma época completa, o *random reshuffling* garante que todo exemplo seja visto exatamente uma vez, reduzindo a variância do estimador do gradiente em comparação com amostragem independente. PyTorch DataLoader usa *random reshuffling* por padrão (`shuffle=True`).
 
 **Por que os dois níveis são independentes**
 
@@ -201,13 +201,13 @@ Resultados teóricos recentes demonstram que o embaralhamento aleatório sem rep
 | **Benefício** | IC válido, PER/WER não-viesado | Menor variância de gradiente, convergência mais rápida |
 | **Alternativa sem ele** | Split aleatório → subrepresentação de padrões raros | Ordem fixa → gradientes correlacionados, risco de oscilação |
 
-A distinção importa para comparação com trabalhos relacionados: alguns G2P reportam resultados em splits puramente aleatórios (Farias et al., 2020; Tan et al., 2021), o que pode subestimar o erro em padrões fonológicos raros e inflar artificialmente métricas agregadas como WER. O FG2P combina os dois mecanismos deliberadamente — estratificação garante que a medição seja justa; *random reshuffling* garante que o treino seja eficiente.
+A distinção importa para comparação com trabalhos relacionados: alguns G2P reportam resultados em splits puramente aleatórios [@tan2021critical], o que pode subestimar o erro em padrões fonológicos raros e inflar artificialmente métricas agregadas como WER. O FG2P combina os dois mecanismos deliberadamente — estratificação garante que a medição seja justa; *random reshuffling* garante que o treino seja eficiente.
 
 ### 2.3 Auditoria do Corpus: Qualidade de Dados
 
 Uma inspeção sistemática do corpus revelou pontos relevantes para validação de qualidade.
 
-**Regra alofônica /r/ em coda**: O corpus aplica transcrição fonética rigorosa, representando o fonema /r/ em posição de coda com dois alofones distintos conforme o contexto fonológico (distribuição complementar com 0 exceções em 95.937 entradas). Esta consistência é indicativo de qualidade e padronização dos dados. A regra foi confirmada em validação teórica (Barbosa & Albano, 2004) e mostrou-se crítica para avaliação correta: na avaliação qualitativa do banco de generalização, 4 palavras foram inicialmente julgadas como erro de modelo quando na verdade refletiam aplicação correta da regra. Após correção, acurácia de generalização subiu de 14/31 (45%) para 17/31 (55%). Para análise fonológica detalhada, ver [PHONOLOGICAL_ANALYSIS.md](../linguistics/PHONOLOGICAL_ANALYSIS.md).
+**Regra alofônica /r/ em coda**: O corpus aplica transcrição fonética rigorosa, representando o fonema /r/ em posição de coda com dois alofones distintos conforme o contexto fonológico (distribuição complementar com 0 exceções em 95.937 entradas). Esta consistência é indicativo de qualidade e padronização dos dados. A regra foi confirmada em validação teórica [@barbosa2004brazilian] e mostrou-se crítica para avaliação correta: na avaliação qualitativa do banco de generalização, 4 palavras foram inicialmente julgadas como erro de modelo quando na verdade refletiam aplicação correta da regra. Após correção, acurácia de generalização subiu de 14/31 (45%) para 17/31 (55%). Para análise fonológica detalhada, ver [PHONOLOGICAL_ANALYSIS.md](../linguistics/PHONOLOGICAL_ANALYSIS.md).
 
 **Normalização Unicode NFC**: 10 entradas (~0,01%) continham normalização Unicode não-padronizada. O pipeline normaliza automaticamente, mas as 10 entradas foram corrigidas na fonte para consistência. Impacto mensurável no PER: nulo.
 
@@ -227,7 +227,7 @@ python scripts/cross_eval.py --index N --stratify --seed 42 --test-ratio 0.2
 
 ## 3. Arquitetura
 
-O sistema utiliza uma arquitetura **BiLSTM Encoder-Decoder com mecanismo de atenção de Bahdanau** (Bahdanau et al., 2014), que se estabeleceu como o paradigma dominante para G2P antes da era dos Transformers e ainda demonstra excelente desempenho para datasets de porte médio.
+O sistema utiliza uma arquitetura **BiLSTM Encoder-Decoder com mecanismo de atenção de Bahdanau** [@bahdanau2014neural], que se estabeleceu como o paradigma dominante para G2P antes da era dos Transformers e ainda demonstra excelente desempenho para datasets de porte médio.
 
 ```
 Grafemas ("c", "a", "s", "a")
@@ -299,7 +299,7 @@ Esta é a configuração de todos os experimentos sem `panphon` no nome (Exp0–
 
 #### Embedding com prior articulatório (*PanPhon init* / `panphon`)
 
-Nos experimentos Exp3, Exp4 e Exp8, a matriz de embedding é **inicializada** com os 24 features articulatórios binários do PanPhon (Mortensen et al., 2016): vozeamento, nasalidade, ponto de articulação, modo de articulação, sonoridade. Fonemas articulatoriamente similares começam **próximos no espaço vetorial desde a primeira época** de treino.
+Nos experimentos Exp3, Exp4 e Exp8, a matriz de embedding é **inicializada** com os 24 features articulatórios binários do PanPhon [@mortensen2016panphon]: vozeamento, nasalidade, ponto de articulação, modo de articulação, sonoridade. Fonemas articulatoriamente similares começam **próximos no espaço vetorial desde a primeira época** de treino.
 
 - **Exp3** (`panphon_trainable`): embedding 24D → FC → 128D ajustável, permite ao modelo refinar o prior durante treino
 - **Exp4** (`panphon_fixed`): embedding 24D estritamente congelado, representa fonologia pura sem aprendizado estatístico
@@ -536,19 +536,19 @@ A abordagem 1 foi escolhida por simplicidade e eficácia — resolve o problema 
 
 #### PER — Phoneme Error Rate
 
-O PER é a métrica primária para sistemas G2P. Definição formal (Morris et al., 2004; Bisani & Ney, 2008):
+O PER é a métrica primária para sistemas G2P. Definição formal [@morris2004cer; @bisani2008joint]:
 
 $$\text{PER} = \frac{\sum_{i=1}^{N} \text{edit\_dist}(\hat{y}_i, y_i)}{\sum_{i=1}^{N} |y_i|} \times 100\%$$
 
-onde $\hat{y}_i$ é a sequência predita, $y_i$ a referência, $\text{edit\_dist}$ é a distância de Levenshtein (inserção, deleção, substituição com custo unitário) e $|y_i|$ é o comprimento da sequência de referência. O denominador é o total de fonemas de **referência** — não o comprimento predito nem o máximo — seguindo a convenção estabelecida em ASR e adotada em G2P desde Bisani & Ney (2008).
+onde $\hat{y}_i$ é a sequência predita, $y_i$ a referência, $\text{edit\_dist}$ é a distância de Levenshtein (inserção, deleção, substituição com custo unitário) e $|y_i|$ é o comprimento da sequência de referência. O denominador é o total de fonemas de **referência** — não o comprimento predito nem o máximo — seguindo a convenção estabelecida em ASR e adotada em G2P desde @bisani2008joint.
 
-**Intervalo de Confiança de Wilson 95%**: Para proporções próximas de zero, o intervalo clássico de Wald ($\hat{p} \pm z\sqrt{\hat{p}(1-\hat{p})/n}$) subestima a incerteza. O intervalo de Wilson (Wilson, 1927; Brown, Cai & DasGupta, 2001) é assintoticamente correto mesmo para $\hat{p} \to 0$:
+**Intervalo de Confiança de Wilson 95%**: Para proporções próximas de zero, o intervalo clássico de Wald ($\hat{p} \pm z\sqrt{\hat{p}(1-\hat{p})/n}$) subestima a incerteza. O intervalo de Wilson [@wilson1927probable; @brown2001interval] é assintoticamente correto mesmo para $\hat{p} \to 0$:
 
 $$\text{CI}_{95\%} = \frac{\hat{p} + \frac{z^2}{2n}}{1 + \frac{z^2}{n}} \pm \frac{z}{1 + \frac{z^2}{n}} \sqrt{\frac{\hat{p}(1-\hat{p})}{n} + \frac{z^2}{4n^2}}$$
 
 com $z = 1{,}96$ para 95% e $n$ = total de fonemas de referência.
 
-Para os experimentos FG2P: Exp9 com ~181.000 fonemas de referência → IC de Wilson ≈ **±0,03 p.p.**; Exp104d (referência PER consolidada) com N=28.782 palavras → IC ≈ ±0,03 p.p. Para comparação, LatPhon (Chary et al., 2025) usa N=500 palavras → IC ≈ **±0,3 p.p.** — intervalo 10× mais largo.
+Para os experimentos FG2P: Exp9 com ~181.000 fonemas de referência → IC de Wilson ≈ **±0,03 p.p.**; Exp104d (referência PER consolidada) com N=28.782 palavras → IC ≈ ±0,03 p.p. Para comparação, LatPhon [@chary2025latphon] usa N=500 palavras → IC ≈ **±0,3 p.p.** — intervalo 10× mais largo.
 
 **Implementação**: `src/analyze_errors.py` — `calculate_per()` + `wilson_ci()`.
 
@@ -560,11 +560,11 @@ $$\text{WER}_{G2P} = \frac{|\{i : \hat{y}_i \neq y_i\}|}{N} \times 100\% = 100\%
 
 Esta definição — word-level *exact-match error rate* — é equivalente ao que a literatura de reconhecimento de fala chama de *String Error Rate* (SER) ou *Sentence Error Rate*. Difere do WER padrão de ASR, que usa distância de edição ao nível de **palavras** numa frase. Em G2P, a palavra já é a unidade mínima; WER é portanto a proporção de palavras com transcrição imprecisa.
 
-Referências: Bisani & Ney (2008); Yao & Zweig (2015).
+Referências: [@bisani2008joint; @yao2015sequence].
 
 #### PER_w e WER_g — Métricas Graduadas (contribuição FG2P)
 
-O PER e WER clássicos tratam todos os erros como equivalentes. Para capturar a **gravidade fonológica** dos erros, duas métricas complementares são calculadas via distância articulatória PanPhon (Mortensen et al., 2016):
+O PER e WER clássicos tratam todos os erros como equivalentes. Para capturar a **gravidade fonológica** dos erros, duas métricas complementares são calculadas via distância articulatória PanPhon [@mortensen2016panphon]:
 
 **PER_w** (*PER ponderado*): Cada substituição é ponderada pela distância normalizada de Hamming no espaço de 24 features articulatórias PanPhon:
 
@@ -587,7 +587,7 @@ Nota: a classificação usa distância de Hamming normalizada (avaliação), enq
 
 #### Verificação do PanPhon para PT-BR
 
-PanPhon (Mortensen et al., 2016) é uma base de 24 features articulatórias binárias/ternárias para fonemas IPA. Antes de usar como fonte de verdade, realizamos auditoria completa das 39 phonemes do vocabulário FG2P (`scripts/_audit_panphon.py`):
+PanPhon [@mortensen2016panphon] é uma base de 24 features articulatórias binárias/ternárias para fonemas IPA. Antes de usar como fonte de verdade, realizamos auditoria completa das 39 phonemes do vocabulário FG2P (`scripts/_audit_panphon.py`):
 
 - **Cobertura**: 100% — todos os 39 fonemas produzem vetores não-nulos
 - **Vogais nasais** (ã, ẽ, ĩ, õ, ũ, ʊ̃): Corretamente distinguidos das orais por exatamente 1 feature (`nas`: −1→+1). PanPhon aceita precomposed NFC (U+00E3, U+00F5, etc.) via normalização interna.
@@ -940,7 +940,7 @@ Esta seção fixa a leitura prática dos resultados para evitar sobre-interpreta
 
 **Limite de inferencia**: as evidencias deste trabalho sustentam associacao mecanistica (melhor qualidade fonetica dos erros), nao causalidade forte para todos os erros de escrita do mundo real.
 
-**Ancoragem bibliografica**: a fundamentacao teorica detalhada de fonetica articulatoria, PanPhon e G2P fica nas referencias compiladas em `REFERENCES.bib` (ex.: Mortensen et al., 2016; Browman and Goldstein, 1992; Barbosa and Albano, 2004; Bisani and Ney, 2008; Rao et al., 2015).
+**Ancoragem bibliografica**: a fundamentacao teorica detalhada de fonetica articulatoria, PanPhon e G2P fica nas referencias compiladas em `REFERENCES.bib` [@mortensen2016panphon; @browman1992articulatory; @barbosa2004brazilian; @bisani2008joint; @rao2015g2p].
 
 ### 8.4 Convergência Rápida como Sinal de Qualidade
 
@@ -982,7 +982,7 @@ t1 = perf_counter()
 latencies.append(t1 - t0)
 token_counts.append(len(result.split()))
 ```
-Toda análise estatística (percentis, CV, janela estável, check térmico) é realizada *post-hoc*, fora do loop. Isso garante que o overhead do instrumento dentro do loop é constante e determinístico — requisito para que a calibração seja válida. Esta abordagem segue o princípio de separação entre coleta e análise recomendado pelo MLPerf Inference Benchmark (Reddi et al., 2020).
+Toda análise estatística (percentis, CV, janela estável, check térmico) é realizada *post-hoc*, fora do loop. Isso garante que o overhead do instrumento dentro do loop é constante e determinístico — requisito para que a calibração seja válida. Esta abordagem segue o princípio de separação entre coleta e análise recomendado pelo MLPerf Inference Benchmark [@reddi2020mlperf].
 
 **Detecção de instabilidade de hardware**
 
@@ -1072,7 +1072,7 @@ A implementação proposta segue 4 fases incrementais:
 3. **Autômato de estados finitos**: FSA encoding estrutura silábica (ONSET → NUCLEUS → CODA), com aceitação/rejeição de transições ilegais
 4. **Integração**: Reranking dos N-melhores beams do LSTM pelo modelo fonotático (risco baixo) ou penalização direta como termo adicional na loss (risco médio)
 
-**Espaço articulatório contínuo 7D**: Substituir o espaço PanPhon binário discreto (24 features binárias) por um espaço de 7 dimensões contínuas fundamentado em estudos de análise de componentes principais do trato vocal (Birkholz et al., 2024 — 7D preservam 95-99% da variância):
+**Espaço articulatório contínuo 7D**: Substituir o espaço PanPhon binário discreto (24 features binárias) por um espaço de 7 dimensões contínuas fundamentado em estudos de análise de componentes principais do trato vocal (Birkholz et al., em preparação — 7D preservam 95-99% da variância):
 
 | Dimensão | Semântica | Correlato acústico |
 |----------|-----------|-------------------|

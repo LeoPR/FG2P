@@ -1,31 +1,32 @@
 {
-  "_version": "1.0",
+  "_version": "1.1",
   "_generated_by": "python src/manage_experiments.py --registry",
-  "_generated_at": "2026-03-13 02:38:06",
+  "_generated_at": "2026-03-16 00:00:00",
+  "_updated_at": "2026-03-16 (manual: aliases corrigidos para Exp104d/Exp9 canônicos)",
   "_promotion_rules": {
     "min_test_words": 5000,
     "note": "N_test >= 5000 required for best_per/best_wer."
   },
   "aliases": {
     "best_per": {
-      "experiment": "exp0_legacy_simple",
-      "run_id": "20260310_030321",
-      "per": 0.0038,
-      "wer": 0.0341,
-      "n_test": 19188,
-      "uses_separators": false,
+      "experiment": "exp104d_structural_tokens_correct",
+      "run_id": "20260312_142940",
+      "per": 0.0048,
+      "wer": 0.0533,
+      "n_test": 28782,
+      "uses_separators": true,
       "description": "Best phoneme accuracy. Recommended for TTS and phonetic alignment.",
-      "notes": "DA Loss + syllable separators + structural distance correction."
+      "notes": "17.2M params. DA Loss λ=0.2 + syllable separators + structural IPA tokens (sep + stress marker). Full IPA output: includes '.' and 'ˈ'. Run 20260312_142940 is the only checkpoint."
     },
     "best_wer": {
-      "experiment": "exp0_legacy_simple",
-      "run_id": "20260310_030321",
-      "per": 0.0038,
-      "wer": 0.0341,
-      "n_test": 19188,
+      "experiment": "exp9_intermediate_distance_aware",
+      "run_id": "20260310_193733",
+      "per": 0.0058,
+      "wer": 0.0496,
+      "n_test": 28782,
       "uses_separators": false,
       "description": "Best word accuracy. Recommended for NLP, search, word-level tasks.",
-      "notes": "DA Loss lambda=0.2, intermediate capacity 9.7M params."
+      "notes": "9.7M params. DA Loss λ=0.2, no syllable separators. Two checkpoints exist: 20260222_064838 (older, sweep model_index=6) and 20260310_193733 (canonical, sweep model_index=14). This alias resolves to the newer checkpoint (run_id=20260310_193733)."
     },
     "fast": {
       "status": "pending_retrain",

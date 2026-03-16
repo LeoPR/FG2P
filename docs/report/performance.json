@@ -491,7 +491,7 @@
       "inference_speed_wps": 32.42,
       "latency_avg_ms": 30.84,
       "sota_tag": "SOTA PER (PT-BR)",
-      "inference_completed": "2026-03-11 13:24:32",
+      "inference_completed": "2026-03-13 03:00:14",
       "graduated_metrics": {
         "per_weighted": 0.41,
         "wer_graduated": 0.62,
