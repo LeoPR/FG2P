@@ -35,12 +35,12 @@ COPY src/phonetic_features.py src/
 # Copy data
 COPY dicts/pt-br.tsv dicts/
 
-# Copy models (best_per, best_wer)
+# Copy models (best_per → exp104d, best_wer → exp9)
 COPY models/model_registry.json models/
-COPY models/exp104b_intermediate_sep_da_custom_dist_fixed/exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333.pt models/exp104b_intermediate_sep_da_custom_dist_fixed/
-COPY models/exp104b_intermediate_sep_da_custom_dist_fixed/exp104b_intermediate_sep_da_custom_dist_fixed__20260225_045333_metadata.json models/exp104b_intermediate_sep_da_custom_dist_fixed/
-COPY models/exp9_intermediate_distance_aware/exp9_intermediate_distance_aware__20260222_064838.pt models/exp9_intermediate_distance_aware/
-COPY models/exp9_intermediate_distance_aware/exp9_intermediate_distance_aware__20260222_064838_metadata.json models/exp9_intermediate_distance_aware/
+COPY models/exp104d_structural_tokens_correct/exp104d_structural_tokens_correct__20260312_142940.pt models/exp104d_structural_tokens_correct/
+COPY models/exp104d_structural_tokens_correct/exp104d_structural_tokens_correct__20260312_142940_metadata.json models/exp104d_structural_tokens_correct/
+COPY models/exp9_intermediate_distance_aware/exp9_intermediate_distance_aware__20260310_193733.pt models/exp9_intermediate_distance_aware/
+COPY models/exp9_intermediate_distance_aware/exp9_intermediate_distance_aware__20260310_193733_metadata.json models/exp9_intermediate_distance_aware/
 
 # Test
 RUN python -c "from src.inference_minimal import G2PPredictor; print('✓ Ready')"
