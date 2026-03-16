@@ -28,8 +28,8 @@ Version framing (lineage):
 |--------|----------------|----------------|---------|
 | **PER (Wilson 95% CI)** | **0.48% ± 0.03** | **0.86% ± 0.30** | PT-BR, same `ipa-dict` lineage, different subset sizes and splits; CIs do not overlap |
 | **WER (Wilson 95% CI)** | **5.33% ± 0.26** | n/d | WER not reported for LatPhon |
-| **Throughput (GPU)** | **1,500 w/s** | **31,4 w/s** | Reported throughput |
-| **Throughput (CPU)** | **736 w/s** | **30,7 w/s** | Reported throughput |
+| **Throughput (GPU)** | **1,500 w/s** (peak†) | **31,4 w/s** | As reported; FG2P peak at optimal batch, LatPhon at single-word mode |
+| **Throughput (CPU)** | **736 w/s** (peak†) | **30,7 w/s** | As reported; FG2P peak at optimal batch, LatPhon at single-word mode |
 | Test set size | **28,782 words** | ~500 words (ipa-dict) | FG2P test is 57× larger |
 | Evaluation design | Stratified train/val/test (χ² p=0.678) | Stratification not reported | FG2P reports split validation explicitly |
 | Model | 17.2M BiLSTM (2014) | 7.5M Transformer (2017) | Architectural families differ |
@@ -234,14 +234,14 @@ Comparing only models with syllable separators (identical output structure):
 
 ### DA Loss Effect on Error *Quality* (Class A–D Distribution)
 
-Comparing Exp1 vs Exp9 — **identical output structure** (phonemes + ˈ only), isolating the DA Loss effect:
+Comparing Exp1 vs Exp9 — **identical output structure** (phonemes + ˈ only), isolating the DA Loss effect. Each word is classified by its worst phoneme error; Class A = word fully correct (all phonemes exact).
 
 | Class | Articulatory Distance | Meaning | **Exp1 (CE)** | **Exp9 (DA Loss)** | **Change** |
 |-------|----------------------|---------|:---:|:---:|---|
-| A | 0 | Exact match | 94.52% | 94.80% | +0.28pp |
-| B | ~1 feature | Phonetically adjacent | 3.53% | **3.72%** | **+0.19pp** ← more near misses |
-| C | 2–3 features | Same phoneme family | 0.93% | 0.85% | −0.08pp |
-| D | 4+ features | Catastrophic ✗ | 1.02% | **0.63%** | **−0.39pp** ← fewer catastrophic |
+| A | 0 | Fully correct | 94.52% | 94.80% | +0.28pp |
+| B | ~1 feature | Adjacent | 3.53% | **3.72%** | **+0.19pp** ← more near misses |
+| C | 2–3 features | Same family | 0.93% | 0.85% | −0.08pp |
+| D | 4+ features | Catastrophic | 1.02% | **0.63%** | **−0.39pp** ← fewer catastrophic |
 
 **What DA Loss achieves**: In the matched comparison Exp1 vs Exp9, catastrophic errors (Class D) fall by 0.39pp while phonetically adjacent errors (Class B) increase by 0.19pp. This supports the claim that DA Loss changes error quality; direct perceptual impact still requires listening-based validation.
 
@@ -416,7 +416,7 @@ FG2P uses internal experiment IDs in the form `ExpN` or `ExpN[a-z]` to track eac
 - **DA Loss effect**: Redistribution of Class D errors to Class B (0.39pp reduction in catastrophic errors, same output structure)
 - **Dataset design matters**: Exp0 (0.38%, biased) vs Exp104d (0.48%, stratified) — unbiased metrics are higher but trustworthy
 - **Capacity sweet spot**: 9.7M — further increase to 17.2M shows diminishing returns
-- **Syllable separators**: PER ↓0.04pp, but WER ↑0.47pp (use for TTS, avoid for NLP)
+- **Syllable separators**: PER ↓0.09pp, WER ↑0.47pp (Exp9 vs Exp104b — use for TTS, avoid for NLP)
 - **Stability**: Exp104d shows stable behavior in long-word and compound-name stress tests
 - **Generalization**: Model generalizes beyond training vocabulary to new word constructions
 
@@ -638,7 +638,7 @@ This project documents all metrics, formulas, and implementation details across 
          in Brazilian Portuguese Grapheme-to-Phoneme Conversion},
   author={Peixoto, Leonardo R.},
   year={2026},
-  note={PER 0.49\%, 9.7M params, 28.8k stratified test words.
+  note={PER 0.48\%, 17.2M params, 28.8k stratified test words.
         Available at https://github.com/LeoPR/FG2P}
 }
 ```
