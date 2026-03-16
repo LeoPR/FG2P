@@ -1,8 +1,10 @@
 # === LARGE BINARIES & ARCHIVES ===
-# Model checkpoints — only published aliases tracked (best_per, best_wer)
-# All others ignored to keep repo small
+# Model checkpoints — only active alias checkpoints tracked
+# best_per  → exp104d_structural_tokens_correct
+# best_wer  → exp9_intermediate_distance_aware (both checkpoints for history)
+# All others (exp104b, exp104c, exp107, etc.) ignored to keep repo small
 models/*/*.pt
-!models/exp104b_intermediate_sep_da_custom_dist_fixed/*.pt
+!models/exp104d_structural_tokens_correct/*.pt
 !models/exp9_intermediate_distance_aware/*.pt
 FG2P.7z
 docs/*.pdf
