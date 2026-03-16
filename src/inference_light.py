@@ -22,25 +22,35 @@ Pode ser copiado e adaptado livremente.
     # Para TTS palavra a palavra: predict() — latência p50 42ms (CPU) / 28ms (GPU)
 
 ═══ CLI (da linha de comando) ══════════════════════════════════════════════
+    # Palavra única:
     python src/inference_light.py --alias best_per --word computador
-    python src/inference_light.py --index 11 --words "selfie,drone,blog"
-    python src/inference_light.py --file corpus.txt --batch-size 128   # CPU pico
-    python src/inference_light.py --file corpus.txt --batch-size 512   # GPU pico
+
+    # Lista de palavras (batch nativo — alta performance):
+    python src/inference_light.py --alias best_wer --words "selfie,drone,blog"
+
+    # Arquivo de corpus (batch nativo — ajuste --batch-size para o hardware):
+    python src/inference_light.py --alias best_per --file corpus.txt              # default batch=32
+    python src/inference_light.py --alias best_per --file corpus.txt --batch-size 128  # CPU pico
+    python src/inference_light.py --alias best_per --file corpus.txt --batch-size 512  # GPU pico
+
+    # Outros:
     python src/inference_light.py --interactive
     python src/inference_light.py --list
 
-═══ COMPARAÇÃO DE PALAVRAS SIMILARES — análise de famílias de palavras ═══════
-    # Encontra palavras similares (ortograficamente) e compara pronúncias:
-    python src/inference_light.py --word laeta --similar
-    python src/inference_light.py --index 18 --word "computador" --similar --similar-count 10
+═══ NEOLOGISMOS / GENERALIZAÇÃO — análise de OOV com path explícito ════════
+    # Dataset padrão (35 neologismos):
+    python src/inference_light.py --alias best_per --neologisms
 
-═══ NEOLOGISMOS — análise rica de OOV e empréstimos ════════════════════════
-    # Avalia banco de 35 neologismos com diff e notas linguísticas:
+    # Dataset customizado (ex: generalização):
+    python src/inference_light.py --alias best_per --neologisms docs/data/generalization_test.tsv
+
+    # API Python:
     p.evaluate_neologisms()
-    p.evaluate_neologisms("docs/data/neologisms_test.tsv")  # path explícito
+    p.evaluate_neologisms("docs/data/generalization_test.tsv")
 
-    python src/inference_light.py --neologisms
-    python src/inference_light.py --index 18 --neologisms
+═══ COMPARAÇÃO DE PALAVRAS SIMILARES ════════════════════════════════════════
+    python src/inference_light.py --alias best_per --word laeta --similar
+    python src/inference_light.py --alias best_per --word "computador" --similar --similar-count 10
 
 ═══ COM AVALIAÇÃO — opcional (se tiver referências) ════════════════════════
     # Carrega TSV genérico com fonemas de referência e calcula WER/PER:

@@ -4,15 +4,23 @@ inference_minimal.py — Interface mínima para usar FG2P.
 
 Dependência: torch (nada mais)
 
-Uso Python:
+Uso Python — palavra única (TTS, consulta):
     from src.inference_minimal import G2PPredictor
 
-    predictor = G2PPredictor.load("best_per")
-    print(predictor.predict("computador"))
+    p = G2PPredictor.load("best_per")   # melhor PER — TTS, fonética
+    p = G2PPredictor.load("best_wer")   # melhor WER — NLP, busca
+    p.predict("computador")             # → "k õ p u . t a . ˈ d o x"
 
-Ou CLI:
-    python -m src.inference_minimal
-    python src/inference_minimal.py
+Uso Python — batch (corpus, pipeline — 6–32× mais rápido):
+    results = p.predict_batch_native(lista_de_palavras, batch_size=32)
+    # CPU: batch=32 → ~155 w/s | batch=128 → ~190 w/s (pico)
+    # GPU: batch=32 → ~406 w/s | batch=512 → ~1.106 w/s (pico)
+
+CLI (completo com batch, neologismos e mais):
+    python src/inference_light.py --alias best_per --word computador
+    python src/inference_light.py --alias best_per --file corpus.txt --batch-size 128
+    python src/inference_light.py --alias best_per --neologisms docs/data/generalization_test.tsv
+    python src/inference_light.py --help
 """
 
 import sys
