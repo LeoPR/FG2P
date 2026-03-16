@@ -19,14 +19,22 @@ How to read these numbers:
 - `same source family (ipa-dict)` means the same lexical-resource lineage, not identical subsets or identical train/test splits.
 - Residual micro-tradeoff: `Exp104b` is lighter and can be faster on CPU-only scenarios.
 
+Version framing (lineage):
+- `v1.0` milestone: `Exp104b` (historical PER milestone in the original cycle).
+- `v1.1` consolidated reference: `Exp104d` (structural correction + current PER anchor for reporting).
+- Reporting policy: unless explicitly stated otherwise, benchmark and comparison claims in this README use the `v1.1` (`Exp104d`) reference.
+
 | Metric | FG2P (2026) | LatPhon (2025) | Context |
 |--------|----------------|----------------|---------|
 | **PER (Wilson 95% CI)** | **0.48% ± 0.03** | **0.86% ± 0.30** | PT-BR, same `ipa-dict` lineage, different subset sizes and splits; CIs do not overlap |
 | **WER (Wilson 95% CI)** | **5.33% ± 0.26** | n/d | WER not reported for LatPhon |
-| Inference speed | ~34 w/s† batch=1 / ~1,106 w/s†† peak (RTX 3060) | 31.4 w/s (RTX 4090, batch=1) | Speed depends critically on batch size and hardware; single-word comparison not meaningful across GPUs |
+| **Throughput (GPU)** | **1,500 w/s** | **31,4 w/s** | Reported throughput |
+| **Throughput (CPU)** | **736 w/s** | **30,7 w/s** | Reported throughput |
 | Test set size | **28,782 words** | ~500 words (ipa-dict) | FG2P test is 57× larger |
 | Evaluation design | Stratified train/val/test (χ² p=0.678) | Stratification not reported | FG2P reports split validation explicitly |
 | Model | 17.2M BiLSTM (2014) | 7.5M Transformer (2017) | Architectural families differ |
+
+*Throughput methodology and hardware details: [docs/benchmarks/BENCHMARK.md](docs/benchmarks/BENCHMARK.md).* 
 
 **Comparison criteria**: primary metric PER, auxiliary metric WER, uncertainty via Wilson 95% CI, and interpretation bounded to the reported dataset/hardware conditions. External comparison is PER-anchored because that is the metric shared with LatPhon.
 
@@ -496,7 +504,7 @@ python src/manage_experiments.py --check        # verify consistency
 
 ### Inference Speed: GPU vs CPU Benchmark
 
-Hardware: **NVIDIA RTX 3060 12GB** (GPU) + **Intel Xeon 36 cores, MKL** (CPU). Metric: `stable_wps` (lowest-CV 20% window). Model: Exp104d (`best_per`, hidden=384, 17.2M params), FP32.
+Hardware: **NVIDIA RTX 3060 12GB** (GPU) + **Intel Xeon E5-2697 v4** (CPU, 36 logical threads, MKL). Metric: `stable_wps` (lowest-CV 20% window). Model: Exp104d (`best_per`, hidden=384, 17.2M params), FP32.
 
 | batch_size | CPU stable w/s* | CPU p50* | GPU stable w/s** | GPU p50** | GPU/CPU |
 |-----------|----------------|---------|-----------------|----------|---------|
@@ -554,6 +562,12 @@ This project documents all metrics, formulas, and implementation details across 
 
 ### High-Level Overview (You Are Here)
 - **README.md**: Project motivation, key results, architecture, generalization analysis
+
+### Documentation Sync Contract
+- **Operational view (GitHub-facing)**: this README summarizes the current recommended metrics and usage guidance.
+- **Scientific view (formal narrative)**: [docs/article/ARTICLE.md](docs/article/ARTICLE.md) is the canonical manuscript for claims, interpretation boundaries, and methodological framing.
+- **Benchmark source of record**: [docs/benchmarks/BENCHMARK.md](docs/benchmarks/BENCHMARK.md) is the authoritative source for inference speed protocol and tables.
+- **Update rule**: when PER/WER/throughput numbers are revised, update README + ARTICLE + BENCHMARK in the same review cycle to avoid drift.
 
 ### Low-Level Technical Details
 - **[docs/article/FORMULAS.md](docs/article/FORMULAS.md)** — Complete mathematical reference for all metrics:

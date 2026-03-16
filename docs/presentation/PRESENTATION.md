@@ -610,7 +610,7 @@ Você quer...
 | **FG2P Exp104b** | **0,49%** | 5,43% | PT-BR | 28.782 | 9,7M |
 | **FG2P Exp9** | 0,58% | **4,96%** | PT-BR | 28.782 | 9,7M |
 | LatPhon 2025 | 0,86% | — | PT-BR | 500 | n/d |
-| ByT5-Small | 8,9% | — | 100 idiomas | ~500/lang | 299M |
+| ByT5-Small | 9,1% | — | 100 idiomas | ~500/lang | 299M |
 
 **FG2P usa 9,7M params** — ByT5-Small usa 299M (30× maior, zero-shot)
 

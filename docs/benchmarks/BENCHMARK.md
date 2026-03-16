@@ -11,7 +11,7 @@ as conclusões técnicas e os comandos para reprodução.
 
 | Componente | Especificação |
 |-----------|---------------|
-| CPU | Intel Xeon (36 processadores lógicos), Windows 10, PyTorch MKL |
+| CPU | Intel Xeon E5-2697 v4 (36 processadores lógicos), Windows 10, PyTorch MKL |
 | GPU | NVIDIA RTX 3060 12GB, CUDA, FP32 |
 | Framework | PyTorch 2.x, Python 3.13 |
 

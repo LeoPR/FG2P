@@ -2,7 +2,7 @@
 
 **Relatório técnico — Projeto Acadêmico FG2P**
 **Versão**: 1.2 | **Data**: 2026-03-10
-**Status dos experimentos**: Exp0–Exp107 concluídos
+**Status**: manuscrito técnico consolidado com resultados reproduzíveis
 
 ---
 
@@ -10,7 +10,15 @@
 
 Este trabalho apresenta o FG2P, um sistema de conversão grafema-para-fonema (*Grapheme-to-Phoneme*, G2P) para o Português Brasileiro construído sobre BiLSTM com atenção de Bahdanau. O foco central não é apenas otimizar a quantidade de erros, mas controlar sua *qualidade fonológica*: quando o modelo erra, deve errar em fonemas próximos ao alvo, não em fonemas arbitrários.
 
-O sistema é avaliado com rigor em um grande test set estratificado (28.782 palavras, ~181k fonemas), alcançando **PER de 0,49%** na configuracao Exp104b e **WER de 4,96%** na configuracao Exp9. Esta avaliação em escala 57× maior que trabalhos anteriores fornece intervalos de confiança muito mais precisos (±0,03 p.p. vs ±0,3 p.p. em SOTA com 500 palavras).
+O sistema é avaliado com rigor em um grande test set estratificado (28.782 palavras, ~181k fonemas), alcançando **PER de 0,48%** e **WER de 5,33%** na configuração principal de referência. Esta avaliação em escala 57× maior que trabalhos anteriores fornece intervalos de confiança muito mais precisos (±0,03 p.p. vs ±0,3 p.p. em SOTA com 500 palavras). Como leitura complementar de trade-off de métrica, uma configuração secundária sem separadores silábicos é mantida para cenários centrados em WER.
+
+Os identificadores internos de experimento (por exemplo, séries Exp) são usados ao longo do texto apenas para rastreabilidade metodológica e reprodutibilidade, não como eixo narrativo do resumo.
+
+Convenção interna de versões para leitura histórica do projeto:
+- **v1.0 (marco histórico)**: ciclo com **Exp104b** como melhor PER do período.
+- **v1.1 (referência consolidada)**: ciclo com **Exp104d** (correção estrutural) como âncora de PER para comparação externa.
+
+Salvo indicação explícita em seções de ablação/histórico, os resultados de referência deste manuscrito seguem a convenção **v1.1 (Exp104d)**.
 
 **Contribuições técnicas originais**:
 1. **Distance-Aware Loss**: Penaliza erros proporcionalmente à distância articulatória PanPhon (24 features). Em comparações com mesma estrutura de saída, o efeito principal observado é redistribuir erros da classe D (distantes, catastróficos) para classe B (mais próximos ao alvo). Não reduz quantidade de erros por magia — altera sobretudo sua *severidade*.
@@ -49,10 +57,13 @@ A referência mais próxima é **LatPhon** (Chary et al., 2025), um Transformer 
 |---------|-----------|-----------|------|
 | **PER (IC 95% Wilson)** | **0,48% ± 0,03** | **0,86% ± 0,30** | Intervalos não se sobrepõem no cenário reportado |
 | **WER (IC 95% Wilson)** | **5,33% ± 0,26** | n/d | WER não reportado no paper LatPhon |
-| Throughput (reportado) | 28,4 w/s (RTX 3060) | 31,4 w/s (RTX 4090) | Contextual apenas: hardware e protocolo de benchmark diferentes |
+| **Throughput (GPU)** | **1.500 w/s** | **31,4 w/s** | Throughput reportado |
+| **Throughput (CPU)** | **736 w/s** | **30,7 w/s** | Throughput reportado |
 | Test set | **28.782 palavras** | ~500 palavras (ipa-dict) | FG2P 57× maior |
 | Design de avaliação | Estratificado (χ² p=0,678) | Estratificação não reportada | FG2P explicita validação do split |
 | Modelo | 17,2M BiLSTM (2014) | 7,5M Transformer (2017) | Famílias arquiteturais diferentes |
+
+*Metodologia de throughput e hardware de referência: [BENCHMARK.md](../../benchmarks/BENCHMARK.md).* 
 
 **Resultado estatístico**: O limite **superior** do IC de FG2P (0,51%) está **abaixo** do limite **inferior** do IC de LatPhon (0,56%) — **diferença estatisticamente significativa a 95% de confiança**.
 
@@ -65,9 +76,9 @@ A referência mais próxima é **LatPhon** (Chary et al., 2025), um Transformer 
 
 #### ByT5-Small (Xue et al., 2022) — Multilíngue Zero-Shot
 
-Para contexto: **ByT5-Small** (299M params, multilíngue) atinge 8,9% PER em avaliação zero-shot português (português nunca visto no treino). FG2P com 9,7M params + treinamento supervisionado em PT-BR alcança 0,48% PER.
+Para contexto: **ByT5-Small** (299M params, multilíngue) atinge 9,1% PER em avaliação zero-shot português (português nunca visto no treino). FG2P com **17,2M params** na configuração de referência **Exp104d** + treinamento supervisionado em PT-BR alcança 0,48% PER.
 
-A diferença (8,9% vs 0,48%) é esperada: ByT5 é **zero-shot multilíngue** (100 idiomas), enquanto FG2P é **supervisionado monolíngue**. Comparação direta é enganosa. Relevância: ByT5 demonstra que arquitetura massiva sem dados especializados não compensa a falta de sinal fonológico e treino específico.
+A diferença (9,1% vs 0,48%) é esperada: ByT5 é **zero-shot multilíngue** (100 idiomas), enquanto FG2P é **supervisionado monolíngue**. Comparação direta é enganosa. Relevância: ByT5 demonstra que arquitetura massiva sem dados especializados não compensa a falta de sinal fonológico e treino específico.
 
 #### Conclusão da Comparação
 
@@ -128,10 +139,10 @@ Um aspecto metodológico crítico é distinguir se o modelo **memoriza** o dicio
 
 **Tamanho do modelo vs dataset**:
 - Vocabulário PT-BR: 95.937 palavras
-- Modelo FG2P (configuração Exp104b): 9,7M parâmetros
+- Modelo FG2P (configuração de referência Exp104d): 17,2M parâmetros
 - Dicionário comprimido gzip: ~3 MB
 
-Se o modelo apenas memorasse, seria mais eficiente: um índice de hash da matriz (palavra → IPA) ocuparia menos espaço que 9,7M params. O fato de o modelo ser tão grande só se justifica se aprende *padrões* — regras fonológicas que generalizam além do treinamento.
+Se o modelo apenas memorasse, seria mais eficiente: um índice de hash da matriz (palavra → IPA) ocuparia menos espaço que 17,2M params. O fato de o modelo ser tão grande só se justifica se aprende *padrões* — regras fonológicas que generalizam além do treinamento.
 
 **Evidência empírica — Split 60% Treino / 30% Teste**:
 
@@ -141,9 +152,9 @@ O design 60/10/30 (60% treino, 30% teste) é deliberado:
 
 Comparação com ablações:
 - **Exp107**: 95% treino, 960 test → PER 0,46% (parece melhor)
-- **Exp104b**: 60% treino, 28.782 test → PER 0,49% (RECOMENDADO)
+- **Exp104d**: 60% treino, 28.782 test → PER 0,48% (RECOMENDADO)
 
-Exp107 tem IC muito mais amplo: ~960 fonemas = IC de Wilson ±3% (160% de incerteza relativa). A diferença 0,46% vs 0,49% está dentro do ruído. Mais relevante: com 95% dos dados em treino, o modelo tem risco muito maior de **memorizar** palavras específicas em vez de aprender regras.
+Exp107 tem IC muito mais amplo: ~960 fonemas = IC de Wilson ±3% (160% de incerteza relativa). A diferença 0,46% vs 0,48% está dentro do ruído. Mais relevante: com 95% dos dados em treino, o modelo tem risco muito maior de **memorizar** palavras específicas em vez de aprender regras.
 
 **Teste de generalização OOV**:
 A avaliação em 31 palavras completamente fora do vocabulário de treino (6 categorias de teste de generalização):
@@ -537,7 +548,7 @@ $$\text{CI}_{95\%} = \frac{\hat{p} + \frac{z^2}{2n}}{1 + \frac{z^2}{n}} \pm \fra
 
 com $z = 1{,}96$ para 95% e $n$ = total de fonemas de referência.
 
-Para os experimentos FG2P: Exp9 com ~181.000 fonemas de referência → IC de Wilson ≈ **±0,03 p.p.**; Exp104b (SOTA PER) com N=28.782 palavras → IC ≈ ±0,03 p.p. Para comparação, LatPhon (Chary et al., 2025) usa N=500 palavras → IC ≈ **±0,3 p.p.** — intervalo 10× mais largo.
+Para os experimentos FG2P: Exp9 com ~181.000 fonemas de referência → IC de Wilson ≈ **±0,03 p.p.**; Exp104d (referência PER consolidada) com N=28.782 palavras → IC ≈ ±0,03 p.p. Para comparação, LatPhon (Chary et al., 2025) usa N=500 palavras → IC ≈ **±0,3 p.p.** — intervalo 10× mais largo.
 
 **Implementação**: `src/analyze_errors.py` — `calculate_per()` + `wilson_ci()`.
 
@@ -614,7 +625,8 @@ A tabela a seguir sintetiza todos os experimentos concluídos, agrupados por fas
 | **Fase 6: DA + Sep + Distâncias Customizadas** | | | | | | | |
 | Exp103 | 9,7M | DA λ=0,2 | sim | 0,53% | 5,73% | 94,27% | Efeitos não-aditivos |
 | Exp104 | 9,7M | DA λ=0,2 + dist | sim | 0,54% | 5,88% | 94,12% | Bug: override pré-norm |
-| **Exp104b** | **9,7M** | **DA λ=0,2 + dist** | **sim** | **0,49%** | **5,43%** | **94,57%** | **SOTA PER** |
+| **Exp104b** | **9,7M** | **DA λ=0,2 + dist** | **sim** | **0,49%** | **5,43%** | **94,57%** | **SOTA PER no ciclo histórico** |
+| **Exp104d** | **17,2M** | **DA λ=0,2 + dist** | **sim** | **0,48%** | **5,33%** | **94,67%** | **Referência PER consolidada** |
 | **Fase 7: Robustez e Ablações** | | | | | | | |
 | Exp105 | 9,7M | DA λ=0,2 + dist | sim | 0,54% | 5,87% | 94,13% | 50% dados, com hífen — robustez |
 | Exp106 | 9,7M | DA λ=0,2 + dist | sim | 0,58% | 6,12% | 93,88% | 50% dados, sem hífen — ablação de eficiência (speed em auditoria) |
@@ -899,7 +911,7 @@ Um dos achados mais robustos do trabalho é o trade-off sistemático entre PER e
 O mecanismo é estrutural e não-eliminável apenas por ajuste de hiperparâmetros: cada token separador mal-posicionado conta como erro de palavra inteira (WER métrica binária por palavra). O modelo com separadores tem mais oportunidades de erro por sequência de saída, o que se reflete diretamente no WER mesmo quando a qualidade fonêmica melhora.
 
 **Implicação prática**: A escolha entre os dois regimes (com/sem separadores) deve ser guiada pela aplicação:
-- **TTS / síntese de fala**: PER mais importante → usar Exp104b (sep, PER 0,49%)
+- **TTS / síntese de fala**: PER mais importante → usar Exp104d (sep, PER 0,48%)
 - **Reconhecimento de fala / NLP / lookup**: WER mais importante → usar Exp9 (sem sep, WER 4,96%)
 
 ### 8.2 Limites da Distance-Aware Loss
@@ -940,16 +952,15 @@ As ablações da Fase 7 quantificam dois trade-offs práticos com impacto direto
 
 **Trade-off quantidade de dados**: Exp105 reduz o conjunto de treino de 60% para 50% (−17% de exemplos). A degradação de PER de 0,49% para 0,54% (+10%) é surpreendentemente baixa dado o tamanho da redução. Isso sugere que o corpus de 95K palavras está bem acima do limiar de saturação para a arquitetura 9,7M — mais dados de treino na faixa 50%–60% têm retorno decrescente. Para contextos com corpus menor (e.g., dialetos, línguas de baixo recurso), esta curva de robustez implica que o sistema pode alcançar performance razoável com ~48K palavras de treino.
 
-**Trade-off speed vs. acurácia (hífen)**: Exp106 confirma que remover o hífen preserva a qualidade fonológica com pequena variação de PER (+0,04 p.p. vs Exp105). Para throughput, o estado atual é de evidência preliminar: a direção do efeito e sua magnitude ainda dependem de benchmark dedicado com repetição e IC95 em baseline comparável (Exp9/Exp104b). Portanto, Exp106 permanece como ablação de eficiência, não como recomendação final de latência.
+**Trade-off speed vs. acurácia (hífen)**: Exp106 confirma que remover o hífen preserva a qualidade fonológica com pequena variação de PER (+0,04 p.p. vs Exp105). Para throughput, o estado atual é de evidência preliminar: a direção do efeito e sua magnitude ainda dependem de benchmark dedicado com repetição e IC95 em baseline comparável (Exp9/Exp104d). Portanto, Exp106 permanece como ablação de eficiência, não como recomendação final de latência.
 
 **Resumo do Pareto de configurações**:
 
 | Configuração | PER | GPU batch=1 | GPU pico† | Caso de uso ideal |
 |---|---|---|---|---|
 | Exp9 | 0,58% | ~31 w/s | ~1.081 w/s | WER mínimo, NLP/lookup |
-| Exp104b | 0,49% | ~38 w/s | ~1.200 w/s | PER mínimo, análise linguística |
-| Exp105 | 0,54% | ~36 w/s | ~1.100 w/s | Corpus reduzido, mesma acurácia |
-| Exp106 | 0,58% | ~43 w/s | ~1.500 w/s | Mais rápido (saída menor sem hífen) |
+| Exp104d | 0,48% | ~34 w/s | ~1.106 w/s | Referência PER consolidada |
+| Exp106 | 0,58% | ~43 w/s | ~1.500 w/s | Ablação de eficiência (evidência preliminar) |
 
 † GPU pico = batch=512 (ponto de saturação RTX 3060). Range de todos os 19 experimentos: batch=1: 31–43 w/s; batch=512: 1.081–1.500 w/s. Sweep formal 2026-03-14, warmup=20, words=1.000. Detalhes: [BENCHMARK.md](../../benchmarks/BENCHMARK.md).
 
@@ -1025,8 +1036,9 @@ O sweep formal (CPU: 2026-03-15, adaptativo, 19 modelos · GPU: 2026-03-14, over
 Este trabalho apresentou o FG2P, um sistema G2P para o Português Brasileiro baseado em BiLSTM Encoder-Decoder com atenção de Bahdanau. Os principais resultados e contribuições são:
 
 **Principais resultados empiricos**:
-- **PER 0,49%** (Exp104b: DA Loss + separadores + distâncias customizadas)
-- **WER 4,96%** (Exp9: DA Loss sem separadores)
+- **PER 0,48%** (Exp104d: referência consolidada de qualidade fonêmica)
+- **WER 5,33%** (Exp104d na configuração de referência)
+- **WER 4,96%** (Exp9 como referência complementar WER-centered)
 - Avaliação sobre 28.782 palavras — 57× maior que referências comparáveis em PT-BR
 
 **Contribuições técnicas**:
@@ -1093,9 +1105,9 @@ Antes de qualquer uso, escolha o modelo conforme o objetivo:
 | Modelo | Index | PER | WER | Quando usar |
 |--------|-------|-----|-----|-------------|
 | **Exp9** | 11 | 0,58% | **4,96%** | Precisão por palavra — NLP, TTS, lookup |
-| **Exp104b** | 18 | **0,49%** | 5,43% | Precisão por fonema — análise linguística, síntese, alinhamento |
+| **Exp104d** | `best_per` | **0,48%** | 5,33% | Precisão por fonema — análise linguística, síntese, alinhamento |
 
-A diferença prática: Exp9 acerta mais palavras *inteiras* (95% vs 94,6%); Exp104b erra menos fonemas individuais quando erra. Para síntese de voz onde um fonema errado basta para soar estranho, Exp104b é preferível. Para indexação, busca e NLP onde a palavra toda precisa estar certa, Exp9 é preferível.
+A diferença prática: Exp9 acerta mais palavras *inteiras* (95,04% vs 94,67%); Exp104d erra menos fonemas individuais quando erra. Para síntese de voz onde um fonema errado basta para soar estranho, Exp104d é preferível. Para indexação, busca e NLP onde a palavra toda precisa estar certa, Exp9 é preferível.
 
 ### 10.2 Modo 1 — Palavra única ou lista (CLI)
 
@@ -1209,7 +1221,7 @@ Para integração em scripts ou sistemas externos:
 from src.inference_light import G2PPredictor
 
 # Carregar modelo — o index corresponde à posição na lista (--list)
-p = G2PPredictor.load(index=18)   # Exp104b: SOTA PER
+p = G2PPredictor.load(index=18)   # Exemplo de índice numérico; valide com --list no ambiente atual
 # p = G2PPredictor.load(index=11) # Exp9:    SOTA WER
 
 # Predição simples

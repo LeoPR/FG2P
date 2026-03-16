@@ -12,6 +12,7 @@ Output:
 import re
 import sys
 from pathlib import Path
+from typing import Optional, Tuple
 
 # Adicionar src ao path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
@@ -62,11 +63,11 @@ BASELINES = [
     },
     {
         "label": "ByT5-Small\n(~500 words)",
-        "per": 9.10,
+        "per": 9.1,
         "ci_low": None,
         "ci_high": None,
         "color": "#e74c3c",   # vermelho
-        "note": "9.10% (no CI)",
+        "note": "9.1% (no CI)",
     },
 ]
 
@@ -110,15 +111,33 @@ def plot_baseline_comparison(all_metrics):
     valid = _valid_metrics(all_metrics)
     best_per_exp, _ = _best_by_metrics(valid)
     fg2p_per = valid[best_per_exp].per if best_per_exp else BASELINES[0]["per"]
-    fg2p_label = f"FG2P\\n({_short_label(best_per_exp)})" if best_per_exp else BASELINES[0]["label"]
-    fg2p_note = f"{fg2p_per:.2f}% (current best PER)" if best_per_exp else BASELINES[0]["note"]
+    fg2p_words = valid[best_per_exp].total_words if best_per_exp else FG2P_TEST_SIZE
+    fg2p_label = (
+        f"FG2P\n({_short_label(best_per_exp)})\n({_format_words_k(fg2p_words)} words)"
+        if best_per_exp
+        else BASELINES[0]["label"]
+    )
+
+    fg2p_ci_low = None
+    fg2p_ci_high = None
+    if best_per_exp:
+        error_file = _latest_error_file_for_exp(best_per_exp)
+        if error_file:
+            fg2p_ci_low, fg2p_ci_high = _estimate_per_ci_from_error_file(error_file, fg2p_per)
+
+    if fg2p_ci_low is not None and fg2p_ci_high is not None:
+        fg2p_note = f"{fg2p_per:.2f}% [{fg2p_ci_low:.2f}–{fg2p_ci_high:.2f}%]"
+    elif best_per_exp:
+        fg2p_note = f"{fg2p_per:.2f}% (CI n/d)"
+    else:
+        fg2p_note = BASELINES[0]["note"]
 
     baselines = [dict(BASELINES[0]), *BASELINES[1:]]
     baselines[0]["per"] = fg2p_per
     baselines[0]["label"] = fg2p_label
     baselines[0]["note"] = fg2p_note
-    baselines[0]["ci_low"] = None
-    baselines[0]["ci_high"] = None
+    baselines[0]["ci_low"] = fg2p_ci_low
+    baselines[0]["ci_high"] = fg2p_ci_high
 
     x_pos = np.arange(len(baselines))
 
@@ -151,7 +170,8 @@ def plot_baseline_comparison(all_metrics):
                  fontsize=13, fontweight="bold")
     ax.set_xticks(x_pos)
     ax.set_xticklabels([b["label"] for b in baselines], fontsize=11)
-    ax.set_ylim([0, 11.5])
+    ymax = max((b["ci_high"] if b["ci_high"] is not None else b["per"]) for b in baselines)
+    ax.set_ylim(0, max(11.5, ymax * 1.15))
     ax.grid(axis="y", alpha=0.3, zorder=1)
 
     plt.tight_layout()
@@ -225,9 +245,65 @@ def plot_top_5_models(all_metrics, all_metadata):
 
 
 def _short_label(exp_name):
-    """Extrai label curto: exp104b_... -> Exp104b, exp9_... -> Exp9"""
-    m = re.match(r"exp(\d+\w?)_", exp_name)
-    return f"Exp{m.group(1)}" if m else exp_name.replace("exp", "Exp")
+    """Extrai label curto robusto: exp104b_... -> Exp104b, exp200xxx_... -> Exp200xxx."""
+    if not exp_name:
+        return "FG2P"
+    m = re.match(r"exp([A-Za-z0-9]+)(?:_|$)", exp_name)
+    return f"Exp{m.group(1)}" if m else exp_name.replace("exp", "Exp", 1)
+
+
+def _format_words_k(words: int) -> str:
+    """Formata contagem de palavras em escala k com 1 casa decimal."""
+    if words >= 1000:
+        return f"{words / 1000.0:.1f}k"
+    return str(words)
+
+
+def _latest_error_file_for_exp(exp_name: str) -> Optional[Path]:
+    """Retorna o error_analysis mais recente para um experimento."""
+    results_dir = Path("results")
+    if not results_dir.exists():
+        return None
+    pattern = f"*/error_analysis_{exp_name}__*.txt"
+    candidates = sorted(results_dir.glob(pattern))
+    return candidates[-1] if candidates else None
+
+
+def _estimate_per_ci_from_error_file(error_file: Path, per_pct: float) -> Tuple[Optional[float], Optional[float]]:
+    """Estima IC 95% de Wilson para PER a partir de total de fonemas e PER reportado.
+
+    O arquivo de análise contém as contagens por classe A/B/C/D (total de fonemas).
+    Como o número bruto de erros de PER não está explícito no arquivo, usamos
+    round(PER * total_fonemas) como aproximação para construir o IC de Wilson.
+    """
+    try:
+        content = error_file.read_text(encoding="utf-8", errors="ignore")
+        counts = []
+        for cls in ("A", "B", "C", "D"):
+            m = re.search(rf"Classe\s+{cls}:\s+(\d+)", content)
+            if not m:
+                return None, None
+            counts.append(int(m.group(1)))
+
+        total_phonemes = sum(counts)
+        if total_phonemes <= 0:
+            return None, None
+
+        err_count = int(round((per_pct / 100.0) * total_phonemes))
+        return _wilson_interval_pct(err_count, total_phonemes)
+    except Exception:
+        return None, None
+
+
+def _wilson_interval_pct(error_count: int, n: int, z: float = 1.96) -> Tuple[float, float]:
+    """Wilson 95% para proporção, retornando em porcentagem."""
+    if n <= 0:
+        return 0.0, 0.0
+    p = error_count / n
+    denom = 1.0 + (z * z) / n
+    center = (p + (z * z) / (2.0 * n)) / denom
+    radius = (z / denom) * np.sqrt((p * (1.0 - p) / n) + (z * z) / (4.0 * n * n))
+    return max(0.0, (center - radius) * 100.0), min(100.0, (center + radius) * 100.0)
 
 
 # Experimentos com vantagem artificial: split viciado (legacy/exp0) ou 95% de treino (exp107)
@@ -258,26 +334,50 @@ def _highlight_info(exp_name, best_per_exp, best_wer_exp):
 
 def plot_class_distribution_top5(all_metrics):
     """
-    Chart: Top 5 PER-validated models + forced Exp1 and Exp9.
-    Exp104b (★ Best PER) e Exp9 (★ Best WER) são destacados na tabela e no gráfico.
+    Chart: strategy-grouped lineup + explicit ablation row.
+    Exp104d é a referência principal; Exp104b fica como marco histórico;
+    Exp104c aparece apenas como ablação/errata.
     Left: A/B/C/D table. Right: B/C/D bars with adjusted scale.
     """
-    safe_print("[3/3] Plotting class distribution for validated top 5...")
+    safe_print("[3/3] Plotting class distribution (strategy-grouped)...")
 
     valid = _valid_metrics(all_metrics)
     best_per_exp, best_wer_exp = _best_by_metrics(valid)
 
-    top_5_keys = {e for e, _ in sorted(valid.items(), key=lambda x: x[1].per)[:5]}
-    forced = {k for k in valid if k.startswith("exp1_")}
-    if best_wer_exp:
-        forced.add(best_wer_exp)
-    selected_keys = top_5_keys | forced
+    # Seleção determinística por estratégia (vitrine) + uma linha de ablação.
+    grouped_specs = [
+        ("Core baseline", "exp1_"),
+        ("No-sep + DA", "exp9_"),
+        ("Sep + CE", "exp102_"),
+        ("Sep + DA", "exp103_"),
+        ("Sep + DA + dist", "exp104b_"),
+        ("Full corrected", "exp104d_"),
+        ("Ablation/errata", "exp104c_"),
+    ]
 
-    experiments = [e for e, _ in sorted(valid.items(), key=lambda x: x[1].per)
-                   if e in selected_keys]
+    selected = []
+    for group_name, prefix in grouped_specs:
+        candidates = [e for e in valid if e.startswith(prefix)]
+        if not candidates:
+            continue
+        exp_name = min(candidates, key=lambda e: valid[e].per)
+        selected.append((group_name, exp_name))
+
+    experiments = [e for _, e in selected]
+    groups = [g for g, _ in selected]
 
     labels_short = [_short_label(e) for e in experiments]
-    highlights = [_highlight_info(e, best_per_exp, best_wer_exp) for e in experiments]
+
+    highlights = []
+    for e in experiments:
+        if e == best_per_exp:
+            highlights.append(("★ Best PER", "#c8e6c9"))
+        elif e.startswith("exp9_"):
+            highlights.append(("★ WER anchor", "#bbdefb"))
+        elif e.startswith("exp104c_"):
+            highlights.append(("Ablation", "#ffe0b2"))
+        else:
+            highlights.append((None, None))
 
     # Labels com badge em segunda linha para modelos destacados
     labels_display = [
@@ -290,21 +390,22 @@ def plot_class_distribution_top5(all_metrics):
     class_c = [all_metrics[e].class_c_pct for e in experiments]
     class_d = [all_metrics[e].class_d_pct for e in experiments]
 
-    fig, (ax_table, ax_chart) = plt.subplots(1, 2, figsize=(14, 6), dpi=FIGURE_DPI,
+    fig, (ax_table, ax_chart) = plt.subplots(1, 2, figsize=(15, 6), dpi=FIGURE_DPI,
                                               gridspec_kw={"width_ratios": [1, 1.6]})
 
     # ===== Esquerda: Tabela A/B/C/D =====
     ax_table.axis("off")
-    col_labels = ["Model", "A (%)", "B (%)", "C (%)", "D (%)"]
+    col_labels = ["Group", "Model", "A (%)", "B (%)", "C (%)", "D (%)"]
     table_data = [
-        [lbl, f"{a:.2f}", f"{b:.2f}", f"{c:.2f}", f"{d:.2f}"]
-        for lbl, a, b, c, d in zip(labels_short, class_a, class_b, class_c, class_d)
+        [grp, lbl, f"{a:.2f}", f"{b:.2f}", f"{c:.2f}", f"{d:.2f}"]
+        for grp, lbl, a, b, c, d in zip(groups, labels_short, class_a, class_b, class_c, class_d)
     ]
     tbl = ax_table.table(
         cellText=table_data,
         colLabels=col_labels,
         loc="center",
         cellLoc="center",
+        colWidths=[0.25, 0.15, 0.15, 0.15, 0.15, 0.15],
     )
     tbl.auto_set_font_size(False)
     tbl.set_fontsize(11)
@@ -319,20 +420,22 @@ def plot_class_distribution_top5(all_metrics):
         exp_idx = row - 1
         _, hl_color = highlights[exp_idx] if exp_idx < len(highlights) else (None, None)
         if col == 0:
-            # Destaca linha do modelo com cor de highlight ou neutro
+            cell.set_facecolor("#f5f5f5")
+        elif col == 1:
+            # Destaca coluna do modelo com cor de highlight quando aplicável
             cell.set_facecolor(hl_color if hl_color else "#f5f5f5")
             if hl_color:
                 cell.set_text_props(fontweight="bold")
-        elif col == 1:
-            cell.set_facecolor(COLORS_CLASSES["A"])
         elif col == 2:
-            cell.set_facecolor(COLORS_CLASSES["B"])
+            cell.set_facecolor(COLORS_CLASSES["A"])
         elif col == 3:
-            cell.set_facecolor(COLORS_CLASSES["C"])
+            cell.set_facecolor(COLORS_CLASSES["B"])
         elif col == 4:
+            cell.set_facecolor(COLORS_CLASSES["C"])
+        elif col == 5:
             cell.set_facecolor(COLORS_CLASSES["D"])
 
-    ax_table.set_title("Full A/B/C/D Distribution", fontsize=12, fontweight="bold", pad=12)
+    ax_table.set_title("A/B/C/D Distribution by Strategy Group", fontsize=12, fontweight="bold", pad=12)
 
     # ===== Direita: Barras agrupadas B/C/D =====
     x = np.arange(len(labels_display))
@@ -359,14 +462,14 @@ def plot_class_distribution_top5(all_metrics):
 
     ax_chart.set_xlabel("Model", fontsize=11, fontweight="bold")
     ax_chart.set_ylabel("B+C+D Errors (% of words)", fontsize=11, fontweight="bold")
-    ax_chart.set_title("Errors by Class — PER-Validated Models", fontsize=12, fontweight="bold")
+    ax_chart.set_title("Errors by Class — Strategy Grouped", fontsize=12, fontweight="bold")
     ax_chart.set_xticks(x)
     ax_chart.set_xticklabels(labels_display, fontsize=10)
     ax_chart.legend(fontsize=9, loc="upper right")
     ax_chart.grid(axis="y", alpha=0.3, zorder=1)
     ax_chart.set_ylim([0, max_val * 1.45])
 
-    fig.suptitle("Phonological Class Distribution — PER-Validated Models",
+    fig.suptitle("Phonological Class Distribution — Core Strategies + Ablation",
                  fontsize=13, fontweight="bold")
     plt.tight_layout()
     plt.savefig("results/class_distribution_top5.png", dpi=FIGURE_DPI, bbox_inches="tight")

@@ -1357,7 +1357,7 @@ def slide_sota(prs: Presentation, num: int, slide_data=None):
             ["**FG2P Exp104b**", "**0,49%**", "5,43%", "PT-BR", "28.782", "9,7M"],
             ["**FG2P Exp9**",    "0,58%", "**4,96%**", "PT-BR", "28.782", "9,7M"],
             ["LatPhon 2025",     "0,86%", "—", "PT-BR", "500",    "n/d"],
-            ["ByT5-Small",       "8,9%",  "—", "100 idiomas", "~500/lang", "299M"],
+            ["ByT5-Small",       "9,1%",  "—", "100 idiomas", "~500/lang", "299M"],
         ]
 
     col_widths = [Inches(3.2), Inches(1.5), Inches(1.5), Inches(2.0), Inches(2.3), Inches(1.8)]

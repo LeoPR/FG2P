@@ -234,8 +234,33 @@ class ExperimentDataExtractor:
 
         return experiments
 
+    @staticmethod
+    def _is_better_metrics_candidate(current: ExperimentMetrics, challenger: ExperimentMetrics) -> bool:
+        """Define critério determinístico para escolher o melhor run por experimento.
+
+        Ordem de comparação:
+        1) menor PER
+        2) menor WER
+        3) run_id mais recente (desempate)
+        """
+        if challenger.per < current.per:
+            return True
+        if challenger.per > current.per:
+            return False
+
+        if challenger.wer < current.wer:
+            return True
+        if challenger.wer > current.wer:
+            return False
+
+        return challenger.run_id > current.run_id
+
     def load_all_metrics(self) -> Dict[str, ExperimentMetrics]:
-        """Load metrics for all experiments"""
+        """Load metrics for all experiments.
+
+        Quando há múltiplos runs para o mesmo exp_name, mantém apenas o melhor
+        candidato por PER (desempate: WER, depois run_id mais recente).
+        """
         all_metrics = {}
         experiments = self.discover_all_experiments()
 
@@ -243,9 +268,20 @@ class ExperimentDataExtractor:
         for exp in experiments:
             metrics = self.extract_metrics_from_error_analysis(exp["error_analysis_path"])
             if metrics:
-                all_metrics[exp["exp_name"]] = metrics
-                # Avoid Unicode issues on Windows by using simple output
-                print(f"  OK {exp['exp_name']}: PER={metrics.per:.2f}%, WER={metrics.wer:.2f}%")
+                exp_name = exp["exp_name"]
+                current = all_metrics.get(exp_name)
+                if current is None or self._is_better_metrics_candidate(current, metrics):
+                    all_metrics[exp_name] = metrics
+                    # Avoid Unicode issues on Windows by using simple output
+                    print(
+                        f"  OK {exp_name}: run={metrics.run_id}, "
+                        f"PER={metrics.per:.2f}%, WER={metrics.wer:.2f}%"
+                    )
+                else:
+                    print(
+                        f"  SKIP {exp_name}: run={metrics.run_id} "
+                        f"(kept run={current.run_id}, PER={current.per:.2f}%, WER={current.wer:.2f}%)"
+                    )
 
         return all_metrics
 
