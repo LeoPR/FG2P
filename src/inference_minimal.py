@@ -30,7 +30,11 @@ __all__ = ["G2PPredictor"]
 if __name__ == "__main__":
     predictor = G2PPredictor.load("best_per")
 
+    # Palavra única — TTS, consulta interativa (p50: ~42ms CPU / ~28ms GPU)
     test_words = ["computador", "português", "inteligência"]
     for word in test_words:
         phonemes = predictor.predict(word)
         print(f"{word:20} → {phonemes}")
+
+    # Batch — corpus, pipeline (CPU: ~155 w/s em batch=32; GPU: ~406 w/s)
+    # results = predictor.predict_batch_native(test_words, batch_size=32)

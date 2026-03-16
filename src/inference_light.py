@@ -12,9 +12,20 @@ Pode ser copiado e adaptado livremente.
     p = G2PPredictor.load("best_wer")  # melhor WER — recomendado para NLP
     p.predict("computador")            # → "k õ p u t a ˈ d o x"
 
+═══ ALTA PERFORMANCE — modo batch (corpus, pipeline, pré-processamento) ════
+    results = p.predict_batch_native(lista_de_palavras, batch_size=32)
+    # CPU (Xeon): batch=32 → 155 w/s (+6.5× vs predict() em loop)
+    #             batch=128 → 190 w/s (pico CPU; saturação em ~64)
+    # GPU (RTX 3060): batch=32 → 406 w/s (+11.8×); batch=512 → 1.106 w/s (pico)
+    # Recomendação: batch=32 para uso geral; batch=128 para ingestão máxima CPU;
+    #               batch=512 para ingestão máxima GPU.
+    # Para TTS palavra a palavra: predict() — latência p50 42ms (CPU) / 28ms (GPU)
+
 ═══ CLI (da linha de comando) ══════════════════════════════════════════════
     python src/inference_light.py --alias best_per --word computador
     python src/inference_light.py --index 11 --words "selfie,drone,blog"
+    python src/inference_light.py --file corpus.txt --batch-size 128   # CPU pico
+    python src/inference_light.py --file corpus.txt --batch-size 512   # GPU pico
     python src/inference_light.py --interactive
     python src/inference_light.py --list
 
@@ -190,10 +201,10 @@ class G2PPredictor:
                          domina para LSTM pequeno). Pode ganhar em ARM (Apple Silicon, mobile)
                          ou modelos maiores (hidden≥1024). Use --quantize para testar no seu
                          hardware — ver docs/evaluations/answered/016.
-            num_threads: Threads intra-op do PyTorch para CPU (padrão: 1).
-                         Para inferência unitária sequencial (batch=1), 1 thread elimina
-                         overhead de sincronização entre threads em operações pequenas.
-                         Use None para manter o padrão do sistema.
+            num_threads: Threads intra-op do PyTorch para CPU (padrão: sistema/MKL).
+                         Para inferência unitária (batch=1), MKL multi-thread já é ótimo —
+                         não ajuste sem validar no seu hardware (Xeon: threads=1 causou
+                         regressão de 61%). Use None para manter o padrão do sistema.
 
         Exemplos:
             p = G2PPredictor.load("best_per")              # melhor PER (recomendado TTS)
@@ -329,6 +340,20 @@ class G2PPredictor:
         Mais eficiente que predict() em loop para throughput:
         1 chamada ao encoder + max_len passos do decoder em paralelo para batch_size items.
         O pipeline garante a mesma saída que predict() chamado individualmente.
+
+        Performance (Exp104d, sweep formal 2026-03-14/15):
+          CPU (Xeon 36 cores, MKL):
+            batch=32  → 155 w/s  (6.5× vs predict() em loop)
+            batch=128 → 190 w/s  (pico CPU; saturação após batch≈64)
+          GPU (RTX 3060, CUDA):
+            batch=32  → 406 w/s  (11.8× vs predict() em loop)
+            batch=128 → 745 w/s
+            batch=512 → 1.106 w/s (pico GPU)
+
+        Recomendações:
+          - Uso geral / baixo volume: batch_size=32 (boa latência + throughput)
+          - Ingestão máxima CPU:      batch_size=128
+          - Ingestão máxima GPU:      batch_size=512
 
         A arquitetura já suporta batch nativamente:
         - Encoder: pack_padded_sequence(enforce_sorted=False)
@@ -1004,6 +1029,11 @@ Avaliação completa (WER/PER no test set padrão):
                              "ATENCAO: em Xeon, threads=1 causou regressao de 61%% — MKL "
                              "multi-thread ja e otimo para matrizes LSTM hidden=384. "
                              "Util apenas para teste em hardware sem MKL otimizado.")
+    parser.add_argument("--batch-size", type=int, default=32, metavar="N",
+                        help="Batch size para --words e --file (default: 32). "
+                             "Aumenta throughput: CPU pico batch=128 (~190 w/s); "
+                             "GPU pico batch=512 (~1.106 w/s). "
+                             "Para palavra única (--word), sem efeito.")
 
     args = parser.parse_args()
 
@@ -1055,8 +1085,12 @@ Avaliação completa (WER/PER no test set padrão):
         return
 
     if args.words:
-        for w in [w.strip() for w in args.words.split(",") if w.strip()]:
-            print(f"{w}\t{_predict(w)}")
+        word_list = [w.strip() for w in args.words.split(",") if w.strip()]
+        phoneme_list = predictor.predict_batch_native(word_list, batch_size=args.batch_size)
+        if args.strip_sep:
+            phoneme_list = [" ".join(p for p in ph.split() if p != ".") for ph in phoneme_list]
+        for w, ph in zip(word_list, phoneme_list):
+            print(f"{w}\t{ph}")
         return
 
     if args.file:
@@ -1064,9 +1098,13 @@ Avaliação completa (WER/PER no test set padrão):
         if not file_path.exists():
             print(f"Arquivo não encontrado: {file_path}")
             sys.exit(1)
-        for w in [ln.strip() for ln in file_path.read_text(encoding="utf-8").splitlines()
-                  if ln.strip()]:
-            print(f"{w}\t{_predict(w)}")
+        word_list = [ln.strip() for ln in file_path.read_text(encoding="utf-8").splitlines()
+                     if ln.strip()]
+        phoneme_list = predictor.predict_batch_native(word_list, batch_size=args.batch_size)
+        if args.strip_sep:
+            phoneme_list = [" ".join(p for p in ph.split() if p != ".") for ph in phoneme_list]
+        for w, ph in zip(word_list, phoneme_list):
+            print(f"{w}\t{ph}")
         return
 
     if args.interactive:
