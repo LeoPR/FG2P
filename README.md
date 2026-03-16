@@ -210,7 +210,7 @@ All FG2P models output at least stress markers (`ˈ`); later models additionally
 | Exp | Output Structure | Official PER | Error Composition |
 |-----|-----------------|:---:|---|
 | **Exp1** (CE Baseline) | phonemes + ˈ | 0.64% | 89.7% phonetic · 10.3% stress |
-| **Exp9** (DA Loss) | phonemes + ˈ | 0.61% | 91.6% phonetic · 8.4% stress |
+| **Exp9** (DA Loss) | phonemes + ˈ | 0.58% | 91.6% phonetic · 8.4% stress |
 | **Exp101** (CE + sep) | phonemes + ˈ + . | 0.53% | 72.0% phonetic · 3.8% stress · 24.2% sep |
 | **Exp103** (DA + sep) | phonemes + ˈ + . | 0.53% | 71.1% phonetic · 4.2% stress · 24.7% sep |
 | **Exp104d** (DA + sep + structural correction) | phonemes + ˈ + . | **0.48%** | 72.5% phonetic · 4.1% stress · **23.3% sep** |
@@ -278,8 +278,7 @@ This means:
 - Exp104d's 0.48% PER is achieved on a harder output setting with ~30% more tokens, so direct comparison with no-separator models requires caution.
 - Fair comparisons: Only compare models with **identical output structure**
 - Compare Exp104d (0.48%) with Exp103 (0.53%) — both include syllable separators + stress markers
-- Compare Exp1 (0.64%) with Exp9 (0.61%) — both are phonemes + stress marker only
-- Exp104c's low WER is valid for the **no-separator** regime (simpler output target), but should not be used as a direct superiority claim over separator-enabled models.
+- Compare Exp1 (0.64%) with Exp9 (0.58%) — both are phonemes + stress marker only
 - For global highlights, biased settings (legacy split variants and 95%-train runs) are excluded from headline ranking.
 - Cross-paper PER comparisons remain conditional on the documented tokenization and evaluation design.
 
@@ -369,13 +368,11 @@ FG2P uses internal experiment IDs in the form `ExpN` or `ExpN[a-z]` to track eac
 
 | Use Case | Model | PER | WER | GPU speed† | CPU speed†† | Reason |
 |----------|-------|-----|-----|-----------|------------|--------|
-| **TTS / Publication** | `best_per` (Exp104d) | **0.48%** | 5.33% | ~34 w/s (batch=1) / ~1,106 w/s*** | ~22 w/s (batch=1) / ~184 w/s*** | Outputs phonemes + stress + syllable structure; largest test set |
-| **NLP / Search** | `best_wer` (Exp9) | 0.61% | **4.96%** | ~31 w/s (batch=1) / ~1,081 w/s*** | — | Lowest word error rate; no separators = clean phoneme output |
-| **Efficiency Ablation** | Exp106 | 0.58% | 6.12% | ~43 w/s (batch=1)† | — | 50% train data, no hyphens; faster due to shorter output sequences |
+| **TTS / Publication** | `best_per` (Exp104d) | **0.48%** | 5.33% | ~1,106 w/s*** | ~190 w/s*** | Outputs phonemes + stress + syllable structure; largest test set |
+| **NLP / Search** | `best_wer` (Exp9) | 0.58% | **4.96%** | ~1,267 w/s*** | ~405 w/s*** | Lowest word error rate; no separators = clean phoneme output |
 
-† GPU sweep formal overnight 2026-03-14 (19 modelos, warmup=20, words=1000, FP32). †† CPU calibração 2026-03-14 (warmup=10, words=200). *** Condições ótimas: GPU batch=512 (saturação ~900–1,500 w/s entre modelos), CPU batch=128 (saturação ≥batch=64). → [docs/benchmarks/BENCHMARK.md](docs/benchmarks/BENCHMARK.md)
+† Throughput peak under optimal batch conditions. GPU: sweep formal 2026-03-14 (19 models, RTX 3060, FP32). CPU: sweep formal 2026-03-15 (Xeon 36 cores, MKL, FP32). Speed varies by batch size and model output length — details: [docs/benchmarks/BENCHMARK.md](docs/benchmarks/BENCHMARK.md).
 
-**Note**: Exp106 remains useful as a linguistic ablation (hyphen removal with small PER/WER impact), but its speed claim is currently treated as preliminary.
 
 ### Train/Test Split: Why 60% Training?
 
@@ -407,7 +404,7 @@ FG2P uses internal experiment IDs in the form `ExpN` or `ExpN[a-z]` to track eac
 |-------|--------|-----|-----|----------|-----|------|---------|
 | **Exp104d** | **Recommended** | **0.48%** | 5.33% | 17.2M | ✓ | DA | Main publication-quality reference model |
 | Exp107 | High train % | 0.46% | 5.56% | 9.7M | ✓ | DA | Shows risk of memorization |
-| Exp9 | No separators | 0.61% | **4.96%** | 9.7M | ✗ | DA | Lowest observed WER in current registry |
+| Exp9 | No separators | 0.58% | **4.96%** | 9.7M | ✗ | DA | Lowest observed WER in current registry |
 | Exp1 | CE baseline | 0.64% | 5.48% | 4.3M | ✗ | CE | Shows DA Loss helps |
 | Exp5 | CE + capacity | 0.63% | 5.38% | 9.7M | ✗ | CE | Capacity alone insufficient |
 | Exp102 | Sep only (CE) | 0.53% | 5.79% | 9.7M | ✓ | CE | Sep helps PER, hurts WER |
@@ -616,13 +613,13 @@ This project documents all metrics, formulas, and implementation details across 
 | Wilson CI | ✅ FG2P [0.47%, 0.51%] vs LatPhon [0.56%, 1.16%] — non-overlapping |
 | Scientific article | ✅ docs/article/ARTICLE.md v1.2 complete (IMRaD, §1–§6) |
 | Reproducibility | ✅ ±0.02pp PER variance between identical runs (D1 validation) |
-| Exp104c | ✅ Rodado — ablação de capacidade válida (17M CE sem sep, WER 4.92% novo record); errata documentada em `conf/config_exp104c_structural_tokens.json` |
+| Exp104c | ✅ Rodado — precursor do Exp104d: mesma arquitetura (17.2M + DA + sep), mas com um símbolo estrutural IPA faltando no vocabulário de saída. Serve como comparativo para o grupo com apenas um dos símbolos estruturais. |
+| Exp104d | ✅ Concluído — versão corrigida do Exp104c com todos os tokens estruturais; referência principal v1.1 (PER 0.48%, WER 5.33%) |
 
 ### Roadmap
 
 | Priority | Item | Description |
 |----------|------|-------------|
-| High | **Exp104d** | Corrected structural token experiment: 17M + sep silábico + DA λ=0.2 (fixes exp104c config bugs) |
 | High | **Revisão de λ com sep** | λ=0.2 foi otimizado em Exp7 (sem sep). Com sep silábico + custom dist, o ótimo pode ser diferente — sweep λ∈{0.1, 0.2, 0.3, 0.5} no regime sep+DA |
 | Medium | **Class E errors** | Fifth error class for structural token confusions (post-publication) |
 | Medium | **Chart: convergence grid** | Show Exp1 / Exp9 / Exp104b convergence side-by-side (currently only Exp104b in README) |

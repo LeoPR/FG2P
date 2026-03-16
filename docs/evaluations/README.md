@@ -32,15 +32,17 @@ Convencao:
 | 015 | Consistencia e ganho real: Exp104d vs Exp104b | Respondida | Exp104d melhora estimativas pontuais de qualidade, mas nao domina em todos os eixos (IC95 de WER sobreposto e custo maior em CPU) |
 | 016 | Estudo de performance cross-platform (train + inference) | Respondida | Auditoria tecnica sem alteracao de codigo; prioriza AMP, batching real de inferencia e trilha de quantizacao CPU |
 | 017 | Benchmark por regime (latencia unitária vs volume CPU/GPU) | Respondida | Define decomposicao de overhead (Python/H2D/sync/decode), protocolo R1-R4 e plano de otimizacao para aceleracao real |
-| 018 | Guia prático de inferência: CPU, batch e métricas de desempenho | Respondida | Sweep completo CPU+GPU (2026-03-14): GPU superior em todos os batch sizes (até 3.97×); CPU satura em batch≥64; GPU atinge 730 w/s em batch=128 |
+| 018 | Guia prático de inferência: CPU, batch e métricas de desempenho | Respondida | Sweeps formais CPU (2026-03-15) + GPU (2026-03-14): GPU superior a partir de batch≥4 em todos os modelos; em batch=1 depende do modelo (0.78×–1.45×); Exp104d pico GPU 1.106 w/s / CPU 190 w/s |
 | 019 | Real-World Use Case do G2P: escopo, taxonomia e metricas | Respondida | Escopo fechado: G2P como camada fonetica em pipeline maior, com limites de inferencia explicitos e metrica nova mantida como trabalho futuro |
 | 020 | Proporcionalidade chars/s e condições de pico por hardware | Respondida | Benchmark consolidado: chars/s não linear em batch=1; picos operacionais definidos (GPU≈512, CPU≈64–128); profiling fino de núcleos fica como micro-otimização opcional |
+| 021 | Auditoria de publicação v1.1 — consistência, links, sincronização | Aberta | 4 itens de alta prioridade (registry Exp9 duplo, PER origin, 104c vs 104d, citações); 6 itens de média; correções imediatas já aplicadas em README/BENCHMARK |
 
 ## Proximas acoes (estado atual)
 
-1. Estado global: pronto para submissao, sem pendencias experimentais abertas no ciclo atual.
+1. Estado global: pronto para publicação no GitHub; 4 pendências abertas (ver avaliação 021) antes de submissão formal a conferência/revista.
 2. Manter MOS/ABX como trabalho futuro explicito (nao bloqueante).
-3. Manter narrativa de velocidade por regime (hardware+batches+modelo), apoiada no benchmark formal em `docs/benchmarks/BENCHMARK.md`.
+3. Benchmark formal completo (CPU 2026-03-15 + GPU 2026-03-14) integrado em todos os documentos principais.
+4. Pendências de 021: verificar registry Exp9 (dois checkpoints); confirmar PER canônico de Exp9; documentar 104c vs 104d; converter citações para \cite{} antes de submissão formal.
 4. Registrar Exp104d como candidato de melhor qualidade media vs Exp104b, sem promover como "melhor em todos os sentidos" ate replicacao com menor ruido e politica de custo/latencia definida.
 
 ## Publicacao: bloqueadores e pendencias
