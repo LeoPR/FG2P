@@ -23,7 +23,7 @@ How to read these numbers:
 |--------|----------------|----------------|---------|
 | **PER (Wilson 95% CI)** | **0.48% ± 0.03** | **0.86% ± 0.30** | PT-BR, same `ipa-dict` lineage, different subset sizes and splits; CIs do not overlap |
 | **WER (Wilson 95% CI)** | **5.33% ± 0.26** | n/d | WER not reported for LatPhon |
-| Inference speed | 28.4 w/s (RTX 3060) | 31.4 w/s (RTX 4090) | Different GPUs and benchmarking conditions; treat reported w/s as contextual, not as a cross-device ranking |
+| Inference speed | ~34 w/s† batch=1 / ~1,106 w/s†† peak (RTX 3060) | 31.4 w/s (RTX 4090, batch=1) | Speed depends critically on batch size and hardware; single-word comparison not meaningful across GPUs |
 | Test set size | **28,782 words** | ~500 words (ipa-dict) | FG2P test is 57× larger |
 | Evaluation design | Stratified train/val/test (χ² p=0.678) | Stratification not reported | FG2P reports split validation explicitly |
 | Model | 17.2M BiLSTM (2014) | 7.5M Transformer (2017) | Architectural families differ |
@@ -57,42 +57,64 @@ FG2P compared against both classical (WFST) and modern neural baselines on Portu
 
 ## How It Works: Three Technical Foundations
 
-### 1. Distance-Aware Loss — Real Articulatory Phonetics as Training Signal
+### 1. Distance-Aware Loss — What Was Used in Practice
 
-Standard G2P uses **CrossEntropy loss**, which minimizes error *count* but treats all errors as equal:
-- Predicting [s] instead of [t]: 1 error
-- Predicting [u] instead of [t]: also 1 error
-
-Both count the same. FG2P adds a penalty proportional to **articulatory distance** — how different the speech organs must be positioned to produce each sound:
+Standard G2P training with **CrossEntropy (CE)** counts errors, but not their phonetic severity. FG2P keeps CE and adds one extra term to make severe phonetic substitutions cost more during training.
 
 ```
 L = L_CE + λ × d_panphon(predicted, target) × p(predicted)
 ```
 
-The penalty `d_panphon` uses **PanPhon's 24-dimensional representation** of actual speech organ configurations. These features are not a metaphor or approximation — they directly encode:
+In practice, `d_panphon` comes from PanPhon articulatory features (24D). We used this as a **training signal**, not as a claim about full speech perception or semantics.
 
-| Feature Group | Examples |
-|---------------|----------|
-| **Place of articulation** | bilabial [p,b,m], alveolar [t,d,n,s,z], velar [k,g,ɡ], glottal [h] |
-| **Manner of articulation** | stop [p,t,k], fricative [f,v,s,z,ʃ], nasal [m,n,ɲ], liquid [l,r] |
-| **Voicing** | voiced [b,d,g,z,v] vs. voiceless [p,t,k,s,f] |
-| **Vowel height** | high [i,u], mid [e,o], low [a] |
-| **Vowel backness** | front [i,e,ɛ], central [a], back [u,o,ɔ] |
-| **Nasality** | oral [a,e,o] vs. nasal [ã,ẽ,õ] |
+| Group | PanPhon dimensions (24D) | What they track |
+|-------|---------------------------|-----------------|
+| Segment type | `syl`, `son`, `cons` | syllabicity, sonority, consonantality |
+| Manner | `cont`, `delrel`, `lat`, `nas`, `strid` | continuancy, delayed release, lateral, nasal, strident |
+| Laryngeal | `voi`, `sg`, `cg` | voicing and glottal state |
+| Place | `ant`, `cor`, `distr`, `lab`, `velaric` | anteriority, coronality, distribution, labiality, velaric activity |
+| Vowel geometry | `hi`, `lo`, `back`, `round`, `tense` | vowel height, backness, rounding, tenseness |
+| Length and prosody | `long`, `hitone`, `hireg` | length and tonal/prosodic flags in PanPhon |
 
-**What this means for gradient descent**: when the model is uncertain between two candidates, it learns to "break ties toward the phonetically closer option" — because choosing a phonetically distant error carries a proportionally larger gradient penalty.
+**Important distinction**: PanPhon models **phonetic segments**. Symbols like `.` and `ˈ` are useful output markers in FG2P, but they are not phonemes; raw PanPhon gives them zero vectors. `<PAD>`, `<EOS>` and `<UNK>` are support codes, not speech sounds.
+
+**Small penalty**: near phonetic neighbors, usually one articulatory distinction.
 
 ```
-d_panphon(e, ɛ) ≈ 0.04   → small penalty   (both mid-front vowels, 1 feature difference)
-d_panphon(t, s) ≈ 0.25   → medium penalty  (same alveolar place, different manner)
-d_panphon(t, u) ≈ 0.70   → large penalty   (consonant vs. vowel — catastrophic)
+d_panphon(e, ɛ) ≈ 0.04
 ```
 
-In matched-output comparisons, the result is a redistribution of errors from **Class D** (catastrophic, phonetically distant) toward **Class B** (phonetically adjacent).
+Typical interpretation: open vs closed vowel, oral vs nasal, voicing flip, or another local phonetic adjustment. This is the kind of error currently concentrated in **Class B**.
+
+**Medium penalty**: same broad family, but no longer just a local tweak.
+
+```
+d_panphon(a, ə) ≈ 0.08
+```
+
+Typical interpretation: centralization, semivowel interaction, or a vowel-family shift that is still recognizably phonetic. This is the kind of error currently concentrated in **Class C**.
+
+**Large penalty**: the prediction leaves the local phonetic neighborhood.
+
+```
+d_panphon(t, u) ≈ 0.70
+```
+
+Typical interpretation: vowel vs consonant, cluster collapse, or another segmental break that is no longer a small phonetic miss. This is the kind of error currently absorbed by **Class D**.
+
+In matched-output comparisons, the practical effect is a redistribution of errors from **Class D** (catastrophic, distant) toward **Class B** (phonetically adjacent).
 
 ![DA Loss gain: error redistribution toward phonetically close classes](results/da_loss_gain.png)
 
-**Note on PanPhon and non-phonetic tokens**: Syllable separator `.` and stress marker `ˈ` have zero vectors in PanPhon (they are not speech sounds). FG2P corrects for this with **custom structural distances** (consolidated in Exp104d), preventing the model from freely confusing `.` ↔ `ˈ` without penalty. The cleanest DA Loss isolation remains Exp1 vs Exp9 (same output structure).
+**Note on structural tokens**: Syllable separator `.` and stress marker `ˈ` have zero vectors in PanPhon, so FG2P applies **custom structural distances** (consolidated in Exp104d). The cleanest DA Loss isolation remains Exp1 vs Exp9 (same output structure).
+
+**Open taxonomy point**: the current A-D reporting still absorbs some structural/support-code failures into **D** because `.` and `ˈ` receive maximum override distance. A future **Class E** is already on the TODO list for cases dominated by support symbols such as `.`/`ˈ`/`<PAD>` rather than by a true segmental phoneme substitution.
+
+For stress marker `ˈ`, the interpretation is still open:
+- if stress is preserved but shifted, it may deserve a lighter class than a segmental catastrophe;
+- if `ˈ` is replaced by `.` or swallowed by `<PAD>`, that looks closer to a future structural **E** than to a phoneme-level **D**.
+
+For theoretical background and related literature, see [docs/article/ARTICLE.md](docs/article/ARTICLE.md) and [docs/article/REFERENCES.bib](docs/article/REFERENCES.bib) (e.g., Mortensen et al., 2016; Browman and Goldstein, 1992; Barbosa and Albano, 2004).
 
 ### 2. Dataset: 95,937 Words, Phonologically Stratified
 
@@ -161,7 +183,7 @@ CE loss treats all substitution errors equally (predicting [u] instead of [t] = 
 <table>
 <tr>
 <td align="center"><strong>Exp104d</strong> — DA Loss + sep + structural correction (Main PER reference)</td>
-<td align="center"><strong>Exp9</strong> — DA Loss, no sep (Lowest WER in current run set)</td>
+<td align="center"><strong>Exp9</strong> — DA Loss, no sep (reference for stress-only DA behavior)</td>
 </tr>
 <tr>
 <td><img src="results/exp104d_structural_tokens_correct/exp104d_structural_tokens_correct__20260312_142940_convergence.png" alt="Exp104d convergence"/></td>
@@ -215,6 +237,23 @@ Comparing Exp1 vs Exp9 — **identical output structure** (phonemes + ˈ only), 
 
 **What DA Loss achieves**: In the matched comparison Exp1 vs Exp9, catastrophic errors (Class D) fall by 0.39pp while phonetically adjacent errors (Class B) increase by 0.19pp. This supports the claim that DA Loss changes error quality; direct perceptual impact still requires listening-based validation.
 
+### Real Exp104d Examples (A-D, plus future E)
+
+The table below uses **real outputs from Exp104d**, not invented toy pairs.
+
+| Bucket | Reading | Real word from Exp104d | Prediction | Reference | Why it fits |
+|--------|---------|------------------------|------------|-----------|-------------|
+| A | exact match | `casa` | `ˈ k a . z ə` | `ˈ k a . z ə` | fully correct output |
+| B | small penalty | `ilha` | `ˈ i . ʎ ə` | `ˈ ĩ . ʎ ə` | local nasalization mismatch, same phonetic neighborhood |
+| C | medium penalty | `voou` | `v o . ˈ o w` | `v u . ˈ o w` | vowel-family shift, still recognizably phonetic |
+| D | large penalty | `oxigenados` | `o . ʃ i . ʒ e . ˈ n a . d ʊ s` | `o . k s i . ʒ e . ˈ n a . d ʊ s` | segmental break (`ks` collapsed to `ʃ`) |
+| E (future) | structural/support-code | `aba` | `a . b e . ˈ a` | `ˈ a . b ə` | dominated by support-symbol and stress-structure behavior rather than a single segmental miss |
+
+**Why keep `E` as future work for now**:
+- the published metrics and current code still report **A-D** only;
+- Exp104d top confusions already show the pressure for this split: `. → ˈ`, `a → .`, `ˈ → .`;
+- the clean separation is between **segmental phoneme distance** and **support-code / structural-token errors**.
+
 ![Error class distribution for top 5 models](results/class_distribution_top5.png)
 
 ---
@@ -230,8 +269,10 @@ Comparing Exp1 vs Exp9 — **identical output structure** (phonemes + ˈ only), 
 This means:
 - Exp104d's 0.48% PER is achieved on a harder output setting with ~30% more tokens, so direct comparison with no-separator models requires caution.
 - Fair comparisons: Only compare models with **identical output structure**
-       - Compare Exp104d (0.48%) with Exp103 (0.53%) — both include syllable separators + stress markers
-  - Compare Exp1 (0.64%) with Exp9 (0.61%) — both are phonemes + stress marker only
+- Compare Exp104d (0.48%) with Exp103 (0.53%) — both include syllable separators + stress markers
+- Compare Exp1 (0.64%) with Exp9 (0.61%) — both are phonemes + stress marker only
+- Exp104c's low WER is valid for the **no-separator** regime (simpler output target), but should not be used as a direct superiority claim over separator-enabled models.
+- For global highlights, biased settings (legacy split variants and 95%-train runs) are excluded from headline ranking.
 - Cross-paper PER comparisons remain conditional on the documented tokenization and evaluation design.
 
 ---
@@ -242,18 +283,25 @@ FG2P has 17.2M parameters vs 95.9k vocabulary words. If the model only memorized
 
 ---
 
-## Real-World Use Case: Phonetic Error Correction
+## Real-World Use Case: G2P as a Phonetic Layer
 
-Imagine a speaker who says "**cinto muito**" (grammatically wrong). A linguistic system needs to recognize this as a *phonetic error* for the intended word "**sinto**" (I feel).
+FG2P is used as a **phonetic layer** in a larger pipeline, not as a standalone semantic resolver.
 
-FG2P learns that `C` before `I` → `/s/` (PT-BR soft-C rule), so:
-- Predicted: /s/ ✓ (correct — learned the rule)
-- Even if wrong, error would be near /s/, not random
+Observed project path:
+- baseline CE reduced error count but still produced some severe substitutions;
+- DA Loss was added to penalize distant phonetic errors;
+- practical outcome: when the model misses, it tends to miss closer to plausible PT-BR phonetic neighborhoods.
 
-**This is what makes FG2P suitable for downstream tasks**:
-- TTS: Near-miss errors tend to be less salient; distant errors are more likely to break intelligibility
-- NLP: Phonetically close predictions help error recovery
-- Linguistics: Error patterns reflect natural phonological rules
+Pipeline example ("cinto" vs "sinto"):
+1. orthographic input -> IPA hypothesis;
+2. IPA hypothesis -> phonetic proximity signal;
+3. downstream module (search/ranking/correction policy) makes the final decision.
+
+Scope boundary:
+- G2P does **not** resolve semantics by itself;
+- claims here are associative/mechanistic (pipeline support), not strong causal claims.
+
+For deeper theory, see [docs/article/ARTICLE.md](docs/article/ARTICLE.md) and bibliography in [docs/article/REFERENCES.bib](docs/article/REFERENCES.bib).
 
 ---
 
@@ -311,11 +359,13 @@ FG2P uses internal experiment IDs in the form `ExpN` or `ExpN[a-z]` to track eac
 
 ### Recommended Models
 
-| Use Case | Model | PER | WER | Speed | Reason |
-|----------|-------|-----|-----|-------|--------|
-| **TTS / Publication** | `best_per` (Exp104d) | **0.48%** | 5.33% | 12.7 w/s | Outputs phonemes + stress + syllable structure; largest test set |
-| **NLP / Search** | `best_wer` (Exp9) | 0.61% | **4.96%** | 34.5 w/s | Lowest word error rate in current registry; no separators = clean phoneme output |
-| **Efficiency Ablation (not promoted)** | Exp106 | 0.58% | 6.12% | under speed audit | 50% train data, no hyphens — keep as exploratory until replicated benchmark closes |
+| Use Case | Model | PER | WER | GPU speed† | CPU speed†† | Reason |
+|----------|-------|-----|-----|-----------|------------|--------|
+| **TTS / Publication** | `best_per` (Exp104d) | **0.48%** | 5.33% | ~34 w/s (batch=1) / ~1,106 w/s*** | ~22 w/s (batch=1) / ~184 w/s*** | Outputs phonemes + stress + syllable structure; largest test set |
+| **NLP / Search** | `best_wer` (Exp9) | 0.61% | **4.96%** | ~31 w/s (batch=1) / ~1,081 w/s*** | — | Lowest word error rate; no separators = clean phoneme output |
+| **Efficiency Ablation** | Exp106 | 0.58% | 6.12% | ~43 w/s (batch=1)† | — | 50% train data, no hyphens; faster due to shorter output sequences |
+
+† GPU sweep formal overnight 2026-03-14 (19 modelos, warmup=20, words=1000, FP32). †† CPU calibração 2026-03-14 (warmup=10, words=200). *** Condições ótimas: GPU batch=512 (saturação ~900–1,500 w/s entre modelos), CPU batch=128 (saturação ≥batch=64). → [docs/benchmarks/BENCHMARK.md](docs/benchmarks/BENCHMARK.md)
 
 **Note**: Exp106 remains useful as a linguistic ablation (hyphen removal with small PER/WER impact), but its speed claim is currently treated as preliminary.
 
@@ -446,51 +496,44 @@ python src/manage_experiments.py --check        # verify consistency
 
 ### Inference Speed: GPU vs CPU Benchmark
 
-Measured with `scripts/benchmark_inference.py` on **NVIDIA RTX 3060 12GB** (consumer GPU, 16-core CPU). Values from stable throughput window (lowest-CV 20% of runs):
+Hardware: **NVIDIA RTX 3060 12GB** (GPU) + **Intel Xeon 36 cores, MKL** (CPU). Metric: `stable_wps` (lowest-CV 20% window). Model: Exp104d (`best_per`, hidden=384, 17.2M params), FP32.
 
-| Device | Model | Stable w/s | Tok/s | p50 ms | Real-time* |
-|--------|-------|-----------|-------|--------|-----------|
-| **CPU** | **best_wer** (Exp9, no sep) | **28.7** | 316 | 35 ms | ✓ 5.7× |
-| **GPU** | **best_wer** (Exp9, no sep) | **15.2** | 170 | 66 ms | ✓ 3.0× |
-| **CPU** | **best_per** (Exp104d, sep) | **17.5** | 233 | 57 ms | ✓ 3.5× |
-| **GPU** | **best_per** (Exp104d, sep) | **12.3** | 164 | 81 ms | ✓ 2.5× |
+| batch_size | CPU stable w/s* | CPU p50* | GPU stable w/s** | GPU p50** | GPU/CPU |
+|-----------|----------------|---------|-----------------|----------|---------|
+| **1** (single-word) | **24** | 41.8 ms | **34** | 28.4 ms | **1.45×** |
+| **32** (pipeline) | **155** | 6.4 ms | **406** | 2.42 ms | **2.62×** |
+| **128** | **190** | 5.2 ms | **745** | 1.35 ms | **3.92×** |
+| **512** (GPU peak) | — | — | **1,106** | 0.89 ms | — |
 
-*Real-time factor: speedup relative to 5 w/s TTS threshold.
+\* CPU: sweep formal adaptativo 2026-03-15, warmup=20, words=500, 19 modelos.
+\** GPU: sweep formal overnight 2026-03-14, warmup=20, words=1000, 19 modelos — range entre modelos: batch=1: 31–43 w/s; batch=512: 1,081–1,500 w/s.
+→ Tabela completa e protocolo: **[docs/benchmarks/BENCHMARK.md](docs/benchmarks/BENCHMARK.md)**
 
-**Key finding — CPU faster than GPU for single-word inference:**
+**Key findings:**
 
-Both models run faster on CPU than GPU (1.9–2.3× for no-sep, ~1.4× for sep model). This is expected, not a hardware defect. The LSTM decoder is **autoregressive**: it generates one phoneme per step, sequentially. GPU parallelism requires independent operations — an autoregressive decoder has none. For each decoder step, GPU incurs:
-- CUDA kernel launch: ~50–150 µs overhead (NVIDIA, 2024)
-- Host-to-device / device-to-host memory transfer: ~10–50 µs
+- **GPU advantage at batch=1 depends on model**: ~1.45× for `best_per` (Exp104d, with structural tokens); ~0.99× for `best_wer` (Exp9, no syllable separators). GPU outperforms CPU at all batch sizes ≥4 for all models.
+- **CPU saturates at batch≥64** (~5.5ms floor) — bottleneck shifts to Python overhead (tensor allocation, index decode loop).
+- **GPU saturates at batch≈512** (~0.9ms floor, 1,081–1,500 w/s depending on model) — CUDA parallelism fully utilized.
+- **Peak GPU advantage**: ~5.8× over CPU at optimal batch (1,106 vs 190 w/s), Exp104d.
 
-The actual compute per decoder step for a 9.7M-param LSTM is ~0.5–2 ms, so kernel overhead represents 10–50% of step time. CPU eliminates this overhead entirely. GPU only outperforms CPU for LSTM inference at batch sizes ≥ 32–64 where parallelism across examples compensates for per-operation overhead (Reddi et al., 2020).
+**Why GPU advantage grows with output sequence length at batch=1:**
+The LSTM decoder runs one autoregressive step per output token. Models with syllable separators and structural tokens generate longer output sequences, doing more sequential compute — which MKL handles per-step while the RTX 3060's CUDA cores amortize kernel launch overhead (~50–150 µs) over more parallel work.
 
-**Hardware context (RTX 3060 vs RTX 4090)**:
-- RTX 4090: 16,384 CUDA cores · 82.6 TFLOPS FP32 · 24 GB GDDR6X
-- RTX 3060: 3,584 CUDA cores · 12.7 TFLOPS FP32 · 12 GB GDDR6
+**Hardware context**: RTX 3060 has 3,584 CUDA cores / 12.7 TFLOPS FP32. An RTX 4090 (~4.57× more cores) would scale this advantage proportionally for batch-parallel workloads. Cross-device comparisons (FG2P on RTX 3060 vs another model on RTX 4090) are not meaningful.
 
-The raw compute ratio is ≈4.57× (CUDA cores) to ≈6.5× (TFLOPS). This advantage applies to large-batch or highly parallelizable workloads. For single-word autoregressive decoding, neither GPU is compute-bound — both are limited by the sequential nature of the LSTM decoder. Cross-device speed comparisons (e.g., FG2P on RTX 3060 vs LatPhon on RTX 4090) are therefore not meaningful for this task.
-
-Hardware specs source: NVIDIA GeForce Graphics Cards Compare, https://www.nvidia.com/en-us/geforce/graphics-cards/compare/ (accessed 2026-03-13).
-
-### Full Multi-Model Benchmark (CPU + GPU, chars/s + CI95)
-
-To enrich speed diagnostics beyond w/s, a full benchmark over all complete checkpoints was run with:
+### Running the Formal Sweep
 
 ```bash
-python scripts/benchmark_inference.py --all-models --warmup 8 --runs 40
+# GPU sweep — all models, batch 1→512 (GPU saturation point)
+python src/benchmark_inference.py --device cuda --sweep-gpu --adaptive --force --warmup 20 --words 1000
+
+# CPU sweep — all models, batch 1→128 (CPU saturation point)
+python src/benchmark_inference.py --device cpu --sweep --adaptive --force --warmup 20 --words 500
 ```
 
-Artifact with all models (19 checkpoints), devices, CI95, tokens/s, input chars/s and output chars/s:
-- [results/benchmarks/benchmark_all_models_2026-03-13.txt](results/benchmarks/benchmark_all_models_2026-03-13.txt)
-
-Interpretation note: this run reported contention/thermal warnings in multiple models, so values should be read as an audit snapshot (not a final publication table yet).
-
-| Model (index) | GPU global w/s [CI95] | CPU global w/s [CI95] | GPU chars/s (in/out) | CPU chars/s (in/out) |
-|---|---:|---:|---:|---:|
-| Exp9 (index:6) | 14.9 [14.5, 15.4] | 28.7 [27.3, 30.2] | 164 / 164 | 316 / 316 |
-| Exp104b (index:8) | 12.6 [12.2, 13.1] | 24.4 [23.3, 25.7] | 139 / 184 | 269 / 357 |
-| Exp104d (index:18) | 12.7 [12.3, 13.2] | 16.2 [15.4, 17.1] | 140 / 186 | 178 / 236 |
+`--adaptive` stops each model when throughput CV converges (< 3%), instead of a fixed run count.
+`--sweep-gpu` covers batch sizes 1, 4, 8, 16, 32, 64, 128, 256, 512.
+Full benchmark documentation: **[docs/benchmarks/BENCHMARK.md](docs/benchmarks/BENCHMARK.md)**
 
 ### Generalization to Unseen Data
 
@@ -524,6 +567,14 @@ This project documents all metrics, formulas, and implementation details across 
 - **[docs/article/EXPERIMENTS.md](docs/article/EXPERIMENTS.md)** — Full ablation study (22 models), methodological choices, design decisions
 - **[docs/article/ARTICLE.md](docs/article/ARTICLE.md)** — Peer-review ready manuscript (IMRaD format)
 - **[docs/evaluations/](docs/evaluations/)** — Ongoing evaluation notes & research robustness assessment
+
+### Inference Performance & Benchmarks
+- **[docs/benchmarks/BENCHMARK.md](docs/benchmarks/BENCHMARK.md)** — Complete benchmark documentation:
+  - Protocol (hardware, warmup, runs, batch sweep methodology)
+  - Calibration results: GPU vs CPU, batch=1–128, Exp104d
+  - Conclusions (GPU > CPU at all batch sizes; CPU saturation at batch≥64)
+  - Commands for formal sweep (all models × all batch sizes, overnight run)
+  - CSV output for chart generation
 
 ### How Metrics Flow Through Code
 - **Formula** → [`docs/article/FORMULAS.md`](docs/article/FORMULAS.md) (theory + math)

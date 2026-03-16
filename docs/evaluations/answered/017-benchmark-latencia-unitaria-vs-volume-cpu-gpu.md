@@ -159,7 +159,71 @@ Regra operacional acordada para proximos testes automatizados:
 2. Nada em background para experimentos potencialmente longos sem confirmacao explicita.
 3. Rodadas formais completas ficam para execucao manual no terminal do usuario apos smoke green.
 
+## Atualização CPU sweep completo (2026-03-14)
+
+### Resultados experimentais CPU — Exp104d, Xeon 36 cores, 200 palavras, warmup=10, runs=20–50
+
+| Regime | batch_size | w/s | stable w/s | p50 ms | Speedup vs batch=1 |
+|--------|-----------|-----|-----------|--------|--------------------|
+| R1/R2 | 1 (baseline) | 21.5 | 21.6 | 45.9 ms | 1.0× |
+| R3 micro | 4 | 55.4 | 55.8 | 17.9 ms | 2.58× |
+| R3 micro | 8 | 83.4 | 83.1 | 11.8 ms | 3.85× |
+| R3 micro | 16 | 114.6 | 115.5 | 8.68 ms | 5.35× |
+| R4 sustentado | 32 | 143.2 | 142.9 | 6.85 ms | 6.63× |
+| R4 sustentado | 64 | 165.0 | 162.7 | 5.52 ms | 7.67× |
+| R4 máximo | 128 | 183.0 | 184.0 | 5.54 ms | **8.52×** |
+
+Saturação confirmada em batch≥64: p50 estabiliza (~5.5ms) — gargalo migrou de operação matricial para overhead Python (alocação de tensores, loop de decodificação de índices).
+
+### Experimentos negativos realizados (CPU)
+
+| Técnica | Resultado | Motivo |
+|---------|-----------|--------|
+| INT8 quantize_dynamic | −38% (13.3 w/s) | Dequantização por passo > ganho compute em Xeon AVX-512 |
+| set_num_threads(1) | −61% (8.4 w/s) | Elimina paralelismo MKL real para W_hh (4×384×384) |
+
+Ambos revertidos. Flags `--quantize` e `--threads N` mantidos como opt-in para outros hardwares (ARM, x86 sem AVX-512).
+
+### Tabela 2×2 completa — CPU vs GPU, Exp104d (2026-03-14)
+
+| batch_size | CPU stable w/s | GPU stable w/s | GPU/CPU ratio | GPU speedup vs GPU=1 |
+|-----------|---------------|---------------|---------------|----------------------|
+| 1 | 21.6 | 29.8 | **1.38×** | 1.0× |
+| 4 | 55.8 | 86.6 | **1.55×** | 2.90× |
+| 8 | 83.1 | 148.8 | **1.79×** | 4.99× |
+| 16 | 115.5 | 250.3 | **2.17×** | 8.39× |
+| 32 | 142.9 | 312.9 | **2.19×** | 10.5× |
+| 64 | 162.7 | 411.9 | **2.53×** | 13.8× |
+| 128 | 184.0 | 729.6 | **3.97×** | 24.5× |
+
+Hardware CPU: Xeon 36 cores, MKL, FP32. Hardware GPU: RTX 3060 12GB, CUDA, FP32.
+
+**Achado principal: GPU vence em todos os batch sizes, incluindo batch=1.**
+
+A hipótese de crossover ("CPU vence no unitário por overhead de kernel") foi falsificada: GPU já é 1.38× mais rápida em batch=1 (30 w/s vs 21.6 w/s). O número anterior (~13 w/s GPU batch=1) vinha de benchmark multi-modelo com alta contention/thermal drift — não era comparável.
+
+### Comportamento de saturação diferenciado
+
+- **CPU**: satura em batch≥64 — p50 estabiliza em ~5.5ms. Gargalo = Python overhead (alocação de tensores, loop de decodificação de índices).
+- **GPU**: ainda escala em batch=128 (p50=1.28ms) — sem saturação clara. GPU parallelism ainda adiciona valor; gargalo ainda é compute/memória, não overhead Python.
+
+Isso implica que a GPU tem um ponto de saturação mais alto e se beneficia mais de batches maiores.
+
+### Notas sobre variância (CV e thermal drift)
+
+Runs de batch=16, 32 e 64 registraram CV > 15% e/ou thermal drift negativo. Isso indica que warmup=10 (com warmup=1 chamada de batch inteiro) pode ser insuficiente para estabilizar a GPU nesses tamanhos. Os resultados são indicativos e coerentes com a tendência, mas IC95 formal exigiria rodada com warmup maior (≥20) e runs ≥50.
+
+### Próximas otimizações GPU
+
+| Step | Descrição | Hipótese | Prioridade |
+|------|-----------|---------|-----------|
+| G2 | Mixed precision FP16/BF16 para inferência GPU | Reduz tempo de kernel e largura de banda de memória | Média |
+| G3 | Rodada controlada com warmup=20, runs=50 para IC95 formal | Reduzir CV e confirmar números com intervalo | Média |
+| G4 | Reduzir round-trips Python→CUDA no decoder (jit.script) | 50 passos = 50 kernel launches; complexo para LSTM variável | Baixa |
+
 ## Status
 
 Respondida.
-Documento consolidado para orientar a rodada final de engenharia de desempenho do benchmark e da inferencia.
+CPU sweep completo (2026-03-14). GPU sweep completo (2026-03-14).
+Tabela 2×2 fechada: GPU superior em todos os regimes. Crossover CPU-GPU não existe para este modelo.
+Ver doc 018 para guia prático de uso e análise de métricas.

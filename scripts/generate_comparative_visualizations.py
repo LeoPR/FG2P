@@ -98,7 +98,7 @@ def safe_print(msg):
         print(msg.encode('utf-8', errors='replace').decode('utf-8'))
 
 
-def plot_baseline_comparison():
+def plot_baseline_comparison(all_metrics):
     """
     Chart 2: FG2P vs all baselines — LatPhon, WFST, ByT5-Small.
     PER with error bars (95% CI where available).
@@ -107,9 +107,22 @@ def plot_baseline_comparison():
 
     fig, ax = plt.subplots(figsize=(12, 7), dpi=FIGURE_DPI)
 
-    x_pos = np.arange(len(BASELINES))
+    valid = _valid_metrics(all_metrics)
+    best_per_exp, _ = _best_by_metrics(valid)
+    fg2p_per = valid[best_per_exp].per if best_per_exp else BASELINES[0]["per"]
+    fg2p_label = f"FG2P\\n({_short_label(best_per_exp)})" if best_per_exp else BASELINES[0]["label"]
+    fg2p_note = f"{fg2p_per:.2f}% (current best PER)" if best_per_exp else BASELINES[0]["note"]
 
-    for i, b in enumerate(BASELINES):
+    baselines = [dict(BASELINES[0]), *BASELINES[1:]]
+    baselines[0]["per"] = fg2p_per
+    baselines[0]["label"] = fg2p_label
+    baselines[0]["note"] = fg2p_note
+    baselines[0]["ci_low"] = None
+    baselines[0]["ci_high"] = None
+
+    x_pos = np.arange(len(baselines))
+
+    for i, b in enumerate(baselines):
         ax.bar(i, b["per"], color=b["color"], alpha=0.75, width=0.55,
                edgecolor="black", linewidth=1.5, zorder=2)
 
@@ -122,22 +135,22 @@ def plot_baseline_comparison():
         ax.text(i, b["per"] + offset, b["note"],
                 ha="center", va="bottom", fontsize=10, fontweight="bold")
 
-    # Destaque: IC não sobrepostos entre FG2P e LatPhon
-    ax.annotate(
-        "CIs do not overlap\n(FG2P upper 0.51% < LatPhon lower 0.56%)",
-        xy=(0.5, 0.86), xycoords=("data", "data"),
-        xytext=(1.5, 2.2), textcoords="data",
-        fontsize=9, style="italic", ha="center",
-        arrowprops=dict(arrowstyle="-", color="gray", lw=1),
-        bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.6),
-    )
+    if fg2p_per < BASELINES[1]["ci_low"]:
+        ax.annotate(
+            "FG2P PER remains below\nLatPhon lower CI bound (0.56%)",
+            xy=(0.5, fg2p_per), xycoords=("data", "data"),
+            xytext=(1.5, 2.2), textcoords="data",
+            fontsize=9, style="italic", ha="center",
+            arrowprops=dict(arrowstyle="-", color="gray", lw=1),
+            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.6),
+        )
 
     ax.set_ylabel("PER (%)", fontsize=12, fontweight="bold")
     ax.set_title("Baseline Comparison — Phoneme Error Rate (PER)\n"
                  "FG2P vs LatPhon 2025, WFST/Phonetisaurus, ByT5-Small",
                  fontsize=13, fontweight="bold")
     ax.set_xticks(x_pos)
-    ax.set_xticklabels([b["label"] for b in BASELINES], fontsize=11)
+    ax.set_xticklabels([b["label"] for b in baselines], fontsize=11)
     ax.set_ylim([0, 11.5])
     ax.grid(axis="y", alpha=0.3, zorder=1)
 
@@ -220,20 +233,26 @@ def _short_label(exp_name):
 # Experimentos com vantagem artificial: split viciado (legacy/exp0) ou 95% de treino (exp107)
 _BIASED_PATTERNS = ("legacy", "107")
 
-# Sempre incluídos: baseline CE (exp1) + melhor WER (exp9)
-_FORCED_PREFIXES = ("exp1_", "exp9_")
-
-# Modelos com destaque: prefixo -> (badge no label, cor de fundo na tabela)
-_HIGHLIGHTS = {
-    "exp104b_": ("★ Best PER", "#c8e6c9"),   # verde claro
-    "exp9_":    ("★ Best WER", "#bbdefb"),   # azul claro
-}
+def _valid_metrics(all_metrics):
+    return {k: v for k, v in all_metrics.items()
+            if not any(p in k for p in _BIASED_PATTERNS)}
 
 
-def _highlight_info(exp_name):
-    for prefix, info in _HIGHLIGHTS.items():
-        if exp_name.startswith(prefix):
-            return info
+def _best_by_metrics(valid_metrics):
+    if not valid_metrics:
+        return None, None
+    best_per = min(valid_metrics.items(), key=lambda x: x[1].per)[0]
+    best_wer = min(valid_metrics.items(), key=lambda x: x[1].wer)[0]
+    return best_per, best_wer
+
+
+def _highlight_info(exp_name, best_per_exp, best_wer_exp):
+    if exp_name == best_per_exp and exp_name == best_wer_exp:
+        return "★ Best PER/WER", "#d1c4e9"
+    if exp_name == best_per_exp:
+        return "★ Best PER", "#c8e6c9"
+    if exp_name == best_wer_exp:
+        return "★ Best WER", "#bbdefb"
     return None, None
 
 
@@ -245,18 +264,20 @@ def plot_class_distribution_top5(all_metrics):
     """
     safe_print("[3/3] Plotting class distribution for validated top 5...")
 
-    valid = {k: v for k, v in all_metrics.items()
-             if not any(p in k for p in _BIASED_PATTERNS)}
+    valid = _valid_metrics(all_metrics)
+    best_per_exp, best_wer_exp = _best_by_metrics(valid)
 
     top_5_keys = {e for e, _ in sorted(valid.items(), key=lambda x: x[1].per)[:5]}
-    forced = {k for k in valid if any(k.startswith(p) for p in _FORCED_PREFIXES)}
+    forced = {k for k in valid if k.startswith("exp1_")}
+    if best_wer_exp:
+        forced.add(best_wer_exp)
     selected_keys = top_5_keys | forced
 
     experiments = [e for e, _ in sorted(valid.items(), key=lambda x: x[1].per)
                    if e in selected_keys]
 
     labels_short = [_short_label(e) for e in experiments]
-    highlights = [_highlight_info(e) for e in experiments]  # list of (badge, color) or (None, None)
+    highlights = [_highlight_info(e, best_per_exp, best_wer_exp) for e in experiments]
 
     # Labels com badge em segunda linha para modelos destacados
     labels_display = [
@@ -362,7 +383,7 @@ def main():
         extractor, all_metrics, all_metadata = load_data()
         safe_print(f"[OK] Loaded {len(all_metrics)} experiments with metrics\n")
 
-        plot_baseline_comparison()
+        plot_baseline_comparison(all_metrics)
         plot_top_5_models(all_metrics, all_metadata)
         plot_class_distribution_top5(all_metrics)
 

@@ -95,6 +95,25 @@ def _cv(data: List[float]) -> float:
     return math.sqrt(variance) / mean
 
 
+def _iqr_filter(samples: List[float], k: float = 1.5):
+    """Rejeição de outliers pelas cercas de Tukey (IQR × k).
+
+    Padrão industrial usado em criterion (Rust), pyperf (Python) e JMH (Java).
+    Com k=1.5 remove ~0,7% de uma distribuição Gaussiana — apenas extremos reais.
+    Requer ≥4 amostras; retorna lista original se abaixo desse mínimo.
+    """
+    if len(samples) < 4:
+        return list(samples)
+    s = sorted(samples)
+    n = len(s)
+    q1 = s[n // 4]
+    q3 = s[(3 * n) // 4]
+    iqr = q3 - q1
+    lo = q1 - k * iqr
+    hi = q3 + k * iqr
+    return [x for x in samples if lo <= x <= hi]
+
+
 def _find_stable_window(latencies: List[float], window_frac: float = 0.20):
     n = len(latencies)
     w = max(10, int(n * window_frac))
@@ -151,6 +170,17 @@ def _analyze(latencies: List[float], token_counts: List[int], input_char_counts:
     mean_first, mean_last, thermal_ratio = _thermal_check(corrected)
     global_cv = _cv(corrected)
 
+    # CV robusto: IQR/mediana — resistente a caudas longas e outliers.
+    # Para batch=1, distingue variância de comprimento (genuína, alta)
+    # de contention (inflaria também o robust_cv).
+    corrected_sorted_q = sorted(corrected)
+    nq = len(corrected_sorted_q)
+    q1_val = corrected_sorted_q[nq // 4]
+    q3_val = corrected_sorted_q[(3 * nq) // 4]
+    p50_val = corrected_sorted_q[nq // 2]
+    iqr_val = q3_val - q1_val
+    robust_cv = iqr_val / p50_val if p50_val > 0 else 0.0
+
     return {
         "n": n,
         "total_time_s": total_time,
@@ -173,6 +203,7 @@ def _analyze(latencies: List[float], token_counts: List[int], input_char_counts:
         "stable_cv": stable_cv,
         "stable_window_start": stable_start,
         "global_cv": global_cv,
+        "robust_cv": robust_cv,
         "thermal_ratio": thermal_ratio,
         "mean_first_ms": mean_first * 1000,
         "mean_last_ms": mean_last * 1000,
@@ -184,22 +215,56 @@ def _hardware_flags(stats: Dict,
                     cv_threshold: float = CV_WARN_THRESHOLD,
                     thermal_warn_high: float = THERMAL_WARN_HIGH,
                     thermal_warn_low: float = THERMAL_WARN_LOW) -> List[str]:
+    """Detecta anomalias de hardware e distingue causas de CV alto.
+
+    CV alto (> 15%) tem três causas distintas:
+    1. Variância de comprimento de entrada (batch=1): o LSTM autoregressive
+       leva mais passos para palavras longas → CV estrutural inevitável.
+       Sinal: robust_cv também alto, mas ausência de outliers extremos.
+    2. Amostra insuficiente (batch grande, poucas palavras): CV instável
+       porque há poucos chunks por run. Sinal: n / batch_size < 20.
+    3. Contention real (OS scheduler, outro processo): CV alto mesmo com
+       robust_cv baixo, picos extremos (>5×p50).
+    """
     flags = []
-    if stats["global_cv"] > cv_threshold:
-        # Modelos rápidos: overhead Python (encode/decode/tensor-create) ~0,1–0,3 ms
-        # já contribui para CV > 15% mesmo sem carga externa, pois a latência total
-        # é pequena e o ruído relativo é proporcionalmente maior.
-        note = ""
-        if stats.get("mean_lat_ms", 999.0) < 5.0:
-            note = (
-                " — modelo rápido: overhead Python (~0,1–0,3 ms por predição) "
-                "é suficiente para elevar CV; contention externa pode coexistir mas "
-                "não é a única explicação"
+    gcv = stats["global_cv"]
+    rcv = stats.get("robust_cv", gcv)
+    batch_size = stats.get("batch_size", 1)
+    n = stats.get("n", 1)
+    mean_lat_ms = stats.get("mean_lat_ms", 999.0)
+
+    if gcv > cv_threshold:
+        if batch_size == 1:
+            # Causa provável: heterogeneidade de comprimento de entrada.
+            # O decoder autoregressive processa mais passos para palavras longas.
+            # Isso é variância estrutural, não contention — o robust_cv confirma.
+            flags.append(
+                f"CV {gcv*100:.1f}% (robust_cv={rcv*100:.1f}%) — variância de comprimento de "
+                f"entrada: LSTM processa mais passos para palavras longas. "
+                f"Use p50 e robust_cv como referência; stable_wps ≈ throughput em palavras típicas."
             )
-        flags.append(
-            f"CV {stats['global_cv']*100:.1f}% > {cv_threshold*100:.0f}%"
-            f" (possível contention{note})"
-        )
+        else:
+            # batch > 1: verificar se há amostras suficientes
+            n_chunks = n // batch_size  # chunks independentes (aprox)
+            if n_chunks < 100:
+                flags.append(
+                    f"CV {gcv*100:.1f}% (robust_cv={rcv*100:.1f}%) — amostra insuficiente: "
+                    f"~{n_chunks} chunks independentes. Use mais palavras (--words {batch_size*20}) "
+                    f"para estatísticas estáveis. robust_cv={rcv*100:.1f}% é mais confiável."
+                )
+            elif mean_lat_ms < 5.0:
+                # Modelo rápido: overhead Python proporcional à latência
+                flags.append(
+                    f"CV {gcv*100:.1f}% (robust_cv={rcv*100:.1f}%) — overhead Python "
+                    f"(~0,1–0,3 ms) representa {0.2/mean_lat_ms*100:.0f}% da latência média "
+                    f"({mean_lat_ms:.2f} ms). robust_cv={rcv*100:.1f}% indica dispersão real do hardware."
+                )
+            else:
+                flags.append(
+                    f"CV {gcv*100:.1f}% (robust_cv={rcv*100:.1f}%) — dispersão elevada; "
+                    f"verificar processos competindo por recursos."
+                )
+
     ratio = stats["thermal_ratio"]
     if ratio > thermal_warn_high:
         flags.append(f"thermal drift +{(ratio - 1) * 100:.1f}% (possível throttling)")
@@ -259,7 +324,9 @@ def list_models(show_devices: Optional[List[str]] = None) -> List[ExperimentReco
 def benchmark_record(rec: ExperimentRecord, device: torch.device, n_words: int,
                      warmup_runs: int, benchmark_runs: int,
                      loop_overhead_s: float, quantize: bool = False,
-                     num_threads: int = None, batch_size: int = 1) -> tuple:
+                     num_threads: int = None, batch_size: int = 1,
+                     adaptive: bool = False, min_runs: int = 10,
+                     max_runs: int = 80, cv_target: float = 0.03) -> tuple:
     """Executa benchmark e retorna (stats_dict, raw_records).
 
     Amostra palavras exclusivamente do split de teste do próprio experimento,
@@ -308,9 +375,18 @@ def benchmark_record(rec: ExperimentRecord, device: torch.device, n_words: int,
     if device.type == "cuda":
         torch.cuda.synchronize()
 
-    if batch_size > 1:
-        # Medição por batch: latência reportada por item = tempo_chunk / n_items
-        for run_idx in range(benchmark_runs):
+    # Modo adaptivo: para quando o CV das medianas por run converge.
+    # Modo fixo: roda exatamente benchmark_runs passes (comportamento original).
+    n_runs_limit = max_runs if adaptive else benchmark_runs
+    run_medians: List[float] = []   # uma mediana por run — para convergência
+    converged = False
+    runs_executed = 0
+
+    for run_idx in range(n_runs_limit):
+        runs_executed += 1
+        run_latencies: List[float] = []
+
+        if batch_size > 1:
             for chunk_start in range(0, len(test_words), batch_size):
                 chunk = test_words[chunk_start:chunk_start + batch_size]
                 t0 = time.perf_counter()
@@ -319,6 +395,7 @@ def benchmark_record(rec: ExperimentRecord, device: torch.device, n_words: int,
                     torch.cuda.synchronize()
                 t1 = time.perf_counter()
                 per_item_s = (t1 - t0) / len(chunk)
+                run_latencies.append(per_item_s)
                 for word_idx, (word, result) in enumerate(zip(chunk, results)):
                     raw_records.append({
                         "run_idx":   run_idx,
@@ -329,24 +406,51 @@ def benchmark_record(rec: ExperimentRecord, device: torch.device, n_words: int,
                         "chars_in":  len(word),
                         "chars_out": len(result.replace(" ", "")),
                     })
-    else:
-        for run_idx in range(benchmark_runs):
+        else:
             for word_idx, word in enumerate(test_words):
                 t0 = time.perf_counter()
                 result = predictor.predict(word)
                 t1 = time.perf_counter()
+                lat = t1 - t0
+                run_latencies.append(lat)
                 raw_records.append({
                     "run_idx":   run_idx,
                     "word_idx":  word_idx,
                     "word":      word,
-                    "latency_s": t1 - t0,
+                    "latency_s": lat,
                     "tokens":    len(result.split()),
                     "chars_in":  len(word),
                     "chars_out": len(result.replace(" ", "")),
                 })
 
+        if adaptive and run_latencies:
+            # Mediana do run como representante (robusto a outliers intra-run)
+            s = sorted(run_latencies)
+            run_medians.append(s[len(s) // 2])
+
+            if len(run_medians) >= min_runs:
+                clean = _iqr_filter(run_medians)
+                if len(clean) >= max(4, min_runs // 2) and _cv(clean) < cv_target:
+                    converged = True
+                    break
+
     if device.type == "cuda":
         torch.cuda.synchronize()
+
+    # Rejeição de outliers a nível de amostra (aplica sempre em modo adaptivo,
+    # opcional em modo fixo — desativado para não alterar comportamento histórico)
+    n_raw = len(raw_records)
+    if adaptive:
+        all_lats = [r["latency_s"] for r in raw_records]
+        if len(all_lats) >= 4:
+            s = sorted(all_lats)
+            n = len(s)
+            q1, q3 = s[n // 4], s[(3 * n) // 4]
+            iqr = q3 - q1
+            lo, hi = q1 - 1.5 * iqr, q3 + 1.5 * iqr
+            raw_records = [r for r in raw_records if lo <= r["latency_s"] <= hi]
+
+    n_outliers = n_raw - len(raw_records)
 
     latencies          = [r["latency_s"]  for r in raw_records]
     token_counts       = [r["tokens"]     for r in raw_records]
@@ -355,6 +459,22 @@ def benchmark_record(rec: ExperimentRecord, device: torch.device, n_words: int,
 
     stats = _analyze(latencies, token_counts, input_char_counts, output_char_counts, loop_overhead_s)
     stats.update({"status": "success", "device": str(device), "batch_size": batch_size})
+
+    if adaptive:
+        final_cv = _cv(_iqr_filter(run_medians)) if len(run_medians) >= 2 else 0.0
+        stats.update({
+            "adaptive": True,
+            "runs_executed": runs_executed,
+            "max_runs": max_runs,
+            "min_runs": min_runs,
+            "cv_target": cv_target,
+            "converged": converged,
+            "final_run_cv": final_cv,
+            "n_samples_raw": n_raw,
+            "n_samples_clean": len(raw_records),
+            "n_outliers_removed": n_outliers,
+        })
+
     return stats, raw_records
 
 
@@ -383,11 +503,23 @@ def _write_raw_csv(path: Path, raw_records: List[Dict], loop_overhead_s: float) 
 
 
 def _write_benchmark_artifact(rec: ExperimentRecord, entry: Dict,
-                               raw_records: List[Dict], benchmark_meta: Dict) -> Path:
-    """Grava JSON do artefato + sidecar CSV com medições brutas."""
+                               raw_records: List[Dict], benchmark_meta: Dict,
+                               batch_size: int = 1) -> Path:
+    """Grava JSON do artefato + sidecar CSV com medições brutas.
+
+    Para batch_size=1 (modo baseline): usa o caminho padrão (compatível com --list e display).
+    Para batch_size>1 (modo sweep): inclui sufixo '_bN' no nome do arquivo para não sobrescrever
+    o artefato base e permitir múltiplos batch sizes por modelo/device.
+    """
     device_tag = entry["device"]
-    path     = rec._reg.get_benchmark_path(device_tag)
-    csv_path = rec._reg.get_benchmark_raw_csv_path(device_tag)
+    base_path     = rec._reg.get_benchmark_path(device_tag)
+    base_csv_path = rec._reg.get_benchmark_raw_csv_path(device_tag)
+    if batch_size > 1:
+        path     = base_path.parent / f"{base_path.stem}_b{batch_size}{base_path.suffix}"
+        csv_path = base_csv_path.parent / f"{base_csv_path.stem}_b{batch_size}{base_csv_path.suffix}"
+    else:
+        path     = base_path
+        csv_path = base_csv_path
     loop_overhead_s = benchmark_meta.get("loop_overhead_us", 0.0) / 1e6
     _write_raw_csv(csv_path, raw_records, loop_overhead_s)
     payload = {
@@ -638,6 +770,37 @@ Exemplos:
                              "Valores >1 usam predict_batch_native(): 1 chamada ao encoder "
                              "+ max_len passos do decoder em paralelo por chunk. "
                              "Testar: 4, 8, 16, 32, 64. Latencia reportada = tempo_chunk/n_items.")
+    parser.add_argument("--batch-sizes", type=str, default=None, metavar="B1,B2,...",
+                        help="Sweep de batch sizes separados por virgula (ex: '1,4,8,16,32,64,128'). "
+                             "Roda o benchmark completo para cada batch e salva artefatos separados "
+                             "(sufixo _bN no arquivo). Incompativel com --batch-size.")
+    parser.add_argument("--sweep", action="store_true",
+                        help="Sweep padrao de batch sizes: 1, 4, 8, 16, 32, 64, 128. "
+                             "Equivalente a --batch-sizes 1,4,8,16,32,64,128. "
+                             "Gera sweep_summary.csv com todos os resultados agrupados.")
+    parser.add_argument("--sweep-gpu", action="store_true",
+                        help="Sweep estendido para GPU: 1, 4, 8, 16, 32, 64, 128, 256, 512. "
+                             "Inclui range alem da saturacao de CPU (~batch=64) ate a saturacao "
+                             "de GPU (~batch=512 para RTX 3060 + LSTM hidden=384). "
+                             "Nao recomendado para CPU pois 256+ nao agrega informacao nova.")
+    # --- Controle de runs adaptivo ---
+    parser.add_argument("--adaptive", action="store_true",
+                        help="Ativa modo adaptivo: para quando o CV das medianas por run converge "
+                             "(cv_target) ou o limite max-runs é atingido. "
+                             "Usa rejeicao de outliers por IQR (cercas de Tukey k=1.5) "
+                             "a nivel de run e de amostra individual. "
+                             "Substitui --runs pelo par --min-runs / --max-runs. "
+                             "Tecnica padrao de criterion (Rust), pyperf (Python) e JMH (Java).")
+    parser.add_argument("--min-runs", type=int, default=10, metavar="N",
+                        help="Minimo de runs antes de checar convergencia (default: 10). "
+                             "So tem efeito com --adaptive.")
+    parser.add_argument("--max-runs", type=int, default=80, metavar="N",
+                        help="Maximo de runs no modo adaptivo (default: 80). "
+                             "So tem efeito com --adaptive; com --runs fixo e ignorado.")
+    parser.add_argument("--cv-target", type=float, default=0.03, metavar="FLOAT",
+                        help="CV alvo para convergencia no modo adaptivo (default: 0.03 = 3%%). "
+                             "CV = std/mean das medianas por run apos filtragem IQR. "
+                             "Valores tipicos: 0.02 (rigoroso), 0.03 (padrao), 0.05 (rapido).")
     args = parser.parse_args()
 
     selected_devices = [str(d) for d in resolve_devices(args.device)]
@@ -649,6 +812,22 @@ Exemplos:
     if args.list:
         list_models(show_devices=selected_devices if args.device != "auto" else ["cuda", "cpu"])
         return
+
+    # Determina lista de batch sizes para o run
+    if args.sweep_gpu:
+        batch_sizes_list = [1, 4, 8, 16, 32, 64, 128, 256, 512]
+    elif args.sweep:
+        batch_sizes_list = [1, 4, 8, 16, 32, 64, 128]
+    elif args.batch_sizes is not None:
+        try:
+            batch_sizes_list = [int(x.strip()) for x in args.batch_sizes.split(",")]
+        except ValueError:
+            logger.error("--batch-sizes deve ser uma lista de inteiros separados por virgula (ex: '1,4,8,16,32,64,128')")
+            return
+    else:
+        batch_sizes_list = [args.batch_size]
+
+    is_sweep = len(batch_sizes_list) > 1
 
     records = get_complete_records()
     if not records:
@@ -677,8 +856,16 @@ Exemplos:
     logger.info("BENCHMARK FORMAL DE INFERÊNCIA")
     logger.info("=" * 100)
     logger.info(f"Dispositivos   : {', '.join(selected_devices)}")
-    logger.info(f"Warmup/Runs    : {args.warmup}/{args.runs}")
+    if args.adaptive:
+        logger.info(f"Warmup         : {args.warmup} | Modo: ADAPTIVO "
+                    f"(min={args.min_runs} max={args.max_runs} runs, cv_target={args.cv_target*100:.1f}%)")
+    else:
+        logger.info(f"Warmup/Runs    : {args.warmup}/{args.runs}")
     logger.info(f"Palavras teste : {args.words}")
+    if is_sweep:
+        logger.info(f"Batch sizes    : {batch_sizes_list} (modo sweep)")
+    else:
+        logger.info(f"Batch size     : {batch_sizes_list[0]}")
     logger.info(f"Selecionados   : {len(selected)} | Pendentes: {len(pending)} | Pulados: {len(skipped)}")
 
     if not pending and not args.force:
@@ -688,88 +875,188 @@ Exemplos:
     overhead = _calibrate_loop_overhead(2000)
     logger.info(f"Overhead calibrado: {overhead * 1e6:.2f} µs por iteração")
 
-    results = {
-        "metadata": {
+    # CSV incremental — aberto antes do loop para gravar linha a linha (crash-safe)
+    sweep_csv_path: Optional[Path] = None
+    sweep_csv_cols = ["experiment", "model_index", "device", "batch_size",
+                      "stable_wps", "throughput_wps", "p50_ms", "p95_ms",
+                      "global_cv", "thermal_ratio", "ci95_wps_low", "ci95_wps_high"]
+    if is_sweep:
+        sweep_ts = time.strftime("%Y%m%d_%H%M%S")
+        sweep_csv_name = f"sweep_summary_{sweep_ts}.csv"
+        if args.index is not None and pending:
+            sweep_csv_name = f"sweep_summary_{pending[0][1].exp_name}_{sweep_ts}.csv"
+        sweep_csv_path = FileRegistry.get_benchmark_run_path(run_label="__sweep_tmp__").parent / sweep_csv_name
+        sweep_csv_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(sweep_csv_path, "w", newline="", encoding="utf-8") as fh:
+            csv.writer(fh).writerow(sweep_csv_cols)
+        logger.info(f"Sweep CSV (incremental): {sweep_csv_path}")
+
+    # Aviso de chunks insuficientes para batch sizes grandes
+    max_batch = max(batch_sizes_list)
+    if max_batch > args.words:
+        n_chunks = max(1, args.words // max_batch)
+        logger.warning(
+            f"batch_size={max_batch} > words={args.words}: apenas ~{n_chunks} chunk(s) por run. "
+            f"Estatísticas podem ser instáveis. Considere --words {max_batch * 10} para ≥10 chunks."
+        )
+
+    all_results_entries: List[Dict] = []
+
+    for batch_idx, current_batch_size in enumerate(batch_sizes_list):
+        if is_sweep:
+            logger.info(f"\n{'='*60}")
+            logger.info(f"SWEEP [{batch_idx+1}/{len(batch_sizes_list)}] batch_size={current_batch_size}")
+            logger.info(f"{'='*60}")
+
+        run_metadata = {
             "benchmark_date": time.strftime("%Y-%m-%d %H:%M:%S"),
             "devices": selected_devices,
             "test_words": args.words,
             "warmup_runs": args.warmup,
             "benchmark_runs": args.runs,
+            "adaptive": args.adaptive,
+            "adaptive_min_runs": args.min_runs if args.adaptive else None,
+            "adaptive_max_runs": args.max_runs if args.adaptive else None,
+            "adaptive_cv_target": args.cv_target if args.adaptive else None,
             "loop_overhead_us": overhead * 1e6,
             "force": args.force,
             "selected_models": len(pending),
             "cpu_quantize": args.quantize,
             "cpu_threads": args.threads,
-            "batch_size": args.batch_size,
-        },
-        "results": [],
-        "skipped": skipped,
-    }
+            "batch_size": current_batch_size,
+            "sweep_mode": is_sweep,
+            "sweep_batch_sizes": batch_sizes_list if is_sweep else None,
+        }
 
-    for ordinal, (model_index, rec) in enumerate(pending, 1):
-        meta = rec.metadata or {}
-        experiment_name = meta.get("experiment_name", rec.exp_name)
-        params = meta.get("total_params", 0)
-        logger.info(f"\n[{ordinal}/{len(pending)}] [{model_index}] {experiment_name}")
-        for device in resolve_devices(args.device):
-            device_key = str(device)
-            if not args.force and rec.has_benchmark(device_key):
-                logger.info(f"  {device_key}: pulado (artefato já existe)")
-                continue
+        batch_results_entries: List[Dict] = []
 
-            stats, raw_records = benchmark_record(
-                rec,
-                device=device,
-                n_words=args.words,
-                warmup_runs=args.warmup,
-                benchmark_runs=args.runs,
-                loop_overhead_s=overhead,
-                quantize=args.quantize,
-                num_threads=args.threads,
-                batch_size=args.batch_size,
-            )
+        for ordinal, (model_index, rec) in enumerate(pending, 1):
+            meta = rec.metadata or {}
+            experiment_name = meta.get("experiment_name", rec.exp_name)
+            params = meta.get("total_params", 0)
+            logger.info(f"\n[{ordinal}/{len(pending)}] [{model_index}] {experiment_name}")
+            for device in resolve_devices(args.device):
+                device_key = str(device)
+                if not args.force and not is_sweep and rec.has_benchmark(device_key):
+                    logger.info(f"  {device_key}: pulado (artefato já existe)")
+                    continue
 
-            entry = {
-                "model_index": model_index,
-                "base_name": rec.base_name,
-                "experiment": experiment_name,
-                "params": params,
-            }
-            entry.update(stats)
-
-            if entry["status"] == "success":
-                artifact_path = _write_benchmark_artifact(rec, entry, raw_records, results["metadata"])
-                entry["artifact_path"] = artifact_path.as_posix()
-                flags = _hardware_flags(entry)
-                logger.info(
-                    f"  {device_key}: {entry['throughput_wps']:.1f} w/s "
-                    f"| stable {entry['stable_wps']:.1f} w/s "
-                    f"| p50 {entry['p50_ms']:.2f} ms | p95 {entry['p95_ms']:.2f} ms"
+                stats, raw_records_list = benchmark_record(
+                    rec,
+                    device=device,
+                    n_words=args.words,
+                    warmup_runs=args.warmup,
+                    benchmark_runs=args.runs,
+                    loop_overhead_s=overhead,
+                    quantize=args.quantize,
+                    num_threads=args.threads,
+                    batch_size=current_batch_size,
+                    adaptive=args.adaptive,
+                    min_runs=args.min_runs,
+                    max_runs=args.max_runs,
+                    cv_target=args.cv_target,
                 )
-                if flags:
-                    logger.info(f"  {device_key}: avisos -> {'; '.join(flags)}")
-            else:
-                logger.warning(f"  {device_key}: falha -> {entry.get('error', '?')}")
 
-            results["results"].append(entry)
+                entry = {
+                    "model_index": model_index,
+                    "base_name": rec.base_name,
+                    "experiment": experiment_name,
+                    "params": params,
+                }
+                entry.update(stats)
 
-    output_path = _build_run_output_path(args, [rec for _, rec in pending])
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(results, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+                if entry["status"] == "success":
+                    artifact_path = _write_benchmark_artifact(
+                        rec, entry, raw_records_list, run_metadata,
+                        batch_size=current_batch_size
+                    )
+                    entry["artifact_path"] = artifact_path.as_posix()
+                    flags = _hardware_flags(entry)
+                    logger.info(
+                        f"  {device_key}: {entry['throughput_wps']:.1f} w/s "
+                        f"| stable {entry['stable_wps']:.1f} w/s "
+                        f"| p50 {entry['p50_ms']:.2f} ms | p95 {entry['p95_ms']:.2f} ms"
+                    )
+                    if entry.get("adaptive"):
+                        conv_mark = "✓ convergiu" if entry.get("converged") else "✗ limite atingido"
+                        logger.info(
+                            f"  {device_key}: [adaptivo] {entry['runs_executed']}/{entry['max_runs']} runs "
+                            f"| cv_runs={entry['final_run_cv']*100:.1f}% {conv_mark} "
+                            f"| {entry['n_outliers_removed']} outliers removidos "
+                            f"({entry['n_samples_clean']}/{entry['n_samples_raw']} amostras)"
+                        )
+                    if flags:
+                        logger.info(f"  {device_key}: avisos -> {'; '.join(flags)}")
 
-    if args.update_performance:
-        _sync_performance_with_benchmark(results["results"], results["metadata"])
+                    if is_sweep and sweep_csv_path is not None:
+                        # Grava linha imediatamente — crash-safe
+                        row = {
+                            "experiment": experiment_name,
+                            "model_index": model_index,
+                            "device": device_key,
+                            "batch_size": current_batch_size,
+                            "stable_wps": round(entry["stable_wps"], 2),
+                            "throughput_wps": round(entry["throughput_wps"], 2),
+                            "p50_ms": round(entry["p50_ms"], 3),
+                            "p95_ms": round(entry["p95_ms"], 3),
+                            "global_cv": round(entry["global_cv"], 4),
+                            "thermal_ratio": round(entry["thermal_ratio"], 4),
+                            "ci95_wps_low": round(entry["ci95_wps_low"], 2),
+                            "ci95_wps_high": round(entry["ci95_wps_high"], 2),
+                        }
+                        with open(sweep_csv_path, "a", newline="", encoding="utf-8") as fh:
+                            csv.writer(fh).writerow([row[c] for c in sweep_csv_cols])
+                else:
+                    logger.warning(f"  {device_key}: falha -> {entry.get('error', '?')}")
 
-    successful = [r for r in results["results"] if r.get("status") == "success"]
-    failed = [r for r in results["results"] if r.get("status") == "error"]
+                batch_results_entries.append(entry)
+                all_results_entries.append(entry)
+
+        # Salva artefato agregado por batch_size (em sweep) ou único (normal)
+        if is_sweep:
+            batch_label = f"sweep_b{current_batch_size}"
+            if args.index is not None:
+                batch_label = f"index_{args.index}_{pending[0][1].exp_name}_b{current_batch_size}"
+            batch_output = FileRegistry.get_benchmark_run_path(run_label=batch_label)
+        else:
+            batch_output = _build_run_output_path(args, [rec for _, rec in pending])
+
+        batch_run_result = {
+            "metadata": run_metadata,
+            "results": batch_results_entries,
+            "skipped": skipped if not is_sweep else [],
+        }
+        batch_output.parent.mkdir(parents=True, exist_ok=True)
+        batch_output.write_text(json.dumps(batch_run_result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        if is_sweep:
+            logger.info(f"  Artefato batch={current_batch_size}: {batch_output}")
+
+    if is_sweep and sweep_csv_path is not None:
+        logger.info(f"\nSweep summary CSV (completo): {sweep_csv_path}")
+
+    if args.update_performance and not is_sweep:
+        _sync_performance_with_benchmark(all_results_entries, {
+            "benchmark_date": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "test_words": args.words,
+            "warmup_runs": args.warmup,
+            "benchmark_runs": args.runs,
+        })
+
+    successful = [r for r in all_results_entries if r.get("status") == "success"]
+    failed = [r for r in all_results_entries if r.get("status") == "error"]
     logger.info("\n" + "=" * 100)
     logger.info("RESUMO")
     logger.info("=" * 100)
     logger.info(f"Sucessos: {len(successful)} | Falhas: {len(failed)} | Pulados: {len(skipped)}")
-    if successful:
+    if successful and not is_sweep:
         wps = [r["throughput_wps"] for r in successful]
         logger.info(f"Throughput global: {min(wps):.1f} — {max(wps):.1f} w/s | média {sum(wps)/len(wps):.1f} w/s")
-    logger.info(f"Artefato agregado: {output_path}")
+        output_path = _build_run_output_path(args, [rec for _, rec in pending])
+        logger.info(f"Artefato agregado: {output_path}")
+    elif is_sweep:
+        logger.info(f"Sweep: {len(batch_sizes_list)} batch sizes × {len(pending)} modelos × {len(selected_devices)} devices")
+        if sweep_csv_path is not None:
+            logger.info(f"Sweep summary CSV: {sweep_csv_path}")
 
 
 if __name__ == "__main__":

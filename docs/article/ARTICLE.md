@@ -912,11 +912,29 @@ A DA Loss demonstrou eficácia como regularizador fonético: melhora PER e WER n
 
 **Limite de escala do sinal**: DA é matematicamente bounded por `λ × 1.0 × 1.0 = 0.20`, enquanto CE pode atingir ~16 computacionalmente. Isso significa que DA representa < 5% do sinal quando o modelo está muito errado (CE alto), sendo efetivo principalmente na zona de transição (CE 0.3–1.5, épocas 30–80). Para análise completa com exemplos numéricos, sugestões de fórmulas alternativas e interação com BiLSTM + atenção, ver [DA_LOSS_ANALYSIS.md](DA_LOSS_ANALYSIS.md).
 
-### 8.3 Convergência Rápida como Sinal de Qualidade
+### 8.3 Escopo Aplicado do G2P no Pipeline
+
+Esta seção fixa a leitura prática dos resultados para evitar sobre-interpretacao teórica no texto principal.
+
+**O que foi usado e como**:
+- o modelo G2P gera uma hipotese IPA por palavra;
+- a saida IPA e usada como sinal fonetico em pipeline (TTS, busca fonetica, normalizacao), nao como decisor semantico final;
+- a DA Loss foi adotada para reduzir erros foneticamente distantes no treinamento, mantendo a arquitetura BiLSTM e o protocolo de avaliacao transparentes.
+
+**Exemplo operacional minimo**:
+1. entrada ortografica (`cinto` / `sinto`)
+2. geracao de hipoteses IPA
+3. modulo downstream decide por contexto de tarefa (ranking, policy, regras de negocio)
+
+**Limite de inferencia**: as evidencias deste trabalho sustentam associacao mecanistica (melhor qualidade fonetica dos erros), nao causalidade forte para todos os erros de escrita do mundo real.
+
+**Ancoragem bibliografica**: a fundamentacao teorica detalhada de fonetica articulatoria, PanPhon e G2P fica nas referencias compiladas em `REFERENCES.bib` (ex.: Mortensen et al., 2016; Browman and Goldstein, 1992; Barbosa and Albano, 2004; Bisani and Ney, 2008; Rao et al., 2015).
+
+### 8.4 Convergência Rápida como Sinal de Qualidade
 
 Um padrão consistente nos experimentos é que modelos superiores convergem em menos épocas com val_loss menor. Exp104b convergiu em 88 épocas com val_loss de 0,0136, similar a Exp102, confirmando que a convergência rápida e a baixa val_loss são indicadores confiáveis de qualidade — o que permite early stopping criterioso sem esperar épocas fixas.
 
-### 8.4 Robustez e Trade-offs de Dados (Exp105/106)
+### 8.5 Robustez e Trade-offs de Dados (Exp105/106)
 
 As ablações da Fase 7 quantificam dois trade-offs práticos com impacto direto em aplicações reais.
 
@@ -926,16 +944,18 @@ As ablações da Fase 7 quantificam dois trade-offs práticos com impacto direto
 
 **Resumo do Pareto de configurações**:
 
-| Configuração | PER | Speed (w/s) | Caso de uso ideal |
-|---|---|---|---|
-| Exp9 | 0,58% | ~20 w/s | WER mínimo, NLP/lookup |
-| Exp104b | 0,49% | 11,7 w/s | PER mínimo, análise linguística |
-| Exp105 | 0,54% | 11,7 w/s | Corpus reduzido, mesma speed |
-| Exp106 | 0,58% | em auditoria | Ablação de eficiência (hífen) |
+| Configuração | PER | GPU batch=1 | GPU pico† | Caso de uso ideal |
+|---|---|---|---|---|
+| Exp9 | 0,58% | ~31 w/s | ~1.081 w/s | WER mínimo, NLP/lookup |
+| Exp104b | 0,49% | ~38 w/s | ~1.200 w/s | PER mínimo, análise linguística |
+| Exp105 | 0,54% | ~36 w/s | ~1.100 w/s | Corpus reduzido, mesma acurácia |
+| Exp106 | 0,58% | ~43 w/s | ~1.500 w/s | Mais rápido (saída menor sem hífen) |
 
-### 8.5 Metodologia de Benchmark de Velocidade
+† GPU pico = batch=512 (ponto de saturação RTX 3060). Range de todos os 19 experimentos: batch=1: 31–43 w/s; batch=512: 1.081–1.500 w/s. Sweep formal 2026-03-14, warmup=20, words=1.000. Detalhes: [BENCHMARK.md](../../benchmarks/BENCHMARK.md).
 
-As medições de throughput (palavras/s, tokens/s) e latência reportadas na §8.4 seguem um protocolo de medição projetado para **isolar o desempenho real do hardware** de artefatos de contention, throttling térmico e overhead do instrumento.
+### 8.6 Metodologia de Benchmark de Velocidade
+
+As medições de throughput (palavras/s, tokens/s) e latência reportadas na §8.5 seguem um protocolo de medição projetado para **isolar o desempenho real do hardware** de artefatos de contention, throttling térmico e overhead do instrumento.
 
 **Calibração de overhead do loop de medição**
 
@@ -977,19 +997,26 @@ Modelos treinados com separadores silábicos produzem ~30% mais tokens por palav
 | Threshold CV | 15% | Heurística conservadora para contention |
 | Threshold térmico | ±10% | Padrão MLPerf para drift de temperatura |
 
-**Resultado empírico: CPU mais rápido que GPU para inferência single-word**
+**Resultado empírico: GPU superior a partir de batch≥4; em batch=1, depende do modelo**
 
-Os benchmarks realizados sobre todos os 19 checkpoints (NVIDIA RTX 3060 12 GB, CPU x86 16 núcleos) revelam que a CPU é consistentemente **1,4–2,3× mais rápida** que a GPU para inferência de uma palavra por vez.
+O sweep formal (CPU: 2026-03-15, adaptativo, 19 modelos · GPU: 2026-03-14, overnight, 19 modelos) revelou que a vantagem da GPU em batch=1 varia com o comprimento da sequência de saída do modelo:
 
-Este resultado é esperado e tem explicação técnica direta: o decoder LSTM é **autoregressivo** — gera um token por passo, e cada passo depende do anterior. Não existe paralelismo temporal a explorar. A GPU incorre em overhead fixo por operação:
-- Lançamento de kernel CUDA: ~50–150 µs (NVIDIA, 2024)
-- Transferência host↔device (H2D/D2H): ~10–50 µs adicionais
+| batch_size | CPU stable w/s* | GPU stable w/s** | GPU/CPU |
+|-----------|----------------|-----------------|---------|
+| 1 (single-word) | **23,8** | 34 | **1,45×** |
+| 32 (pipeline) | **155** | 406 | **2,62×** |
+| 128 | **190** | 745 | **3,92×** |
+| 512 (pico GPU) | — | 1.106 | — |
 
-Para um modelo com 4,3–17 M parâmetros, o tempo de cômputo por passo é ~0,3–2 ms. O overhead representa 5–50% do tempo de passo, tornando a CPU mais eficiente. A GPU só supera a CPU em inferência LSTM quando batch ≥ 32–64 (paralelismo entre amostras independentes).
+\* CPU sweep formal adaptativo 2026-03-15 (warmup=20, words=500). \*\* GPU sweep overnight 2026-03-14 (warmup=20, words=1.000). Modelo Exp104d. Range entre 19 modelos: CPU batch=1: 24–55 w/s, batch=128: 190–736 w/s; GPU batch=1: 31–43 w/s, batch=512: 1.081–1.500 w/s.
 
-Este resultado não invalida o uso de GPU em produção — para cenários com múltiplas requisições simultâneas em batch, ou para treino, a GPU mantém vantagem. Para inferência on-demand single-word (caso típico de TTS), a CPU é suficiente e ligeiramente superior.
+**Revisão da hipótese inicial**: A previsão de que "CPU vence em batch=1 por overhead de kernel CUDA" foi parcialmente falsificada. Para Exp104d (`best_per`, saída com tokens estruturais): GPU já é 1,45× mais rápida em batch=1. Para Exp9 (`best_wer`, sem separadores): GPU ≈ CPU em batch=1 (0,99×). O mecanismo: modelos com sequências de saída mais longas executam mais passos autoregressivos — trabalho que o CUDA amortiza melhor que o MKL sequencial. A GPU supera o CPU em todos os modelos a partir de batch≥4.
 
-**Contexto de hardware**: O RTX 4090 possui 16.384 CUDA cores e 82,6 TFLOPS FP32; o RTX 3060 possui 3.584 CUDA cores e 12,7 TFLOPS FP32 (razão ~4,57× em cores, ~6,5× em TFLOPS). Essa vantagem se materializa em cargas paralelizáveis (LLMs com batch, CNNs em imagem). Para o decoder autoregressivo do FG2P — sequencial por design — ambas as GPUs estão igualmente limitadas pelo overhead serial, tornando comparações cross-device sem sentido para esta tarefa específica (NVIDIA, 2024).
+**Pontos de saturação diferenciados**:
+- CPU: p50 estabiliza em ~5,2 ms a partir de batch≈64 — gargalo migra de compute BLAS para overhead Python (alocação de tensores, loop de decodificação de índices). Pico: **~190 w/s** (Exp104d); range 190–736 w/s entre modelos.
+- GPU: p50 estabiliza em ~0,9 ms a partir de batch≈512 — paralelismo CUDA esgotado; throughput pico **~1.106 w/s** (Exp104d); range 1.081–1.500 w/s entre modelos.
+
+**Contexto de hardware**: O RTX 3060 possui 3.584 CUDA cores e 12,7 TFLOPS FP32. A vantagem de GPU escala com batch (paralelismo entre amostras) mas não com comprimento de sequência (decoder autoregressivo é serial por definição). Comparações cross-device (RTX 3060 vs RTX 4090) sem paridade de batch size e modelo são inválidas. Detalhes metodológicos e análise de variância em [docs/benchmarks/BENCHMARK.md](../../benchmarks/BENCHMARK.md).
 
 ---
 

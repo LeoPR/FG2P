@@ -28,17 +28,19 @@ Convencao:
 | 011 | Questionario de fechamento por etapas | Respondida | Decisoes editoriais principais aplicadas no README/ARTICLE e no indice de avaliacoes |
 | 012 | Clareza narrativa e nomenclatura | Respondida | Regra geral para ordem da historia do projeto e uso consistente de rotulos (comparacao externa vs interna) |
 | 013 | Checklist final de submissao (Ciclo 3.2) | Respondida | Coerencia final validada; consistencia numerica e referencias quebradas ajustadas |
-| 014 | Auditoria da narrativa de velocidade (Exp106) | Aberta | Revisar claim de speedup 2,58x, baseline comparavel e CI95 de throughput/latencia antes de recomendacao forte |
+| 014 | Auditoria da narrativa de velocidade (Exp106) | Respondida | Fechada com narrativa por regime (hardware+batches+modelo), sem claim universal de speedup isolado |
 | 015 | Consistencia e ganho real: Exp104d vs Exp104b | Respondida | Exp104d melhora estimativas pontuais de qualidade, mas nao domina em todos os eixos (IC95 de WER sobreposto e custo maior em CPU) |
 | 016 | Estudo de performance cross-platform (train + inference) | Respondida | Auditoria tecnica sem alteracao de codigo; prioriza AMP, batching real de inferencia e trilha de quantizacao CPU |
 | 017 | Benchmark por regime (latencia unitária vs volume CPU/GPU) | Respondida | Define decomposicao de overhead (Python/H2D/sync/decode), protocolo R1-R4 e plano de otimizacao para aceleracao real |
-| 018 | Guia prático de inferência: CPU, batch e métricas de desempenho | Aberta | Sweep batch=1–128 confirmado (+8.52× em batch=128 vs unitário); GPU com batch pendente; análise de métricas w/s vs chars/s vs tokens/s |
+| 018 | Guia prático de inferência: CPU, batch e métricas de desempenho | Respondida | Sweep completo CPU+GPU (2026-03-14): GPU superior em todos os batch sizes (até 3.97×); CPU satura em batch≥64; GPU atinge 730 w/s em batch=128 |
+| 019 | Real-World Use Case do G2P: escopo, taxonomia e metricas | Respondida | Escopo fechado: G2P como camada fonetica em pipeline maior, com limites de inferencia explicitos e metrica nova mantida como trabalho futuro |
+| 020 | Proporcionalidade chars/s e condições de pico por hardware | Respondida | Benchmark consolidado: chars/s não linear em batch=1; picos operacionais definidos (GPU≈512, CPU≈64–128); profiling fino de núcleos fica como micro-otimização opcional |
 
 ## Proximas acoes (estado atual)
 
-1. Estado global: pronto para submissao, com ressalva de auditoria textual da narrativa de velocidade do Exp106.
+1. Estado global: pronto para submissao, sem pendencias experimentais abertas no ciclo atual.
 2. Manter MOS/ABX como trabalho futuro explicito (nao bloqueante).
-3. Tratar claim de speedup do Exp106 como preliminar ate fechamento de benchmark replicado com IC95 (run inicial em `results/benchmarks/benchmark_all_models_2026-03-13.txt`).
+3. Manter narrativa de velocidade por regime (hardware+batches+modelo), apoiada no benchmark formal em `docs/benchmarks/BENCHMARK.md`.
 4. Registrar Exp104d como candidato de melhor qualidade media vs Exp104b, sem promover como "melhor em todos os sentidos" ate replicacao com menor ruido e politica de custo/latencia definida.
 
 ## Publicacao: bloqueadores e pendencias
@@ -49,7 +51,7 @@ Leitura pragmatica para submissao/publicacao:
 
 1. Nenhum bloqueador experimental aberto no estado documental atual.
 
-Observacao: existe uma pendencia editorial de consistencia na narrativa de velocidade do Exp106 (nota 014), tratada como ajuste de rigor e nao como bloqueador de arquitetura/metodologia.
+Observacao: ajustes editoriais de velocidade (nota 014) e caso de uso real (nota 019) foram encerrados e registrados como respondidos.
 
 Observacao: a delimitacao formal de originalidade da DA Loss foi registrada em `docs/article/ORIGINALITY_ANALYSIS.md` e consolidada na nota 010.
 

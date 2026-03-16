@@ -49,6 +49,23 @@ def load_data():
     return extractor.load_all_metrics()
 
 
+def _select_sota_per_exp(all_metrics):
+    """Seleciona referência PER para o estágio final da timeline."""
+    preferred = [
+        "exp104d_structural_tokens_correct",
+        "exp104b_intermediate_sep_da_custom_dist_fixed",
+    ]
+    for name in preferred:
+        if name in all_metrics:
+            return name
+
+    valid = {k: v for k, v in all_metrics.items()
+             if "legacy" not in k and "107" not in k}
+    if not valid:
+        return None
+    return min(valid.items(), key=lambda x: x[1].per)[0]
+
+
 def plot_evolution_timeline(all_metrics):
     """
     Gráfico 1: Timeline de evolução PER/WER
@@ -56,13 +73,18 @@ def plot_evolution_timeline(all_metrics):
     """
     safe_print("[1/4] Plotando timeline evolutiva...")
 
+    final_exp = _select_sota_per_exp(all_metrics)
+    if final_exp is None:
+        final_exp = "exp9_intermediate_distance_aware"
+    final_label = "E104d SOTA\n(+sep+dist)" if final_exp == "exp104d_structural_tokens_correct" else "E104b SOTA\n(+sep+dist)"
+
     # Caminho de evolução principal (mostrando progresso)
     evolution_path = [
         ("exp0_baseline_70split", "E0 Baseline\n(70% split)", COLORS["baseline"]),
         ("exp1_baseline_60split", "E1 Baseline\n(60% split)", COLORS["baseline"]),
         ("exp5_intermediate_60split", "E5 Intermed.\n(+capacity)", COLORS["intermediate"]),
         ("exp9_intermediate_distance_aware", "E9 DA Loss\n(lambda=0.20)", COLORS["da_loss"]),
-        ("exp104b_intermediate_sep_da_custom_dist_fixed", "E104b SOTA\n(+sep+dist)", COLORS["sota"]),
+        (final_exp, final_label, COLORS["sota"]),
     ]
 
     x_pos = np.arange(len(evolution_path))
@@ -119,7 +141,11 @@ def plot_evolution_timeline(all_metrics):
     ax1.grid(axis="y", alpha=0.3, zorder=1)
 
     # Title
-    title_text = "Evolution: Baseline -> Intermediate -> DA Loss -> SOTA\nShowing PER reduction (0.59% -> 0.49%) and WER behavior (5.06% -> 5.43%)"
+    title_text = (
+        "Evolution: Baseline -> Intermediate -> DA Loss -> SOTA\n"
+        f"Showing PER reduction ({pers[0]:.2f}% -> {pers[-1]:.2f}%) "
+        f"and WER behavior ({wers[0]:.2f}% -> {wers[-1]:.2f}%)"
+    )
     ax1.set_title(title_text, fontsize=13, fontweight="bold", pad=15)
 
     # Legend
