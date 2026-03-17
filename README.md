@@ -627,7 +627,7 @@ This project documents all metrics, formulas, and implementation details across 
 @article{fg2p2026,
   title={FG2P: Distance-Aware Loss for Phonetically Controlled Errors
          in Brazilian Portuguese Grapheme-to-Phoneme Conversion},
-  author={Peixoto, Leonardo R.},
+  author={Souza, Leonardo M.},
   year={2026},
   note={PER 0.48\%, 17.2M params, 28.8k stratified test words.
         Available at https://github.com/LeoPR/FG2P}
