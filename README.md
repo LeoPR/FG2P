@@ -606,8 +606,11 @@ This project documents all metrics, formulas, and implementation details across 
 
 ### Roadmap
 
+**📌 Nota importante**: Todos os próximos passos (v2.0, Transformer, multilíngue, Tupi, cache, dialetos, etc.) estão consolidados e canonizados em um único local: **[docs/evaluations/README.md — Trabalhos Futuros Consolidados (TF-001 até TF-006)](docs/evaluations/README.md#trabalhos-futuros-consolidados--91-articlemd)**. Outros documentos devem apenas referenciar este arquivo para evitar dispersão.
+
 | Priority | Item | Description |
 |----------|------|-------------|
+| High | **Data/caching/multilingual planning (TF-002, TF-003, TF-004)** | Central planning and execution checklist for dataset ingestion, layered dictionaries, multilingual/dialect support, cache v2, Tupi-Guarani, and transfer learning 7D: [docs/evaluations/README.md — TF section](docs/evaluations/README.md#trabalhos-futuros-consolidados--91-articlemd) |
 | High | **Revisão de λ com sep** | λ=0.2 foi otimizado em Exp7 (sem sep). Com sep silábico + custom dist, o ótimo pode ser diferente — sweep λ∈{0.1, 0.2, 0.3, 0.5} no regime sep+DA |
 | Medium | **Class E errors** | Fifth error class for structural token confusions (post-publication) |
 | Medium | **Chart: convergence grid** | Show Exp1 / Exp9 / Exp104b convergence side-by-side (currently only Exp104b in README) |

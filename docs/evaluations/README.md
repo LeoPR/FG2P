@@ -36,6 +36,7 @@ Convencao:
 | 019 | Real-World Use Case do G2P: escopo, taxonomia e metricas | Respondida | Escopo fechado: G2P como camada fonetica em pipeline maior, com limites de inferencia explicitos e metrica nova mantida como trabalho futuro |
 | 020 | Proporcionalidade chars/s e condições de pico por hardware | Respondida | Benchmark consolidado: chars/s não linear em batch=1; picos operacionais definidos (GPU≈512, CPU≈64–128); profiling fino de núcleos fica como micro-otimização opcional |
 | 021 | Auditoria de publicação v1.1 — consistência, links, sincronização | Aberta | 4 itens de alta prioridade (registry Exp9 duplo, PER origin, 104c vs 104d, citações); 6 itens de média; correções imediatas já aplicadas em README/BENCHMARK |
+| 022 | Trabalhos Futuros v2.0: Métricas, Fonotática, Espaço 7D, Multilíngue | Aberta | Consolidação de 6 tópicos principais da seção 9.1 de ARTICLE.md: métricas especializadas, pipeline fonotático 4-fases, espaço articulatório 7D (transfer learning zero/few-shot para novos idiomas incluindo Tupi), geminadas, batch stratification, morfossintaxe. Documentação canônica nesta avaliação. Ver seção "Trabalhos Futuros Consolidados" abaixo. |
 
 ## Proximas acoes (estado atual)
 
@@ -103,3 +104,164 @@ Quando surgir uma nova pergunta, adicionar primeiro uma nota em `open/` com:
 - o que falta para responder com mais rigor.
 
 Quando a pergunta estiver madura, mover o conteudo para `answered/` ou consolidar no artigo.
+
+---
+
+## Trabalhos Futuros Consolidados (§ 9.1 ARTICLE.md)
+
+**Nota de canonicidade**: Esta seção consolida todos os próximos passos mencionados em docs/article/ARTICLE.md§9.1, docs/article/EXPERIMENTS.md e comparativos sobre arquiteturas (Transformer, LatPhon, ByT5-Small). **Este é o local de referência única** — outros arquivos devem apenas referenciar este documento em vez de repetir detalhes.
+
+### TF-001: Métricas Especializadas
+
+**Objetivo**: Capturar aspectos de qualidade invisíveis ao PER/WER padrão.
+
+- **Stress Accuracy**: % de acentos posicionados corretamente (sílaba tônica no lugar certo)
+- **Boundary F1**: Precisão/revocação de fronteiras silábicas quando separadores são gerados
+
+**Importância**: Algumas palavras podem ter PER baixo mas stress no lugar errado, quebrando compreensão em TTS.
+
+**Implementação**: Adicionar métricas em `src/metrics.py` com suporte a avaliação por palavra completa vs por segmento.
+
+---
+
+### TF-002: Pipeline Fonotático em 4 Fases
+
+**Objetivo**: Integrar restrições explícitas de fonotática do PT-BR para reduzir erros estruturais (separadores mal posicionados, conflitos com regras silábicas).
+
+**Contexto de domínio**: PT-BR permite apenas ~4 consoantes em coda (/s/, /ɾ/, /l/, /N/), com ~78% das sílabas sendo abertas (CV).
+
+**Ordem de implementação**:
+
+1. **Diagnóstico** (risco zero): Quantificar quantos erros atuais violam regras fonotáticas conhecidas sem modificar o modelo
+   - Dataset: 28.782 palavras de teste estratificado
+   - Métrica: % de violações por categoria (inserção de sep, confusão positional, etc)
+
+2. **N-gram Fonotático** (risco baixo): Treinar bigrama/trigrama de fonemas como modelo de linguagem fonológico
+   - Treino: corpus de 95.937 pares (grapheme, IPA)
+   - Objetivo: aprender sequências válidas de fonemas
+
+3. **Autômato de Estados Finitos** (risco médio): FSA encoding estrutura silábica
+   - Estados: ONSET → NUCLEUS → CODA → BOUNDARY
+   - Válidade: rejeita transições ilegais em tempo real
+
+4. **Integração** (risco médio-alto): Reranking dos N-melhores beams do LSTM
+   - Abordagem 1 (baixo risco): Post-process reranking pelo modelo fonotático
+   - Abordagem 2 (médio risco): Penalização direta como termo adicional na loss durante treino
+
+**Referência técnica**: [docs/article/ARTICLE.md § 9.1 Pipeline fonotático](../article/ARTICLE.md#91-trabalhos-futuros)
+
+---
+
+### TF-003: Espaço Articulatório Contínuo 7D (Multilíngue + Transfer Learning)
+
+**Objetivo**: Substituir PanPhon discreto (24 features binárias) por espaço contínuo 7D fundamentado em análise do trato vocal.
+
+**Vantagem chave**: Espaço é **multilinguisticamente universal** — cada idioma é uma quantização (conjunto de fonemas) do mesmo espaço contínuo subjacente.
+
+**Mapeamento de dimensões**:
+
+| Dimensão | Range | Semântica | Correlato Acústico |
+|----------|-------|-----------|--------------------|
+| HEIGHT | [0,1] | Altura da língua | F1 (inverso) |
+| BACKNESS | [0,1] | Posição anterior-posterior | F2 (inverso) |
+| ROUNDING | [0,1] | Arredondamento labial | Timbre, F2 |
+| CONSTR_LOC | [0,1] | Local de constrição (labial→glotal) | Transições F2/F3 |
+| CONSTR_DEG | [-0.1,1] | Grau de constrição | Energia, fricção |
+| NASALITY | [0,1] | Nasalização | Antirressonâncias em F1 |
+| VOICING | [0,1] | Vozeamento binário | F0, estrutura harmônica |
+
+**Conservação de variância**: 7D preservam 95-99% da variância do trato vocal (Birkholz et al., em prep).
+
+**Resolução de problema estrutural**: `.` (boundary) e `ˈ` (stress) receberiam coordenadas distintas:
+  - Ambos: CONSTR_DEG = -0,1 (estrutural, não-fonético)
+  - Diferença: VOICING = 0,0 vs 1,0
+  - Resultado: d(., ˈ) ≠ 0,0 naturalmente, sem necessidade de override
+
+**Aplicações**:
+- **Transfer Learning Zero-Shot**: modelo PT-BR puro pode fazer predições baseline para idiomas novos quantizando no espaço 7D
+- **Few-Shot**: adaptar com N exemplos de novo idioma usando espaço contínuo como inicialização
+- **Multilíngue Nativo**: treinar modelo único sobre múltiplos idiomas no espaço 7D compartilhado
+
+**Correlação com referências comparativas**:
+- LatPhon (2025): Transformer multilíngue para 6 idiomas, sem loss fonológica — pode ganhar com espaço 7D
+- ByT5-Small (299M): zero-shot para 100 idiomas — seria complementar a transfer learning 7D para few-shot
+- Este projeto (PT-BR): espaço 7D permitiria estender FG2P para Tupi-Guarani, outros idiomas indígenas, e variantes dialetais do PB
+
+**Referência técnica**: [docs/article/ARTICLE.md § 9.1 Espaço articulatório contínuo 7D](../article/ARTICLE.md#91-trabalhos-futuros)
+
+---
+
+### TF-004: Ampliar Corpus de Geminadas
+
+**Objetivo**: Cobrir gap identificado em avaliação de generalização (Exp OOV em ARTICLE.md).
+
+**Contexto**: PT-BR têm geminadas principalmente em empréstimos italianos e ingleses:
+- Italianos: *zz* (/dz/), *tt* (/t:/) em borrowings como "pizza", "patente"
+- Ingleses: *pp*, *ss*, *tt* em palavras como "sipping", "kissing"
+
+**Ação**: Expandir `dicts/pt-br.tsv` com ~500-1000 exemplos de geminadas certificadas de fonte fonética confiável.
+
+**Validação pós-inclusão**: 
+- Treinar Exp com dados estendidos
+- Comparar OOV accuracy (geminadas) vs baseline Exp104d
+- Esperado: redução de erro no subset de geminadas
+
+---
+
+### TF-005: Estratificação de Batches Durante Treinamento
+
+**Objetivo**: Reduzir variância em loss curves mantendo distribuição fonológica balanceada em cada mini-batch.
+
+**Setup atual**: Batches aleatórios simples (`batch_size=32`)
+
+**Proposta**: Implementar stratified batching (`batch_size=96`)
+
+**Mecânica**:
+1. Agrupar corpus por estratos fonológicos (mesmo critério do split train/val/test)
+2. Amostrar proporcionalmente em cada batch:
+   - 6 exemplos de "monossilábicos"
+   - 24 exemplos de "2–3 silábicas"
+   - 48 exemplos de "4+ silábicas"
+   - etc (proporções = dataset)
+
+**Benefício esperado**:
+- Redução de variância em curvas de loss: ~50% menos ruído
+- Convergência mais estável
+- Sem penalidade significativa em tempo de treino: +6% overhead de indexação
+
+**Referência técnica**: [docs/article/ARTICLE.md § 9.1 Estratificação de batches](../article/ARTICLE.md#91-trabalhos-futuros)
+
+---
+
+### TF-006: Análise de Homógrafos Heterófonos (Morfossintaxe)
+
+**Objetivo**: Resolver ambiguidade onde ortografia é idêntica mas pronúncia depende da categoria gramatical.
+
+**Exemplos PT-BR**:
+- *jogo* (substantivo /ˈʒɔgʊ/ vs verbo /ˈʒogʊ/) — diferença em altura/abertura de segunda vogal
+- *gosto* (substantivo /ˈɡɔstʊ/ vs verbo /ɡɔˈstʊ/) — stress diferente
+- *acordo* (substantivo /aˈkɔrdʊ/ vs verbo /ɑˈkɔrdʊ/) — slight vowel difference
+
+**Natureza do limite**: Qualquer sistema G2P em **isolamento de palavra** (word-level, sem contexto) nunca resolverá isso. É um limite arquitetural irredutível, não da implementação.
+
+**Solução**: Pipeline em série (não sequencial local):
+```
+Texto pleno → Analisador Morfossintático (POS-tagging) → G2P Condicionado → IPA
+```
+
+**Referência técnica**: [docs/article/ARTICLE.md § 9.1 Morfossintaxe](../article/ARTICLE.md#91-trabalhos-futuros)
+
+---
+
+## Referências Cruzadas e Documentação Existente
+
+Para evitar duplicação, todos os documentos devem referenciar este arquivo quando mencionarem "próximos passos", "trabalhos futuros", "extensão multilíngue", "Transformer", "Tupi", etc:
+
+- **README.md**: Referenciar seção TF-003 (espaço 7D) ao falar sobre LatPhon, ByT5, transfer learning
+- **ARTICLE.md**: Já contém texto original em § 9.1; este arquivo é o resumo executivo canonizado
+- **EXPERIMENTS.md**: Referenciar TF-001 (métricas) ao mencionar "análise PanPhon graduada"
+- **src/inference_light.py**: Documentação de uso pode referenciar TF-004 (geminadas) se dataset for expandido
+
+**Convenção**: Quando outro arquivo menciona um futuro trabalho:
+1. Descrição breve inline se < 2 parágrafos
+2. Referência cruzada para esta seção se > 2 parágrafos ou se for tópico central
