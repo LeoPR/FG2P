@@ -40,6 +40,9 @@ Regra da pasta:
 | 027 | Estratificacao de batches | Open | [open/027_batch_stratification.md](open/027_batch_stratification.md) |
 | 028 | Morfossintaxe e homografos heterofonos | Open | [open/028_morphosyntax.md](open/028_morphosyntax.md) |
 | 029 | Normalizar pasta `evaluations` | Open | [open/029_normalize_folder.md](open/029_normalize_folder.md) |
+| 030 | Auditoria: 'y' como glide / representação de 'j' | Open | [open/030_ipa_y_glide_and_j_representation.md](open/030_ipa_y_glide_and_j_representation.md) |
+| 031 | Auditoria: ditongos nasais (`ỹ`, `ʊ̃`) | Open | [open/031_nasal_diphthongs_ỹ_ʊ̃_audit.md](open/031_nasal_diphthongs_ỹ_ʊ̃_audit.md) |
+| 032 | Organizar fontes originais (`ipa-dict`) e scripts de mapeamento | Open | [open/032_dicts_sources_and_mapping_scripts.md](open/032_dicts_sources_and_mapping_scripts.md) |
 
 ## Uso rapido
 

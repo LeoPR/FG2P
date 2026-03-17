@@ -186,37 +186,21 @@ Leitura:
 
 ---
 
-## Dúvidas Comuns
+## Dúvidas Abertas e Ações
 
-**P: Quais desvios em relação ao IPA oficial estão realmente identificados aqui?**
+Mantivemos aqui apenas as observações já justificadas e corrigidas; as demais questões foram convertidas em tickets de auditoria em `docs/evaluations/open/` para investigação e documentação padronizada.
 
-A: Os principais pontos identificados são:
-- `g` no lugar de `ɡ`: defeito real de dados;
-- `y` em contextos de glide: questão aberta que exige estudo e possível normalização;
-- `ỹ` e `ʊ̃` em ditongos nasais: também merecem auditoria mais profunda antes de qualquer afirmação forte.
+- `g` no lugar de `ɡ`: **defeito de dado — corrigido**. (Normalização aplicada aos dicionários e predições históricas.)
 
-**P: Qual é a diferença entre `ɾ`, `x` e `ɣ`?**
+- Questões convertidas em tickets (abrir para evidências e decisões):
+	- `y` vs glide palatal / possível uso de `j` — ver ticket ID 030.
+	- `ỹ` e `ʊ̃` em ditongos nasais — ver ticket ID 031.
 
-A: No corpus atual, os três aparecem como realizações contextuais do `r`:
-- `ɾ` = r simples entre vogais ou em ataque simples;
-- `x` = r forte em coda/final ou antes de consoante surda;
-- `ɣ` = r em coda antes de consoante vozeada.
-
-Todos os três são símbolos IPA oficiais. O ponto importante não é o símbolo em si, mas justificar foneticamente seu uso nos contextos do corpus.
-
-**P: `.` e `ˈ` são fonemas?**
-
-A: Não. São marcadores estruturais:
-- `.` = fronteira silábica;
-- `ˈ` = sílaba tônica.
-
-**P: Os caracteres não renderizam corretamente?**
-
-A: Use UTF-8 e, se possível, uma fonte com boa cobertura IPA, como DejaVu Sans ou Charis SIL.
+Observação: sinais estruturais como `.` (separador silábico) e `ˈ` (marca de tônica) permanecem documentados como não-fonemas.
 
 ---
 
-**Última atualização**: 2026-03-15
+**Última atualização**: 2026-03-17
 **Encoding**: UTF-8
 **Fonte recomendada**: DejaVu Sans, Charis SIL, ou Liberation Sans
 
