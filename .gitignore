@@ -13,6 +13,8 @@ docs/*.pdf
 # Prediction TSVs: ~28k words per experiment, not useful without code to analyze
 results/predictions_*.tsv
 results/*/predictions_*.tsv
+# Raw benchmark CSVs (regenerable; large)
+results/*/benchmark_*_cuda_raw*.csv
 # Binary presentation (generated from presentation_generator.py)
 results/*.pptx
 

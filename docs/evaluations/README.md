@@ -43,6 +43,16 @@ Regra da pasta:
 | 030 | Auditoria: 'y' como glide / representação de 'j' | Open | [open/030_ipa_y_glide_and_j_representation.md](open/030_ipa_y_glide_and_j_representation.md) |
 | 031 | Auditoria: ditongos nasais (`ỹ`, `ʊ̃`) | Open | [open/031_nasal_diphthongs_ỹ_ʊ̃_audit.md](open/031_nasal_diphthongs_ỹ_ʊ̃_audit.md) |
 | 032 | Organizar fontes originais (`ipa-dict`) e scripts de mapeamento | Open | [open/032_dicts_sources_and_mapping_scripts.md](open/032_dicts_sources_and_mapping_scripts.md) |
+| 033 | Limpeza: arquivos/pastas obsoletos e artefatos temporários | Respondida | [answered/033_project_cleanup.md](answered/033_project_cleanup.md) |
+| 034 | Segunda rodada: auditoria geral de organização do projeto | Open | [open/034_project_cleanup_round2.md](open/034_project_cleanup_round2.md) |
+| 035 | Estrutura de dicionários multilíngue com compatibilidade | Open | [open/035_dicts_structure_and_compatibility.md](open/035_dicts_structure_and_compatibility.md) |
+| 036 | Workbench de dicionários e pipeline de limpeza | Open | [open/036_dicts_workbench_pipeline.md](open/036_dicts_workbench_pipeline.md) |
+| 037 | Compatibilidade PT-BR com treino atual | Open | [open/037_ptbr_training_compatibility.md](open/037_ptbr_training_compatibility.md) |
+| 038 | Reproduzir `pt-br.tsv` a partir de `pt_BR` (ipa-dict) | Open | [open/038_rebuild_ptbr_from_ipa_dict.md](open/038_rebuild_ptbr_from_ipa_dict.md) |
+| 039 | Tupi como primeira língua piloto multilíngue | Open | [open/039_tupi_first_multilingual_language.md](open/039_tupi_first_multilingual_language.md) |
+| 040 | Inglês como segundo idioma piloto | Open | [open/040_english_pilot_language.md](open/040_english_pilot_language.md) |
+| 041 | Leitor de dataset multilíngue com tags de idioma | Open | [open/041_multilingual_dataset_reader_and_tags.md](open/041_multilingual_dataset_reader_and_tags.md) |
+| 042 | Limpeza de legado e depreciação controlada | Open | [open/042_legacy_cleanup_and_deprecation.md](open/042_legacy_cleanup_and_deprecation.md) |
 
 ## Uso rapido
 
