@@ -11,11 +11,13 @@ Escopo:
 - Propor árvore canônica por língua/variante: `dicts/<lang>/<region>/<variant?>`.
 - Manter compatibilidade temporária com caminhos legados.
 - Não alterar conteúdo linguístico dos arquivos nesta etapa.
+- Declarar explicitamente que `dicts/` contém apenas artefatos canônicos de consumo; fontes brutas, recipes e builds ficam fora daqui.
 
 Entregáveis:
 - Documento canônico de estrutura de pastas em `dicts/README.md`.
 - Mapeamento de caminhos legado -> novo.
 - Plano de depreciação de `dicts/pt-br/`.
+- Fronteira explícita entre `dicts/` e `dicts-workbench/`.
 
 Critérios de aceite:
 - Estrutura aprovada e documentada.

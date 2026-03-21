@@ -196,7 +196,7 @@ Esses são checkpoints de experimentos que estão corretamente ignorados pelo `.
 |---|------|-----------|---------|---------|--------|
 | A1 | Adicionar `results/*/benchmark_*_cuda_raw*.csv` ao `.gitignore` | CRÍTICO | Baixo | -403 MB do tracking | Concluído em 2026-03-20 |
 | A2 | `git rm --cached` nos 172 benchmark CSVs | CRÍTICO | Baixo | Limpa o index | Concluído em 2026-03-20 |
-| A3 | Remover `backups/ipa-dict/` do disco | MÉDIO | Baixo | -190 MB disco | Pendente |
+| A3 | Realocar `backups/ipa-dict/` para área canônica de fontes brutas/proveniência (fora de `dicts/`) | MÉDIO | Médio | Reduz ruído estrutural sem perder rastreabilidade científica | Concluído em 2026-03-20 |
 | A4 | Decidir destino dos 16 .pt locais não rastreados | MÉDIO | Médio | -393 MB potencial | Pendente |
 | A5 | Documentar status dos 14 configs órfãos | BAIXO | Baixo | Clareza | Pendente |
 | A6 | Avaliar Git LFS para os 3 .pt tracked | BAIXA | Alto | Necessário para publicação | Backlog (adiável) |
@@ -219,3 +219,10 @@ O `.gitignore` está **bem configurado**, incluindo agora benchmark CSVs regener
 - Se for sincronizar no curto prazo, priorizar apenas `docs/evaluations/` (tickets) e, separadamente, o ajuste do `.gitignore`.
 - O untracking dos benchmarks (A2) deve entrar no mesmo ciclo de sincronização do A1 para evitar reintrodução em merges futuros.
 - Purge histórico (A7) não é necessário para funcionamento; tratar apenas quando houver objetivo explícito de reduzir histórico remoto.
+
+### Decisão arquitetural emergente para fontes lexicais
+
+- `dicts/` deve permanecer como área **canônica de consumo** do treino/inferência/publicação.
+- Fontes brutas, snapshots do upstream, regras declarativas, manifests, relatórios e artefatos temporários devem viver em área separada de trabalho/proveniência.
+- Para este projeto, a melhor direção é fortalecer `dicts-workbench/` (ticket 036) em vez de misturar `raw/` dentro de `dicts/`.
+- Consequência prática: o antigo `backups/ipa-dict/` deixa de ser “backup solto” e passa a ser insumo controlado do pipeline de reconstrução do ticket 038.

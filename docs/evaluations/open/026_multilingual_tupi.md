@@ -150,15 +150,17 @@ Para reduzir confusão e evitar mexer em caminhos errados, a execução recomend
 
 1. 034 - Auditoria geral de organização (limpeza e inventário global).
 2. 042 - Limpeza de legado e depreciação controlada (reduzir ruído de arquivos antigos).
-3. 037 - Compatibilidade PT-BR (congelar referência + smoke tests).
-4. 035 - Estrutura multilíngue com compatibilidade de path.
-5. 036 - Workbench de dicionários (`dicts-workbench`) para processamento separado.
+3. 036 - Workbench de dicionários (`dicts-workbench`) para processamento separado.
+4. 032 - Organizar fontes originais e expor pipeline/manifest de normalização.
+5. 037 - Compatibilidade PT-BR (congelar referência + smoke tests).
 6. 038 - Reproduzir `pt-br.tsv` a partir de `pt_BR` via regras auditáveis.
-7. 039 - Tupi como primeiro piloto multilíngue.
-8. 040 - Inglês como segundo piloto.
-9. 041 - Loader multilíngue com tags.
+7. 035 - Estrutura multilíngue com compatibilidade de path.
+8. 039 - Tupi como primeiro piloto multilíngue.
+9. 040 - Inglês como segundo piloto.
+10. 041 - Loader multilíngue com tags.
 
 Racional:
 - Primeiro limpar e reduzir ambiguidade documental/estrutural.
-- Depois proteger o que já funciona (PT-BR atual).
-- Só então avançar para expansão multilíngue e supermodelo misto.
+- Depois separar claramente consumo (`dicts/`) de proveniência/workbench.
+- Em seguida proteger o que já funciona (PT-BR atual) e provar a reconstrução auditável.
+- Só depois mexer no path canônico publicado e avançar para expansão multilíngue.

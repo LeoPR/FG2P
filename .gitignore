@@ -42,6 +42,8 @@ src/aula01_p1_3.py
 /data
 /logs
 /results/_reports
+# Keep upstream ipa-dict clone local-only (sync separately from FG2P)
+/dicts-workbench/sources/ipa-dict
 
 # === HISTORICAL ARTIFACTS ===
 CONSOLIDACAO_DOCUMENTACAO.md

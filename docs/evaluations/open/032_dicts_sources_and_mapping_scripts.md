@@ -7,25 +7,29 @@ Status: open
 ---
 
 Resumo:
-Criar uma entrada canônica que documente as fontes originais (ex.: `backups/ipa-dict/`), reorganizar a pasta `dicts/` com um README e scripts de mapeamento/normalização claros (ex.: g→ɡ), e expor um CLI/script top-level para aplicar correções e gerar artefatos normalizados.
+Criar uma entrada canônica que documente as fontes originais (ex.: snapshot local do `ipa-dict`), reorganizar a rastreabilidade dos insumos sem poluir `dicts/`, e expor um CLI/script top-level para aplicar correções e gerar artefatos normalizados.
 
 Motivação:
-Atualmente a correção g→ɡ e outras normalizações estão implementadas em código (`src/phonetic_features.py`), e há backups de `ipa-dict` em `backups/ipa-dict/`. Precisamos tornar essa infraestrutura evidente para futuros colaboradores e automatizar a aplicação de normalizações na fonte (`dicts/`), com documentação sobre licenças e origem das fontes.
+Atualmente a correção g→ɡ e outras normalizações estão implementadas em código (`src/phonetic_features.py`), e há uma cópia do `ipa-dict` em `backups/ipa-dict/`. Precisamos tornar essa infraestrutura evidente para futuros colaboradores e automatizar a aplicação de normalizações sem transformar `dicts/` em depósito de insumos brutos, com documentação sobre licenças, origem e checksums.
 
 Tarefas propostas:
-1. Inventariar fontes: listar conteúdos de `backups/ipa-dict/`, `dicts/pt-br.tsv` e `data/phoneme_map.json` com origem e licença.
-2. Criar `dicts/README.md` com: fonte(s), versão, licença, instruções para regenerar/normalizar (com exemplos de comando).
-3. Extrair ou criar um wrapper CLI `scripts/normalize_dicts.py` (ou `scripts/data_normalize.py`) que:
+1. Inventariar fontes: listar conteúdos do snapshot local do `ipa-dict`, `dicts/pt-br.tsv` e `data/phoneme_map.json` com origem, licença, checksum e data de captura.
+2. Definir área canônica para fontes brutas e proveniência, preferencialmente `dicts-workbench/sources/ipa-dict/`.
+3. Criar `dicts/README.md` com foco em consumo: corpus canônicos, origem resumida e ponteiro para o workbench/proveniência.
+4. Extrair ou criar um wrapper CLI `scripts/normalize_dicts.py` (ou `scripts/data_normalize.py`) que:
    - aplique as normalizações conhecidas (g→ɡ, NFC, etc.) usando a função central em `src/phonetic_features.py` ou replicando lógica equivalente;
    - gere hashes e um relatório (conteagens antes/depois) e um CSV com instâncias modificadas;
-   - escreva saída em `dicts/pt-br.normalized.tsv` por padrão.
-4. Adicionar um pequeno teste/unit test que verifica g→ɡ normalização (ex.: 10.252 instâncias corrigidas no histórico).
-5. Documentar no `README.md` do projeto e em `IPA_REFERENCE.md` o local e o comando único para (re)aplicar normalizações.
+   - escreva saída em área de build intermediária antes da promoção para `dicts/`.
+5. Adicionar um pequeno teste/unit test que verifica g→ɡ normalização (ex.: 10.252 instâncias corrigidas no histórico).
+6. Documentar no `README.md` do projeto e em `IPA_REFERENCE.md` o local e o comando único para (re)aplicar normalizações.
+7. Criar manifest por snapshot/regra, por exemplo `manifest.json` ou `recipe.yaml`, contendo input, licença, versão, checksum, regras e output esperado.
 
 Critérios de aceite:
-- `dicts/README.md` criado e referenciado no topo-level `README.md`.
+- `dicts/README.md` criado e referenciado no topo-level `README.md`, deixando claro que `dicts/` contém apenas artefatos canônicos de uso.
+- Área de fontes/proveniência definida fora de `dicts/`.
 - `scripts/normalize_dicts.py` presente com CLI (`--input --output --report`) e exemplo de uso documentado.
 - Relatório CSV gerado com contagens antes/depois e amostra de linhas modificadas.
+- Manifest de proveniência/rule-set criado para pelo menos o caso PT-BR.
 - Ticket/PR linking e uma entrada no changelog descrevendo a mudança.
 
 Próximos passos imediatos:
