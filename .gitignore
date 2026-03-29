@@ -1,3 +1,21 @@
+# === LaTeX BUILD ARTIFACTS ===
+# Artefatos intermediários gerados pelo compilador LaTeX (latexmk/pdflatex)
+# O PDF final (main.pdf) também é ignorado — gerado localmente pelo compilador
+# Para incluir o PDF no git manualmente: git add -f docs/article/icassp/main.pdf
+docs/article/icassp/*.aux
+docs/article/icassp/*.bbl
+docs/article/icassp/*.blg
+docs/article/icassp/*.fdb_latexmk
+docs/article/icassp/*.fls
+docs/article/icassp/*.log
+docs/article/icassp/*.pdf
+docs/article/icassp/*.synctex.gz
+docs/article/icassp/*.synctex
+docs/article/icassp/*.out
+docs/article/icassp/*.toc
+# Subdiretório de build configurado no latexmkrc ($out_dir = '.build')
+docs/article/icassp/.build/
+
 # === LARGE BINARIES & ARCHIVES ===
 # Model checkpoints — only active alias checkpoints tracked
 # best_per  → exp104d_structural_tokens_correct
