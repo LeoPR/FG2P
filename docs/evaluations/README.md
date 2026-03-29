@@ -53,6 +53,20 @@ Regra da pasta:
 | 040 | Inglês como segundo idioma piloto | Open | [open/040_english_pilot_language.md](open/040_english_pilot_language.md) |
 | 041 | Leitor de dataset multilíngue com tags de idioma | Open | [open/041_multilingual_dataset_reader_and_tags.md](open/041_multilingual_dataset_reader_and_tags.md) |
 | 042 | Limpeza de legado e depreciação controlada | Open | [open/042_legacy_cleanup_and_deprecation.md](open/042_legacy_cleanup_and_deprecation.md) |
+| 043 | Piloto de integração PT-BR first para base multilíngue | Open | [open/043_ptbr_first_integration_pilot.md](open/043_ptbr_first_integration_pilot.md) |
+| 044 | Contrato canônico de corpus e metadados de proveniência | Open | [open/044_corpus_contract_metadata.md](open/044_corpus_contract_metadata.md) |
+| 045 | Canonização fonética para treino e estabilidade da DA Loss | Open | [open/045_phoneme_canonicalization_for_training.md](open/045_phoneme_canonicalization_for_training.md) |
+| 046 | Agregação PT-BR multi-arquivo (base + overlays) | Open | [open/046_ptbr_multifile_aggregation.md](open/046_ptbr_multifile_aggregation.md) |
+| 047 | Taxonomia lexical opcional para expansão incremental | Open | [open/047_optional_lexical_taxonomy.md](open/047_optional_lexical_taxonomy.md) |
+| 048 | Checklist de submissão ICASSP 2026 | Open | [open/048_icassp2026_submission_checklist.md](open/048_icassp2026_submission_checklist.md) |
+| 049 | Auditoria completa ARTICLE.md — todas as correções para publicação (C0–C3) | Open | [open/049_article_md_consistency_fixes.md](open/049_article_md_consistency_fixes.md) |
+| 050 | Submissão PROPOR 2026 — venue alternativo PT-BR | Open | [open/050_propor2026_submission.md](open/050_propor2026_submission.md) |
+| 051 | Avaliação Interspeech 2026 — venue internacional de fala | Open | [open/051_interspeech2026_submission.md](open/051_interspeech2026_submission.md) |
+| 052 | Validação perceptual MOS/ABX (Class B vs D) | Open | [open/052_perceptual_validation_mos_abx.md](open/052_perceptual_validation_mos_abx.md) |
+| 053 | Versão journal — Computer Speech and Language (paper completo) | Open | [open/053_journal_version_full_paper.md](open/053_journal_version_full_paper.md) |
+| 054 | Paper de extensão multilíngue da DA Loss | Open | [open/054_da_loss_multilingual_extension_paper.md](open/054_da_loss_multilingual_extension_paper.md) |
+| 055 | Expansão de corpus para consoantes geminadas (empréstimos) | Open | [open/055_geminate_corpus_expansion.md](open/055_geminate_corpus_expansion.md) |
+| 056 | Roadmap de publicações — venues e datas reais verificadas | Open | [open/056_publication_roadmap.md](open/056_publication_roadmap.md) |
 
 ## Uso rapido
 

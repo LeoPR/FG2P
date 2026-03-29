@@ -19,3 +19,17 @@ Critérios de aceite:
 
 Dependências:
 - 035, 037, 039, 040
+
+Dependências adicionais (2026-03-26):
+- 043 (piloto PT-BR first)
+- 044 (contrato de corpus)
+- 046 (agregação PT-BR multi-arquivo)
+- 047 (taxonomia lexical opcional)
+
+Fase de prontidão para implementação:
+1. Primeiro garantir estabilidade PT-BR (037) e contrato de corpus (044).
+2. Depois integrar agregação PT-BR multi-arquivo (046) como caso de transição.
+3. Só então habilitar parsing de tags multilíngues em modo misto.
+
+Critério adicional de aceite:
+- Modo single-language deve reproduzir baseline PT-BR sem regressão antes de ativar modo multi-language.
