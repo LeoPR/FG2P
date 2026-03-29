@@ -369,9 +369,7 @@ $$L_{CE} = -\frac{1}{N} \sum_{i=1}^N \log p_i^{(y_i)}$$
 
 O principal limitante da CE é tratar todos os erros igualmente. Do ponto de vista fonológico, isso é inadequado: substituir `/ɛ/` por `/e/` (1 feature de diferença, vogais médias da mesma família) é erro qualitativaente diferente de substituir `/a/` por `/k/` (8+ features, vogal baixa vs. oclusiva velar).
 
-### 4.2 Distance-Aware Phonetic Loss (DA Loss)
-
-> Análise aprofundada com exemplos numéricos, sweep de λ e sugestões de fórmulas alternativas em [DA_LOSS_ANALYSIS.md](./DA_LOSS_ANALYSIS.md).
+### 4.2 Distance-Aware Phonetic Loss (DA Loss) [DA_LOSS_ANALYSIS.md](./DA_LOSS_ANALYSIS.md).
 
 #### O problema fundamental
 
@@ -562,7 +560,7 @@ $$\text{WER}_{G2P} = \frac{|\{i : \hat{y}_i \neq y_i\}|}{N} \times 100\% = 100\%
 
 Esta definição — word-level *exact-match error rate* — é equivalente ao que a literatura de reconhecimento de fala chama de *String Error Rate* (SER) ou *Sentence Error Rate*. Difere do WER padrão de ASR, que usa distância de edição ao nível de **palavras** numa frase. Em G2P, a palavra já é a unidade mínima; WER é portanto a proporção de palavras com transcrição imprecisa.
 
-Referências: [@bisani2008joint].
+Referências: [@bisani2008joint; @yao2015sequence].
 
 #### PER_w e WER_g — Métricas Graduadas (contribuição FG2P)
 
@@ -679,7 +677,8 @@ O encoding NFD (decomposed) foi testado em Exp11 e mostrou regressão severa (+4
 
 ### 5.5 Principais Descobertas por Fase
 
-**Fase 1 — Split**: O split 60/10/30 supera 70/10/20 em −41% PER com a mesma arquitetura. Mais dados de treino não garantem melhor generalização — conjunto de teste maior e bem estratificado é mais valioso. A estratificação por features fonológicas (stress_type, syllable_bin, length_bin) foi a intervenção decisiva: PER 1,12% → 0,66%, WER 9,37% → 5,65%, confirmando a importância de um split representativo para avaliação realista.
+**Fase 1 — Split**: O split 60/10/30 supera 70/10/20 em −41% PER com a mesma arquitetura. Mais dados de treino não garantem melhor generalização — conjunto de teste maior e bem estratificado é mais valioso.
+Aqui a estratificação também seguia a lógica de fazer um random do corpus, e quebrar em pedaços como a maioria dos G2P ciram nos artigos. No experimento 1, foi feito um split 60/10/30 com uma estratificação inicial dos fonemas e graphemas bem distribuidos. Com essa ideia rodei novamente o split com uma estratificação mais robusta, usando as features fonológicas (stress_type, syllable_bin, length_bin) para criar estratos mais representativos. O resultado foi uma melhora significativa de PER (1,12% → 0,66%) e WER (9,37% → 5,65%), confirmando a importância de um split bem estratificado para avaliação realista.
 
 
 **Fase 2 — Capacidade**: O modelo 9,7M é o *sweet spot*. 4,3M satura; 17,2M não adiciona valor proporcional. DA Loss funciona como regularizador e, acima de 17,2M parâmetros, passa a interferir negativamente com o potencial de memorização benígna do modelo.
@@ -756,7 +755,7 @@ O override de distância (Exp104b) reduziu ligeiramente essas confusões, mas o 
 
 Uma propriedade científica frequentemente subestimada das métricas PER/WER clássicas é que elas tratam **todos os erros como equivalentes**: predizer `/ʒ/` quando o correto é `/e/` (distância fonológica ≈ 0.9) conta o mesmo que predizer `/ɛ/` quando o correto é `/e/` (distância ≈ 0.1). Isso oculta uma diferença qualitativa fundamental no comportamento dos modelos.
 
-**Hipótese de distribuição graduada**: A DA Loss não apenas reduz a taxa de erro absoluta — ela *redistribui* os erros ao longo do eixo de distância fonológica. Especificamente:
+**Hipótese de distribuição graduada**: A DA Loss com embeddings PanPhon não apenas reduz a taxa de erro absoluta — ela *redistribui* os erros ao longo do eixo de distância fonológica. Especificamente:
 
 - **Modelos CE padrão**: os erros que ocorrem são governados pela distribuição de probabilidade do softmax. O fonema "mais errado provável" (próximo ao correto) e o "muito errado" (distante) competem igualmente pelo gradiente.
 - **Modelos DA Loss**: a penalidade `λ · d(pred, correct) · p_pred` é proporcional à distância. Erros distantes custam mais. O modelo aprende a *preferir erros próximos* quando erra — ou seja, quando erra `/e/`, é mais provável que prediga `/ɛ/` do que `/ʒ/`.
@@ -771,7 +770,7 @@ As classes A–D definidas em §5.1 (distância de Hamming normalizada: A = 0; B
 
 | Exp | Técnica | PER | Cls A | Cls B | Cls C | Cls D | D/erros |
 |-----|---------|-----|-------|-------|-------|-------|---------|
-| Exp1 | CE baseline (4,3M) | 0,66% | 98,94% | 0,39% | 0,13% | 0,54% | 50,9% |
+| Exp1 | CE baseline (4,3M) | 0,64% | 98,94% | 0,39% | 0,13% | 0,54% | 50,9% |
 | Exp6 | DA λ=0,1 (4,3M) | 0,63% | 99,02% | 0,39% | 0,12% | 0,47% | 48,0% |
 | Exp7 | DA λ=0,2 (4,3M) | 0,60% | 99,02% | 0,37% | 0,13% | 0,49% | 48,5% |
 | **Exp9** | **DA λ=0,2 (9,7M)** | **0,58%** | **99,09%** | **0,36%** | **0,11%** | **0,44%** | **48,4%** |
@@ -803,7 +802,7 @@ As 6 categorias e seus objetivos diagnósticos:
 | Categoria | N | Objetivo |
 |-----------|---|---------|
 | Generalização PT-BR | 9 | Testar regras fonológicas em neologismos |
-| Consoantes Duplas | 5 | Testar redução de geminadas (lazzaretti → z único) |
+| Consoantes Duplas | 5 | Testar redução de geminadas (lazzaretti → z único :`) ) |
 | Anglicismos (chars no vocab) | 5 | Testar fonologia inglesa com grafemas portugueses |
 | Chars OOV (k/w/y) | 3 | Documentar falhas esperadas por limite do charset |
 | Palavras PT-BR reais (OOV) | 5 | Testar generalização de regras para palavras inéditas |
@@ -847,20 +846,20 @@ Avaliação com o modelo Exp104b (SOTA PER, índice 18):
 
 | Categoria | Corretas | Score Fonol. Médio | Insight |
 |-----------|----------|---------------------|---------|
-| Generalização PT-BR | 6/9 (67%) | 97% | Near-misses: ĩ→i, fantabulástico (ʃ→s) |
-| Consoantes Duplas | 1/5 (20%) | 81% | Modelo gera geminadas no output |
+| Generalização PT-BR | 4/9 (44%) | 97% | Near-misses: ɣ→x, ĩ→i |
+| Consoantes Duplas | 1/5 (20%) | 81% | Model gera geminadas no output |
 | Anglicismos (invocab) | 1/5 (20%) | 71% | clube ✓; fonologia inglesa é OOV |
 | Chars OOV | 0/3 (0%) | 68% | Falha esperada documentada |
 | **PT-BR Reais (OOV)** | **5/5 (100%)** | **100%** | **Generalização perfeita** |
-| Controles (em treino) | 4/4 (100%) | 100% | borboleta ✓ (ɣ/x correto por assimilação) |
+| Controles (em treino) | 3/4 (75%) | 98% | borboleta: ɣ→x |
 
-**Total**: 17/31 corretas (55%)
+**Total**: 14/31 corretas (45%)
 
 ### 7.4 Análise Qualitativa por Categoria
 
-**Generalização PT-BR (6/9)**: Os 3 erros restantes nesta categoria têm score médio de 97%, indicando que todos são *near-misses* com uma substituição de fonema da mesma família articulatória. Exemplos de erro:
+**Generalização PT-BR (4/9)**: Os 5 erros nesta categoria têm score médio de 97%, indicando que todos são *near-misses* com uma ou duas substituições de fonemas da mesma família articulatória. Exemplos:
 - *fantabulástico*: `ʃ` → `s` (mesma posição alveolar; score 97%)
-- Os 6 acertos incluem todos os padrões produtivos corretos, inclusive *computadorzinho* e *açucarzão* (ɣ antes de consoante vozeada — confirmado correto em §6.2)
+- *computadorzinho*: `ɣ` → `x` (mesma classe velar; score 94%)
 - O modelo acerta todos os padrões complexos: `tʃ` para `-ti-`, `ɲ` para `nh`, `ã ʊ̃` para `-ão`, acento na sílaba correta
 
 **Consoantes Duplas (1/5)**: O modelo não aprendeu que geminadas italianas/estrangeiras reduzem a uma única consoante em PT-BR. Em *lazzaretti*, prediz `l a z z a...` (duplo-z) em vez de `l a z a...`. Em *mozzarela*, idem: duplo-z no output. Pois não há exemplos de geminadas no corpus para o modelo aprender a regra de redução.
@@ -920,21 +919,21 @@ A DA Loss demonstrou eficácia como regularizador fonético: melhora PER e WER n
 
 ### 8.3 Escopo Aplicado do G2P no Pipeline
 
-Esta seção fixa a leitura prática dos resultados para evitar sobre-interpretação teórica no texto principal.
+Esta seção fixa a leitura prática dos resultados para evitar sobre-interpretacao teórica no texto principal.
 
 **O que foi usado e como**:
-- o modelo G2P gera uma hipótese IPA por palavra;
-- a saída IPA é usada como sinal fonético em pipeline (TTS, busca fonética, normalização), não como decisor semântico final;
-- a DA Loss foi adotada para reduzir erros foneticamente distantes no treinamento, mantendo a arquitetura BiLSTM e o protocolo de avaliação transparentes.
+- o modelo G2P gera uma hipotese IPA por palavra;
+- a saida IPA e usada como sinal fonetico em pipeline (TTS, busca fonetica, normalizacao), nao como decisor semantico final;
+- a DA Loss foi adotada para reduzir erros foneticamente distantes no treinamento, mantendo a arquitetura BiLSTM e o protocolo de avaliacao transparentes.
 
-**Exemplo operacional mínimo**:
-1. entrada ortográfica (`cinto` / `sinto`)
-2. geração de hipóteses IPA
-3. módulo downstream decide por contexto de tarefa (ranking, policy, regras de negócio)
+**Exemplo operacional minimo**:
+1. entrada ortografica (`cinto` / `sinto`)
+2. geracao de hipoteses IPA
+3. modulo downstream decide por contexto de tarefa (ranking, policy, regras de negocio)
 
-**Limite de inferência**: as evidências deste trabalho sustentam associação mecanística (melhor qualidade fonética dos erros), não causalidade forte para todos os erros de escrita do mundo real.
+**Limite de inferencia**: as evidencias deste trabalho sustentam associacao mecanistica (melhor qualidade fonetica dos erros), nao causalidade forte para todos os erros de escrita do mundo real.
 
-**Ancoragem bibliográfica**: a fundamentação teórica detalhada de fonética articulatória, PanPhon e G2P fica nas referências compiladas em `REFERENCES.bib` [@mortensen2016panphon; @browman1992articulatory; @barbosa2004brazilian; @bisani2008joint; @rao2015g2p].
+**Ancoragem bibliografica**: a fundamentacao teorica detalhada de fonetica articulatoria, PanPhon e G2P fica nas referencias compiladas em `REFERENCES.bib` [@mortensen2016panphon; @browman1992articulatory; @barbosa2004brazilian; @bisani2008joint; @rao2015g2p].
 
 ### 8.4 Convergência Rápida como Sinal de Qualidade
 
@@ -1029,7 +1028,7 @@ O sweep formal (CPU: 2026-03-15, adaptativo, 19 modelos · GPU: 2026-03-14, over
 
 Este trabalho apresentou o FG2P, um sistema G2P para o Português Brasileiro baseado em BiLSTM Encoder-Decoder com atenção de Bahdanau. Os principais resultados e contribuições são:
 
-**Principais resultados empíricos**:
+**Principais resultados empiricos**:
 - **PER 0,48%** (Exp104d: referência consolidada de qualidade fonêmica)
 - **WER 5,33%** (Exp104d na configuração de referência)
 - **WER 4,96%** (Exp9 como referência complementar WER-centered)
@@ -1052,6 +1051,7 @@ Este trabalho apresentou o FG2P, um sistema G2P para o Português Brasileiro bas
 - Geminadas de empréstimos (zz, tt, pp) → corpus insuficiente
 - Fonologia de anglicismos não-adaptados → OOV fonológico
 - Chars k, w, y → OOV de charset (limite hard)
+- Confusão `ɣ`→`x` em coda → erro sistemático de vozeamento velar
 
 ### 9.1 Trabalhos Futuros
 
@@ -1088,10 +1088,6 @@ A vantagem chave deste espaço: `.` e `ˈ` receberiam coordenadas distintas (CON
 ---
 
 ## 10. Guia de Uso: inference_light.py
-
-> ⚠️ **Nota de escopo**: Esta seção é documentação técnica interna do projeto, não conteúdo de artigo científico.
-> Em qualquer versão destinada a publicação (TASLP, ICASSP, PROPOR), esta seção deve ser omitida.
-> A API documentada aqui pertence ao README do repositório.
 
 O módulo `src/inference_light.py` é a interface principal para uso do modelo em produção ou experimentação. Funciona como API Python e como ferramenta de linha de comando (CLI), com quatro modos de operação.
 
@@ -1347,25 +1343,16 @@ Este artigo faz parte de um conjunto integrado de documentação:
 
 ## Referências
 
-> As referências completas estão em formato BibTeX canônico em [`REFERENCES.bib`](./REFERENCES.bib).
-> Todas as chaves `[@chave]` usadas neste documento têm entradas correspondentes nesse arquivo.
-> A lista abaixo é um índice das principais referências; para geração de bibliografias em LaTeX/Zotero, usar REFERENCES.bib como fonte única.
-
-**Referências principais citadas neste artigo**:
-
-- `@bahdanau2014neural` — Bahdanau, Cho & Bengio (2014). Neural Machine Translation by Jointly Learning to Align and Translate.
-- `@bisani2008joint` — Bisani & Ney (2008). Joint-Sequence Models for G2P. *Speech Communication* 50(5).
-- `@bottou2010large` — Bottou (2010). Large-Scale Machine Learning with SGD. *COMPSTAT*.
-- `@barbosa2004brazilian` — Barbosa & Albano (2004). Brazilian Portuguese. *JIPA* 34(2).
-- `@byt5g2p` — Xue et al. (2022). ByT5: Towards a token-free future. *TACL* 10.
-- `@chary2025latphon` — Chary et al. (2025). LatPhon: Multilingual G2P with Language-Aware Encoders. *arXiv:2509.03300*.
-- `@brown2001interval` — Brown, Cai & DasGupta (2001). Interval Estimation for a Binomial Proportion. *Statist. Sci.* 16(2).
-- `@kohavi1995crossvalidation` — Kohavi (1995). A Study of Cross-Validation and Bootstrap. *IJCAI*.
-- `@mortensen2016panphon` — Mortensen et al. (2016). PanPhon. *COLING*.
-- `@neto2006brazilian` — Neto, Fagundes & Catelli (2006). New Resources for Brazilian Portuguese G2P. *ICASSP*.
-- `@rao2015g2p` — Rao, Sak & Prabhavalkar (2015). G2P with LSTM RNNs. *ICASSP*.
-- `@wilson1927probable` — Wilson (1927). Probable Inference. *JASA* 22.
+- Bahdanau, D., Cho, K., & Bengio, Y. (2014). Neural Machine Translation by Jointly Learning to Align and Translate. *arXiv:1409.0473*.
+- Graves, A., & Schmidhuber, J. (2005). Framewise phoneme classification with bidirectional LSTM and other neural network architectures. *Neural Networks*, 18(5–6), 602–610.
+- Hayes, B., & Wilson, C. (2008). A maximum entropy model of phonotactics and phonotactic learning. *Linguistic Inquiry*, 39(3), 379–440.
+- Hochreiter, S., & Schmidhuber, J. (1997). Long short-term memory. *Neural Computation*, 9(8), 1735–1780.
+- Levenshtein, V. I. (1966). Binary codes capable of correcting deletions, insertions, and reversals. *Soviet Physics Doklady*, 10(8), 707–710.
+- Mortensen, D. R., Littell, P., Bharadwaj, A., Goyal, K., Dyer, C., & Levin, L. (2016). PanPhon: A resource for mapping IPA segments to articulatory feature vectors. *COLING 2016*, 3475–3484.
+- NVIDIA. (2026). Compare GeForce Graphics Cards. https://www.nvidia.com/en-us/geforce/graphics-cards/compare/
+- Vitevitch, M. S., & Luce, P. A. (2004). A web-based interface to calculate phonotactic probability for words and nonwords in English. *Behavior Research Methods, Instruments, & Computers*, 36(3), 481–487.
+- Xue, L., Barua, A., Constant, N., Al-Rfou, R., Narang, S., Kale, M., ... & Raffel, C. (2022). ByT5: Towards a token-free future with pre-trained byte-to-byte models. *TACL*, 10, 291–306.
 
 ---
 
-*Versão: 1.3 | Atualizado: 2026-03-29 | Código, dados e modelos disponíveis em [src/](../src/), [dicts/](../dicts/), [models/](../models/).*
+*Documento gerado em 2026-02-25. Código, dados e modelos disponíveis em [src/](../src/), [dicts/](../dicts/), [models/](../models/).*

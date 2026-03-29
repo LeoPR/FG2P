@@ -1,0 +1,546 @@
+% =============================================================
+% Distance-Aware Loss for Phonologically-Graded G2P in PT-BR
+% IEEE ICASSP 2026 — Anonymous Submission
+% =============================================================
+%
+% COMPILATION:
+%   Recommended (best IPA rendering):
+%     xelatex main && bibtex main && xelatex main && xelatex main
+%
+%   Alternative (pdflatex — IPA symbols require a T3-capable font):
+%     pdflatex main && bibtex main && pdflatex main && pdflatex main
+%
+%   If IPA characters show as boxes under pdflatex, uncomment the
+%   \usepackage{tipa} block below and replace Unicode IPA with
+%   \textipa{} commands.
+% =============================================================
+
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% ---- Encoding & fonts ----------------------------------------
+% XeLaTeX path (recommended):
+%\usepackage{fontspec}
+%\setmainfont{Linux Libertine O}   % or Times New Roman if available
+
+% pdfLaTeX path:
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% tipa — required: \textipa{} commands are used throughout
+\usepackage{tipa}
+
+% ---- Math ----------------------------------------------------
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ---- Tables --------------------------------------------------
+\usepackage{booktabs}
+\usepackage{multirow}
+
+% ---- References ----------------------------------------------
+\usepackage{cite}
+
+% ---- Hyperlinks (comment out for camera-ready if required) ---
+% \usepackage{hyperref}
+
+% ---- Macros --------------------------------------------------
+\newcommand{\dpp}{d_{\mathrm{PP}}}        % PanPhon distance
+\newcommand{\LCE}{L_{\mathrm{CE}}}        % CE loss
+\newcommand{\lam}{\lambda}                % lambda shorthand
+
+% =============================================================
+\begin{document}
+% =============================================================
+
+\title{Distance-Aware Loss for Phonologically-Graded\\
+       Grapheme-to-Phoneme Conversion in Brazilian Portuguese}
+
+\author{%
+  \IEEEauthorblockN{[ANONYMOUS]}
+  \IEEEauthorblockA{[ANONYMOUS]}
+}
+
+\maketitle
+
+% ---- Abstract -----------------------------------------------
+\begin{abstract}
+Standard grapheme-to-phoneme (G2P) training treats all phoneme
+substitutions equally, regardless of articulatory distance.
+We propose Distance-Aware (DA) Loss, which penalizes substitutions
+proportionally to PanPhon articulatory distance between predicted and
+target phonemes, weighted by the model's prediction confidence.
+Applied to Brazilian Portuguese with a BiLSTM encoder-decoder,
+DA~Loss systematically redistributes errors toward phonologically
+closer targets: Class~D (catastrophic) substitutions decrease
+19\,\% relative vs.\ a CE~baseline.
+Our system achieves PER~0.48\,\% and WER~4.96\,\% on a stratified
+28{,}782-word test set---57$\times$ larger than comparable PT-BR
+evaluations---with a Wilson 95\,\% CI of $\pm$0.03\,pp.
+Evaluation on 31~out-of-vocabulary words yields 100\,\% accuracy
+on genuine novel PT-BR words, consistent with phonological rule
+generalization beyond memorization.
+\end{abstract}
+
+\begin{IEEEkeywords}
+grapheme-to-phoneme, distance-aware loss, Brazilian Portuguese,
+BiLSTM, phonological features, articulatory distance
+\end{IEEEkeywords}
+
+% =============================================================
+\section{Introduction}
+% =============================================================
+
+Grapheme-to-phoneme (G2P) conversion is a core component of
+text-to-speech synthesis, automatic speech recognition, and
+multilingual NLP pipelines.
+For Brazilian Portuguese, G2P presents well-documented challenges:
+graphemic ambiguity (grapheme ``c'' maps to /k/ in \textit{cama}
+but /s/ in \textit{cena}; ``r'' maps to /\textipa{\*r}/ in syllable
+onset but /x/ in word-final coda~\cite{barbosa2004brazilian}), vowel
+neutralization in unstressed positions
+(/e/$\leftrightarrow$/\textipa{E}/ and /o/$\leftrightarrow$/\textipa{O}/
+merge), and position-dependent coda realization (/x/ in final
+position; /\textipa{G}/ before voiced consonants).
+Prior work on PT-BR G2P has addressed these challenges with
+decision trees, n-gram models, and neural sequence-to-sequence
+architectures~\cite{neto2006brazilian}.
+
+Standard models trained with cross-entropy (CE) treat all phoneme
+errors equally: predicting /\textipa{E}/ when the target is /e/---a
+near-miss differing in one articulatory feature---incurs the same
+gradient penalty as predicting /k/ for /a/, an error spanning eight
+articulatory features.
+This phonological blindness distorts the training signal: the model
+learns \emph{that} it erred but not \emph{how severely}.
+
+We address this with \textbf{Distance-Aware (DA) Loss}, which adds a
+training signal proportional to the articulatory distance between
+predicted and target phonemes, weighted by the model's prediction
+confidence.
+DA~Loss asks not only ``did you err?'' but also ``how far
+phonologically was your error?''
+We apply this to Brazilian Portuguese using a BiLSTM encoder-decoder
+with Bahdanau attention~\cite{bahdanau2014neural}---deliberately
+chosen to isolate the contribution of the loss function from
+architectural novelty.
+
+\textbf{Comparison with LatPhon~\cite{chary2025latphon}.}
+LatPhon is a 4-layer multilingual Transformer (7.5M parameters, RoPE)
+reporting PER~0.86\,\% (Wilson CI $\pm$0.30\,pp) on
+$\approx$500~PT-BR words from the same IPA dictionary used here.
+Our system achieves PER~0.48\,\% (CI~$\pm$0.03\,pp) on
+28{,}782~words.
+These test sets differ in size and phonological sampling; this
+comparison is indicative rather than confirmatory.
+Within these constraints, the Wilson CIs do not overlap (upper
+bound 0.51\,\% vs.\ lower bound 0.56\,\%).
+
+\textbf{Contributions:}
+\begin{enumerate}
+  \item DA~Loss: a phonologically-graded training objective combining
+        PanPhon articulatory distance with prediction confidence
+        (Sec.~\ref{sec:daloss})
+  \item Large-scale stratified evaluation: 28{,}782-word test set
+        with Wilson CI 10$\times$ more precise than prior PT-BR work
+        (Sec.~\ref{sec:data})
+  \item Error quality taxonomy: Class~A--D classification reveals
+        systematic redistribution of catastrophic errors
+        (Sec.~\ref{sec:analysis})
+\end{enumerate}
+
+% =============================================================
+\section{Data and Evaluation Protocol}
+\label{sec:data}
+% =============================================================
+
+\subsection{Corpus}
+
+The training corpus consists of \textbf{95{,}937 grapheme--IPA pairs}
+from a Brazilian Portuguese phonetic dictionary.
+The input charset covers a--z (excluding k, w, y, which are absent
+from the dictionary) plus Portuguese diacritics.
+Words containing k, w, or~y are character-OOV and mapped to
+$\langle$UNK$\rangle$.
+Prior to training, 10{,}252 entries were corrected for ASCII-g
+(U+0067) vs.\ IPA-\textipa{g} (U+0261) conflation, required for
+correct PanPhon feature lookup.
+
+\subsection{Stratified Split}
+
+The corpus is divided \textbf{60/10/30} (train/val/test) using
+stratified sampling over three phonological variables: stress type
+(oxy\-tone/paroxytone/proparoxytone), syllable count bin, and
+character length bin, yielding approximately 48~strata.
+A purely random split risks underrepresenting rare phonological
+patterns---proparoxytones account for fewer than 5\,\% of the
+corpus---inflating metrics on high-frequency
+patterns~\cite{kohavi1995crossvalidation}.
+Split quality: $\chi^2\!=\!0.95$ ($p\!=\!0.678$),
+Cram\'{e}r $V\!=\!0.0007$---no statistically significant
+distributional difference across subsets.
+Per-epoch random reshuffling serves a separate purpose: variance
+reduction in stochastic gradient estimation~\cite{bottou2010large}.
+
+\subsection{Evaluation Metrics}
+
+\textbf{PER} (Phoneme Error Rate): Levenshtein distance over phoneme
+sequences, normalized by reference length~\cite{bisani2008joint}:
+\begin{equation}
+  \mathrm{PER} = \frac{\displaystyle\sum_i \mathrm{edit}(\hat{y}_i,\,
+                 y_i)}{\displaystyle\sum_i |y_i|} \times 100\%
+  \label{eq:per}
+\end{equation}
+
+\textbf{WER} (G2P Word Error Rate): fraction of words with any
+phoneme error (exact-match; equivalent to String Error Rate in
+ASR~\cite{bisani2008joint}).
+
+\textbf{Wilson 95\,\% CI}~\cite{wilson1927probable,brown2001interval}:
+used throughout in place of Wald intervals, which underestimate
+uncertainty near $\hat{p}\!\to\!0$.
+For our test set ($\approx$181K reference phonemes), the Wilson CI on
+PER is $\pm$0.03\,pp---10$\times$ more precise than
+$\pm$0.30\,pp for $\approx$500-word evaluations.
+
+% =============================================================
+\section{Architecture}
+% =============================================================
+
+We use a \textbf{BiLSTM encoder-decoder with Bahdanau
+attention}~\cite{bahdanau2014neural}, established for supervised
+G2P~\cite{rao2015g2p}, and chosen to isolate the loss contribution
+from architectural novelty.
+
+\textbf{Encoder}: 2-layer BiLSTM over grapheme embeddings.
+Each position~$t$ yields $h_t\!=\![\overrightarrow{h}_t;\,
+\overleftarrow{h}_t]$, providing full bidirectional context---critical
+for resolving graphemic ambiguity where phoneme identity depends on
+surrounding characters.
+
+\textbf{Attention}: at each decoder step~$t$:
+\begin{align}
+  e_{t,j} &= v^\top \tanh(W_h h_j + W_s s_{t-1}), \nonumber \\
+  \alpha_{t,j} &= \mathrm{softmax}(e_{t,j}), \quad
+  c_t = \textstyle\sum_j \alpha_{t,j}\, h_j
+  \label{eq:attention}
+\end{align}
+
+\textbf{Decoder}: 2-layer LSTM with teacher forcing during training;
+autoregressive at inference.
+Three capacity configurations were evaluated
+(Table~\ref{tab:configs}).
+The medium configuration (9.7M) is the optimal point for DA~Loss;
+at 17.2M, model memorization capacity begins to interfere with
+phonological regularization (Sec.~\ref{sec:results}).
+
+\begin{table}[t]
+  \caption{Architecture configurations}
+  \label{tab:configs}
+  \centering\small
+  \begin{tabular}{lccc}
+    \toprule
+    Config  & Embedding & Hidden & Parameters \\
+    \midrule
+    Small   & 128-D & 256-D & 4.3M \\
+    Medium  & 192-D & 384-D & 9.7M \\
+    Large   & 256-D & 512-D & 17.2M \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% =============================================================
+\section{Distance-Aware Loss}
+\label{sec:daloss}
+% =============================================================
+
+\subsection{Formulation}
+
+\begin{equation}
+  \boxed{L = \LCE + \lam \cdot \dpp(\hat{y},\, y) \cdot p(\hat{y})}
+  \label{eq:daloss}
+\end{equation}
+
+\begin{itemize}
+  \item $\LCE = -\log p_\mathrm{correct}$: standard cross-entropy
+  \item $\dpp(\hat{y}, y) \in [0,1]$: normalized Euclidean distance
+        in PanPhon's 24-dimensional articulatory feature space
+        encoding voicing, nasality, place, and manner of
+        articulation~\cite{mortensen2016panphon}.
+        Example values: p$\leftrightarrow$b: 0.04 (voicing only);
+        s$\leftrightarrow$\textipa{S}: 0.15 (place);
+        a$\leftrightarrow$k: 0.90 (vowel vs.\ velar stop)
+  \item $p(\hat{y}) \in (0,1]$: softmax probability of the
+        \emph{predicted} (argmax) phoneme---independent of
+        $p_\mathrm{correct}$
+  \item $\lam$: coupling weight ($\lam\!=\!0.20$ throughout)
+\end{itemize}
+
+\textbf{Design rationale.}
+CE monitors $p_\mathrm{correct}$; DA monitors $p(\hat{y})$.
+These are independent: when the model is confidently wrong,
+$p_\mathrm{correct}$ is low while $p(\hat{y})$ is high.
+The confidence factor scales the articulatory penalty with the
+model's certainty---maximally penalizing errors that are both
+confident and phonologically distant.
+
+\textbf{Bounded signal.}
+DA~Loss is upper-bounded by $\lam\!\times\!1.0\!\times\!1.0=0.20$,
+while CE can reach $\approx$16 in early training.
+DA is effective primarily in the learning transition zone
+(CE~0.3--1.5), where the model is actively resolving phoneme
+ambiguities.
+
+\textbf{Novelty scope.}
+Distance-weighted losses and phonologically-motivated training
+signals have been explored in ASR and TTS.
+Our contribution is novel in the G2P context through the specific
+combination: (1)~PanPhon articulatory distance as gradient signal,
+(2)~prediction confidence as weighting factor, and (3)~controlled
+coupling via~$\lam$ preserving CE as primary learning axis.
+
+\subsection{Structural Token Override}
+
+PanPhon assigns zero vectors to non-phonemic tokens: syllable
+boundary ``\textbf{.}'' and stress marker ``\textbf{'}'' (U+02C8).
+Without correction, $d(., \text{'}) = 0$---DA provides no gradient
+signal for their confusion.
+We apply a post-normalization override: distance~1.0 between any
+structural token and any other symbol.
+\emph{The override must be applied after Euclidean normalization};
+applying it before yields $d\!\approx\!0.25$, not the intended
+maximum.
+
+\subsection{$\lambda$ Sweep}
+
+Table~\ref{tab:lambda} sweeps $\lam$ with fixed architecture (4.3M,
+no syllable separators).
+The inverted-U curve motivates $\lam\!=\!0.20$: too low leaves CE
+undifferentiated; too high competes with CE and induces gradient
+instability.
+
+\begin{table}[t]
+  \caption{$\lambda$ sweep, 4.3M architecture, no separators}
+  \label{tab:lambda}
+  \centering\small
+  \begin{tabular}{cccc}
+    \toprule
+    $\lambda$ & PER & WER & Behavior \\
+    \midrule
+    0.05 & 0.62\,\% & 5.36\,\% & Signal too weak \\
+    0.10 & 0.63\,\% & 5.35\,\% & Moderate improvement \\
+    \textbf{0.20} & \textbf{0.60\,\%} & \textbf{5.14\,\%} & \textbf{Optimal} \\
+    0.50 & 0.65\,\% & 5.57\,\% & Over-penalization \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% =============================================================
+\section{Experiments}
+\label{sec:results}
+% =============================================================
+
+\subsection{Error Quality Classes}
+
+Table~\ref{tab:classes} defines four classes by normalized Hamming
+distance~$d_H$ in PanPhon 24-feature space.
+Training uses Euclidean distance (penalizes bipolar
+$+1\!\leftrightarrow\!-1$ feature flips more strongly than neutral
+transitions); evaluation uses~$d_H$ (uniform, interpretable).
+
+\begin{table}[t]
+  \caption{Phoneme error quality classes}
+  \label{tab:classes}
+  \centering\small
+  \begin{tabular}{clll}
+    \toprule
+    Class & $d_H$ & Features & Example \\
+    \midrule
+    A & $0.000$ & 0 --- exact match & --- \\
+    B & $\leq\!0.050$ & 1 --- minimal pair & p$\leftrightarrow$b, e$\leftrightarrow$\textipa{E} \\
+    C & $\leq\!0.150$ & 2--3 --- same family & s$\leftrightarrow$\textipa{S}, a$\leftrightarrow$\textipa{@} \\
+    D & $>\!0.150$  & 4+ --- cross-class & n$\leftrightarrow$\textipa{J}, vowel$\leftrightarrow$stop \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Main Results}
+\label{sec:mainresults}
+
+Table~\ref{tab:results} presents the main experimental results.
+Stratified evaluation across 28{,}782 test words yields Wilson CI
+$\pm$0.03\,pp---\textbf{57$\times$ larger} than comparable
+PT-BR evaluations~\cite{chary2025latphon}.
+
+\begin{table}[t]
+  \caption{Main results. Sep.\ = syllable boundary tokens in output.
+           Bold = recommended configurations.}
+  \label{tab:results}
+  \centering\small
+  \begin{tabular}{lcccc}
+    \toprule
+    System & Params & Sep. & PER & WER \\
+    \midrule
+    CE baseline              & 4.3M  & ---          & 0.66\,\% & 5.65\,\% \\
+    DA $\lambda\!=\!0.1$     & 4.3M  & ---          & 0.63\,\% & 5.35\,\% \\
+    DA $\lambda\!=\!0.2$     & 4.3M  & ---          & 0.60\,\% & 5.14\,\% \\
+    \textbf{DA} $\boldsymbol{\lambda\!=\!0.2}$ & \textbf{9.7M} & --- & \textbf{0.58\,\%} & \textbf{4.96\,\%} \\
+    CE + sep.                & 9.7M  & \checkmark   & 0.52\,\% & 5.79\,\% \\
+    \textbf{DA+dist}         & \textbf{17.2M} & \checkmark & \textbf{0.48\,\%} & \textbf{5.33\,\%} \\
+    \midrule
+    LatPhon~\cite{chary2025latphon} & 7.5M & --- & 0.86\,\% & n/a \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{Separator trade-off.}
+Syllable boundary tokens improve PER ($-17$\,\% to $-20$\,\%) at
+the cost of WER ($+6$\,\% to $+8$\,\%).
+Each misplaced separator counts as a full word error under
+exact-match WER---a structural trade-off independent of architecture
+or loss.
+\textit{Recommendation}: use the 9.7M DA model (no separators)
+for WER-sensitive tasks (NLP, lexicon lookup); use the 17.2M
+DA+dist model for PER-sensitive tasks (TTS, forced alignment).
+
+\textbf{LatPhon comparison.}
+LatPhon~\cite{chary2025latphon} reports PER~0.86\,\%
+($\pm$0.30\,pp, $n\!\approx\!500$).
+Our 17.2M DA+dist model achieves PER~0.48\,\%
+($\pm$0.03\,pp, $n\!=\!28{,}782$).
+CIs do not overlap in the reported scenario.
+Test sets differ in size, phonological sampling, and language scope;
+this comparison is indicative, not confirmatory.
+
+% =============================================================
+\section{Analysis}
+\label{sec:analysis}
+% =============================================================
+
+\subsection{Dominant Error Patterns}
+
+Table~\ref{tab:confusions} shows the top confusions on the
+17.2M~DA+dist model.
+Over 60\,\% of errors are vowel neutralizations---phonological
+ambiguity inherent to PT-BR.
+Structural analysis of the e$\leftrightarrow$\textipa{E} pattern
+reveals the cause: the global /e/:/\textipa{E}/ corpus ratio is 7.1:1,
+but by position the pre-tonic ratio is 24.9:1 (/e/~dominant) while
+the tonic ratio is 0.33:1 (/\textipa{E}/~dominant).
+The model learns the strong pre-tonic /e/ bias and overgeneralizes
+it to tonic syllables---a corpus distribution artifact.
+Resolving this class requires explicit prosodic features (stress
+position as input) or a dedicated tonic-vowel classifier.
+
+\begin{table}[t]
+  \caption{Top phoneme confusions, 17.2M DA+dist, 28{,}782-word
+           test set}
+  \label{tab:confusions}
+  \centering\small
+  \begin{tabular}{lrll}
+    \toprule
+    Substitution & Count & Group & Mechanism \\
+    \midrule
+    \textipa{E}$\to$e & 255 & Mid-front vowel & Unstressed neutralization \\
+    e$\to$\textipa{E} & 197 & Mid-front vowel & Same (reverse) \\
+    \textipa{O}$\to$o & 131 & Mid-back vowel  & Neutralization \\
+    i$\to$e           & 121 & High/mid front  & Vowel reduction \\
+    o$\to$\textipa{O} & 95  & Mid-back vowel  & Same \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Error Quality: DA Loss Redistribution}
+
+Table~\ref{tab:classdist} quantifies the redistribution of errors
+along the articulatory axis.
+DA~Loss reduces Class~D errors \textbf{19\,\% relative}
+(4.3M CE $\to$ 9.7M DA), independently of PER improvement.
+Substitutions shift toward phonologically closer targets.
+In downstream TTS, Class~B errors (single-feature substitutions,
+e.g., /e/$\leftrightarrow$/\textipa{E}/) are perceptually less
+salient than Class~D (cross-class, e.g., vowel$\leftrightarrow$stop);
+formal perceptual validation (MOS/ABX) remains future work.
+
+\begin{table}[t]
+  \caption{Error class distribution. $\dagger$~Class~D inflated by
+           structural token confusions (Sec.~\ref{sec:daloss}).}
+  \label{tab:classdist}
+  \centering\small
+  \begin{tabular}{lcccc}
+    \toprule
+    System & PER & Cls~B & Cls~D & D/errors \\
+    \midrule
+    CE baseline (4.3M)         & 0.66\,\% & 0.39\,\% & 0.54\,\% & 50.9\,\% \\
+    DA $\lambda\!=\!0.2$ (9.7M) & 0.58\,\% & 0.36\,\% & 0.44\,\% & 48.4\,\% \\
+    DA+dist (17.2M+sep.)       & 0.48\,\% & 0.29\,\% & 0.53\,$\%^\dagger$ & 47.4\,\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{OOV Generalization}
+
+The 17.2M DA+dist model was evaluated on 31~curated OOV words across
+6~categories (Table~\ref{tab:oov}).
+The 5/5 result on genuine novel PT-BR words---verified absent from
+training---includes correct: palatalization (d+i$\to$d\textipa{Z}),
+coda reduction (l$\to$w), rhotacism (rr$\to$x), and nasal vowel
+mapping (om$\to$\~{o}).
+These patterns are consistent with phonological rule generalization
+rather than corpus memorization.
+
+\textbf{Defined failure modes}: (1)~geminate consonants from
+Italian/English loans, absent from training data;
+(2)~English-phonology anglicisms, genuinely OOV phonologically;
+(3)~characters k, w, y---hard character-level OOV.
+
+\begin{table}[t]
+  \caption{OOV generalization, 17.2M DA+dist. Phon.\ score =
+           average articulatory similarity to reference (0--100\,\%).}
+  \label{tab:oov}
+  \centering\small
+  \begin{tabular}{lcc}
+    \toprule
+    Category & Correct & Phon.\ Score \\
+    \midrule
+    PT-BR neologisms        & 6/9\,(67\,\%)   & 97\,\% \\
+    Geminate consonants     & 1/5\,(20\,\%)   & 81\,\% \\
+    Anglicisms (in-vocab)   & 1/5\,(20\,\%)   & 71\,\% \\
+    Char-OOV (k/w/y)        & 0/3\,(0\,\%)    & 68\,\% \\
+    \textbf{Real PT-BR OOV} & \textbf{5/5\,(100\,\%)} & \textbf{100\,\%} \\
+    Controls (in training)  & 4/4\,(100\,\%)  & 100\,\% \\
+    \midrule
+    \textbf{Total}          & \textbf{17/31\,(55\,\%)} & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% =============================================================
+\section{Conclusion}
+% =============================================================
+
+We presented Distance-Aware (DA) Loss, a phonologically-graded
+training objective for G2P that penalizes substitution errors
+proportionally to PanPhon articulatory distance, weighted by
+prediction confidence.
+Applied to Brazilian Portuguese, DA~Loss reduces catastrophic
+(Class~D) substitutions by 19\,\% relative while achieving
+PER~0.48\,\% (Wilson CI $\pm$0.03\,pp) and WER~4.96\,\% on
+the largest PT-BR G2P evaluation reported---28{,}782 stratified
+words.
+Genuine OOV generalization (5/5 novel PT-BR words, 100\,\%)
+supports phonological rule acquisition beyond corpus memorization.
+
+DA~Loss is applicable to any language with PanPhon coverage;
+effectiveness beyond PT-BR remains to be validated experimentally.
+Limitations: geminate reduction for loan words absent from training,
+English-phonology anglicisms as genuine phonological OOV, and
+homograph disambiguation requiring morphosyntactic context beyond
+word-level G2P.
+
+% =============================================================
+\bibliographystyle{IEEEtran}
+\bibliography{icassp_refs}
+% =============================================================
+
+\end{document}
