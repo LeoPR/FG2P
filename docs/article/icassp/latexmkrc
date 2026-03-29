@@ -1,9 +1,16 @@
-# latexmkrc — ordem de compilação automática para main.tex
-# Usar com: latexmk -pdf main
-# Ou:       latexmk -xelatex main   (recomendado para IPA)
+# latexmkrc — configuração de compilação para main.tex
+# Compilar com: latexmk -pdf main
+# Ou:           latexmk -xelatex main   (se precisar de XeLaTeX para IPA)
 
-# Sequência completa automática:
-#   pdflatex → bibtex → pdflatex → pdflatex
+# ── Modo de geração ──────────────────────────────────────────────────────────
 $pdf_mode = 1;          # gerar PDF via pdflatex
-$bibtex_use = 2;        # rodar bibtex quando necessário
-$clean_ext = "bbl blg aux log out toc";
+$bibtex_use = 2;        # rodar bibtex automaticamente quando necessário
+
+# ── Diretório de saída ───────────────────────────────────────────────────────
+# Concentra TODOS os artefatos intermediários (aux, bbl, log, etc.) em .build/
+# O PDF final fica em .build/main.pdf — copie para cá se precisar subir ao git.
+# Para compilar sem subdiretório: comente a linha $out_dir abaixo.
+$out_dir = '.build';
+
+# ── Extensões limpas pelo `latexmk -c` ──────────────────────────────────────
+$clean_ext = "bbl blg aux log out toc fdb_latexmk fls synctex.gz synctex";
