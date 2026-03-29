@@ -131,27 +131,69 @@ Para submissão a venues formais, é necessário declarar: financiamento (se hou
 
 ---
 
-## Ordem de execução recomendada
+## Status de execução
+
+### ✅ CONCLUÍDO — C0 (Factual) e C1 (Texto)
+Commits `66b127c` → restaurado em `74a36a4` (v1.0/pub) e `8324fc3` (cleanup) após reversão acidental.
+
+- [x] C0-A: §7.3 tabela → 17/31 (55%), 6/9, 4/4
+- [x] C0-B: §7.4 header → (6/9)
+- [x] C0-C: §9 — removido "ɣ→x erro sistemático"
+- [x] C0-D: §5.1 — removido @yao2015sequence
+- [x] C1-A: §8.3 — encoding restaurado
+- [x] C1-B: §5.5 — lab notebook removido
+- [x] C1-C: §9 — "empiricos" → "empíricos"
+- [x] C1-D: §4.2 — link movido do título para nota
+- [x] §6.4: "DA Loss com embeddings PanPhon" → "DA Loss"
+- [x] §10: marcado como apêndice técnico não-publicável
+- [x] Referências: seção substituída por ponteiro para REFERENCES.bib
+
+**Branches atualizadas**: `cleanup/initial-prune-20260318`, `v1.0/publication`.
+
+---
+
+### ⬜ PENDENTE — C2 (Completude para journal/TASLP)
+
+Cada passo é independente e verificável antes de prosseguir:
+
+**Passo 1 — C2-D** (framing crítico, fazer primeiro):
+- §1.1 linha ~68: substituir "diferença estatisticamente significativa a 95%" pela formulação do ICASSP_DRAFT.md: "Esta comparação é indicativa, não confirmatória: os test sets diferem substancialmente em tamanho e amostragem."
+- Verificar: `grep "indicativa, não confirmatória" docs/article/ARTICLE.md`
+
+**Passo 2 — C2-A** (abstract EN):
+- Adicionar abstract em inglês antes de "## 1. Introdução", adaptado do §Abstract em `icassp/ICASSP_DRAFT.md`.
+- Verificar: seção "Abstract" (inglês) existe antes de "## 1."
+
+**Passo 3 — C2-B** (reprodutibilidade):
+- Adicionar em §9: "Reprodutibilidade: código em `src/`, corpus em `dicts/pt-br.tsv`, modelos em `models/`. Experimento reproduzível via `python src/inference_light.py --index 18 --word <palavra>`."
+- Verificar: `grep "Reprodutibilidade" docs/article/ARTICLE.md` retorna linha em §9.
+
+**Passo 4 — C2-C** (agradecimentos):
+- Adicionar "## Agradecimentos" antes de "## Referências": "Este trabalho foi desenvolvido como projeto de pesquisa independente."
+- Verificar: seção existe imediatamente antes de Referências.
+
+---
+
+### ⬜ PENDENTE — C3 (Derivados)
+C3-A (ICASSP 2027), C3-B (TASLP), C3-C (CSL), C3-D (PROPOR) — ver tickets 048, 053.
+
+---
+
+## Ordem de execução
 
 ```
-C0-A → C0-B → C0-C → C0-D   (factual — 1 hora)
-C1-A → C1-B → C1-C → C1-D   (texto — 30 min)
-C2-A → C2-D                  (framing crítico — 30 min)
-C2-B → C2-C → C2-E           (completude — 1 hora)
-→ ARTICLE.md está publicável como artigo completo
-C3-B (TASLP) → C3-A (ICASSP 2027) → C3-C → C3-D
+✅ C0 + C1   FEITO — branches atualizadas
+⬜ C2: passos 1→2→3→4 (cada um verificável)
+→ ARTICLE.md completo para qualquer submissão
+⬜ C3: derivados por venue (tickets 048, 053)
 ```
-
-**Total estimado**: 3–4 horas para C0+C1+C2 (ARTICLE.md completo), depois derivados.
 
 Dependências:
 - docs/article/ARTICLE.md (fonte)
-- docs/article/icassp/ICASSP_DRAFT.md (referência para C0-A, C2-D)
-- docs/article/REFERENCES.bib (verificado — todas as chaves existem exceto notas abaixo)
-- docs/benchmarks/BENCHMARK.md (existe ✓)
-- docs/linguistics/PHONOLOGICAL_ANALYSIS.md (existe ✓)
+- docs/article/icassp/ICASSP_DRAFT.md (referência para C2-A, C2-D)
+- docs/article/REFERENCES.bib (fonte canônica de referências)
 
 Notas sobre REFERENCES.bib:
-- @byt5g2p ✓ existe (linha 171 do .bib)
-- @yao2015sequence existe mas é paper de MT — não citar para WER em G2P
+- @byt5g2p ✓ existe
+- @yao2015sequence removido do texto principal (paper de MT, não G2P)
 - @vasilевски2012phonologic tem caractere cirílico na chave — pode causar problemas em BibTeX/LaTeX

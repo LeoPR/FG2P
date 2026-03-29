@@ -31,18 +31,71 @@ Pré-requisitos para submissão forte:
 - 052 (perceptual validation como diferencial)
 - Ao menos 1 idioma adicional validando generalização do DA Loss (tickets 026/039)
 
-Passos:
-- [ ] Mapear diferenças concretas entre ICASSP draft e journal version (conteúdo adicional)
-- [ ] Verificar Guide for Authors do CSL (formato, página mínima/máxima, single-blind vs. double-blind)
-- [ ] Definir momento de submissão (após ICASSP response ou em paralelo?)
-- [ ] Adaptar ARTICLE.md como base para journal version
+## Venue recomendado: IEEE/ACM TASLP
+
+**IEEE/ACM TASLP** (Transactions on Audio, Speech, and Language Processing):
+- Submissão rolling — **pode submeter agora, sem deadline fixo**
+- Formato: 8–12 páginas, double-column IEEE, inglês
+- Portal: https://mc.manuscriptcentral.com/tasl-ieee
+
+Alternativa se quiser português ou volume maior: **Computer Speech and Language (CSL, Elsevier)**.
+
+---
+
+## Passos incrementais (verificáveis individualmente)
+
+**Pré-requisito**: ticket 049 Passo 1 (C2-D framing §1.1) completo.
+
+**Passo 1 — Verificar Guide for Authors TASLP**:
+- Acessar: https://signalprocessingsociety.org/publications-resources/ieee-transactions-audio-speech-and-language-processing/author-information-taslp
+- Anotar page limit, double-blind policy, template LaTeX disponível.
+- Verificar: anotações adicionadas em "Notas TASLP" abaixo.
+
+**Passo 2 — Listar gaps entre ARTICLE.md e requisitos TASLP**:
+- Ler §1–§9 do ARTICLE.md com olhar de revisor IEEE.
+- Listar no máximo 5 pontos que precisam de expansão (ex: §Background, ablações completas).
+- Verificar: lista documentada neste ticket.
+
+**Passo 3 — Criar outline de journal version**:
+- Seções e tamanho estimado com base em ARTICLE.md.
+- Identificar quais seções são expansão vs. tradução EN direta.
+- Verificar: outline existe neste ticket.
+
+**Passo 4 — Rascunho §1–§4** (EN, Introdução + Background + Corpus + Método):
+- Base: ARTICLE.md §1–§4 traduzido e expandido conforme outline.
+- Verificar: arquivo `docs/article/taslp/draft_sections_1_4.md` existe.
+
+**Passo 5 — Rascunho §5–§7** (EN, Resultados + Generalização):
+- Tabela de ablações completa (14 experimentos), análise e↔ɛ.
+- Verificar: arquivo `docs/article/taslp/draft_sections_5_7.md` existe.
+
+**Passo 6 — Rascunho §8–§9 + Referências** (EN, Discussão + Conclusões):
+- Reprodutibilidade, limitações, trabalhos futuros.
+- Referências: REFERENCES.bib revisadas para formato TASLP.
+- Verificar: paper completo compilável em LaTeX.
+
+**Passo 7 — Submissão**:
+- Submeter em: https://mc.manuscriptcentral.com/tasl-ieee
+- Registrar número de manuscript ID neste ticket.
+
+---
+
+## Notas TASLP (preencher no Passo 1)
+
+- Page limit: ___
+- Double-blind: ___
+- Template LaTeX: ___
+
+---
 
 Critérios de aceite:
-- Decisão sobre venue documentada.
-- Outline de journal version aprovado.
-- Timeline de submissão definida.
+- Passo 1 completo (Guide for Authors verificado).
+- Passo 3 completo (outline aprovado).
+- Passo 7: número de manuscript ID registrado.
 
-Dependências:
-- 048, 049 (ICASSP e ARTICLE.md)
-- 052 (perceptual validation)
-- 026, 039, 040 (multilingual extension para versão mais forte)
+Dependências obrigatórias:
+- 049 (ARTICLE.md com abstract EN, reprodutibilidade — C2 completo)
+
+Dependências que fortalecem mas não bloqueiam:
+- 052 (perceptual validation como diferencial)
+- 026/039 (extensão multilíngue — seção opcional)
