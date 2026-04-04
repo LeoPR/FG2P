@@ -620,7 +620,7 @@ A tabela a seguir sintetiza todos os experimentos concluídos, agrupados por fas
 | Exp7 | 4,3M | DA λ=0,2 | não | 0,60% | 5,14% | 94,86% | λ ótimo confirmado |
 | Exp8 | 4,3M | DA+PanPhon λ=0,2 | não | 0,65% | 5,62% | 94,38% | Sinergia não materializada |
 | **Exp9** | **9,7M** | **DA λ=0,2** | **não** | **0,58%** | **4,96%** | **95,04%** | **SOTA WER** |
-| Exp10 | 17,2M | DA λ=0,2 | não | 0,61% | 5,25% | 94,75% | DA não escala para 17,2M |
+| Exp10 | 17,2M | DA λ=0,2 | não | 0,61% | 5,25% | 94,75% | DA sem sep: sem ganho vs CE (ver §8.2) |
 | **Fase 5: Separadores Silábicos** | | | | | | | |
 | Exp101 | 4,3M | CE | sim | 0,53% | 5,99% | 94,01% | Sep+raw: PER ↓, WER ↑ |
 | Exp102 | 9,7M | CE | sim | 0,52% | 5,79% | 94,21% | Capacidade atenua WER penalty |
@@ -682,7 +682,7 @@ O encoding NFD (decomposed) foi testado em Exp11 e mostrou regressão severa (+4
 **Fase 1 — Split**: O split 60/10/30 supera 70/10/20 em −41% PER com a mesma arquitetura. Mais dados de treino não garantem melhor generalização — conjunto de teste maior e bem estratificado é mais valioso. A estratificação por features fonológicas (stress_type, syllable_bin, length_bin) foi a intervenção decisiva: PER 1,12% → 0,66%, WER 9,37% → 5,65%, confirmando a importância de um split representativo para avaliação realista.
 
 
-**Fase 2 — Capacidade**: O modelo 9,7M é o *sweet spot*. 4,3M satura; 17,2M não adiciona valor proporcional. DA Loss funciona como regularizador e, acima de 17,2M parâmetros, passa a interferir negativamente com o potencial de memorização benígna do modelo.
+**Fase 2 — Capacidade**: O modelo 9,7M é o *sweet spot* para configurações sem separadores. 4,3M satura; 17,2M sem separadores (Exp10) não adiciona valor proporcional. Contudo, 17,2M *com* separadores e distâncias corrigidas (Exp104d) atinge o melhor PER (0,48%), indicando que a interação capacidade × representação estrutural é determinante — não apenas o número de parâmetros.
 
 **Fase 3 — Embeddings PanPhon**: Features articulatórias treináveis (Exp3) não melhoram PER clássico (0,66% em ambos) e, surpreendentemente, pioram o PER ponderado (0,32% vs 0,30% do baseline) — o inductive bias articulatório no embedding força representações que o modelo não consegue explorar eficientemente. O aprendizado negativo é relevante: PanPhon é útil como base para o label smoothing fonético da DA Loss, mas não como embedding fixo. O modelo precisa aprender a usar os features articulatórios de forma flexível, não ser forçado a usá-los como única representação.
 
@@ -809,6 +809,8 @@ As 6 categorias e seus objetivos diagnósticos:
 | Palavras PT-BR reais (OOV) | 5 | Testar generalização de regras para palavras inéditas |
 | Controles (em treino) | 4 | Baseline de sanidade |
 
+**Nota sobre o tamanho do banco (N=31)**: Este banco não substitui o test set principal (28.782 palavras estratificadas, §2.2) — é uma sonda diagnóstica complementar com palavras *curadas manualmente* para testar tipos específicos de dificuldade. O test set principal demonstra estabilidade quantitativa do modelo em palavras reais de dicionário; o banco de generalização testa uso prático: neologismos, empréstimos, desafios fonológicos e limites do charset. Um segundo banco de avaliação (`docs/data/neologisms_test.tsv`, 35 palavras em 5 categorias: anglicismos, verbos emprestados, neologismos nativos, nomes próprios, palavras inventadas) estende a cobertura qualitativa para cenários de uso real.
+
 ### 7.2 Métrica Fonológica Independente
 
 Para além das métricas binárias (correto/errado), foi implementada uma métrica de **score fonológico** baseada em distâncias articulatórias — completamente independente do framework G2P, sem uso de PanPhon, funcionando como avaliador externo:
@@ -912,7 +914,7 @@ O mecanismo é estrutural e não-eliminável apenas por ajuste de hiperparâmetr
 
 A DA Loss demonstrou eficácia como regularizador fonético: melhora PER e WER no modelo 9,7M. No entanto, dois limites importantes foram identificados:
 
-**Limite de escala**: Em 17,2M parâmetros (Exp10), DA Loss interfere negativamente — o modelo grande tem capacidade suficiente para memorizar, e a penalização fonética atrapalha esse processo. DA Loss funciona melhor em modelos de capacidade moderada onde o sinal fonético guia a generalização.
+**Limite de escala (observação parcial)**: Em 17,2M parâmetros *sem separadores silábicos* (Exp10), DA Loss não melhora o PER em relação ao CE puro (Exp2: 0,60% vs Exp10: 0,61%). Contudo, Exp104d (17,2M + DA + separadores + distâncias corrigidas) atinge o melhor PER observado (0,48%) — refutando a hipótese simples de que "modelos grandes memorizam e DA atrapalha". A variável que diferencia Exp10 de Exp104d não é o tamanho do modelo, mas a presença de separadores e o override correto de distâncias estruturais. A interação entre capacidade, DA Loss e representação estrutural requer ablação dedicada para conclusões definitivas sobre memorização.
 
 **Limite estrutural**: Símbolos estruturais (`.`, `ˈ`) não recebem sinal útil da DA Loss porque têm vetor zero no PanPhon. O override de distância corrige parcialmente isso, mas confusões posicionais persistem — o modelo sabe que `.` e `ˈ` são diferentes, mas ainda os posiciona incorretamente na sequência.
 

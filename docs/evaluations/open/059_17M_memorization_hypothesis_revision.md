@@ -44,8 +44,9 @@ Revisar §8.2 para:
 
 ## Verificacao
 
-- [ ] §8.2 nao afirma categoricamente que 17.2M memoriza
-- [ ] Exp104d e citado como contra-evidencia
-- [ ] Hipotese de memorizacao marcada como "requer teste dedicado"
+- [x] §8.2 nao afirma categoricamente que 17.2M memoriza (reformulado 2026-04-04)
+- [x] Exp104d citado como contra-evidencia (§8.2 e §5.5 Fase 2 atualizados)
+- [x] Hipotese de memorizacao marcada como "requer ablacao dedicada" (§8.2)
+- [x] Tabela §5.2 Exp10 atualizada: "DA sem sep: sem ganho vs CE (ver §8.2)"
 
 Dependencias: nenhuma
