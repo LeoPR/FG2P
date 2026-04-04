@@ -1,5 +1,5 @@
 ID: 025
-Title: Espaço articulatório contínuo 7D (Multilíngue)
+Title: [v2.0] Espaço articulatório contínuo 7D (Multilíngue)
 Type: research
 Priority: High
 Status: Open

@@ -1,6 +1,6 @@
 ---
 ID: 030
-Title: Auditoria: 'y' como glide / representação de 'j' em transcrições IPA
+Title: [v2.0] Auditoria: 'y' como glide / representação de 'j' em transcrições IPA
 Type: improvement / investigation
 Priority: high
 Status: open

@@ -1,5 +1,5 @@
 ID: 023
-Title: Empacotamento PIP / Distribuição
+Title: [v2.0] Empacotamento PIP / Distribuição
 Type: packaging
 Priority: High
 Status: Open

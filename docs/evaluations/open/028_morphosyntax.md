@@ -1,5 +1,5 @@
 ID: 028
-Title: Morfossintaxe / Homógrafos Heterófonos
+Title: [v2.0] Morfossintaxe / Homógrafos Heterófonos
 Type: research
 Priority: Medium
 Status: Open

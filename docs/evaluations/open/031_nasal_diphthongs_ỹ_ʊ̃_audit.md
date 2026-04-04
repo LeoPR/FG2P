@@ -1,6 +1,6 @@
 ---
 ID: 031
-Title: Auditoria: ditongos nasais (`ỹ`, `ʊ̃`) e sua interpretação fonética
+Title: [v2.0] Auditoria: ditongos nasais (`ỹ`, `ʊ̃`) e sua interpretação fonética
 Type: investigation
 Priority: medium
 Status: open

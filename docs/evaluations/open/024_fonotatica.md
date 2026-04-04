@@ -1,5 +1,5 @@
 ID: 024
-Title: Pipeline Fonotático (4 fases)
+Title: [v2.0] Pipeline Fonotático (4 fases)
 Type: feature
 Priority: Medium
 Status: Open

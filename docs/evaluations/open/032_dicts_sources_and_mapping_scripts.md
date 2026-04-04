@@ -1,6 +1,6 @@
 ---
 ID: 032
-Title: Organizar fontes originais (`ipa-dict`) e tornar scripts de mapeamento mais visíveis
+Title: [v2.0] Organizar fontes originais (`ipa-dict`) e tornar scripts de mapeamento mais visíveis
 Type: maintenance / infrastructure
 Priority: high
 Status: open

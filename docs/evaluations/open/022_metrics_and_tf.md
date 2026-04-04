@@ -1,5 +1,5 @@
 ID: 022
-Title: Métricas especializadas e consolidação de Trabalhos Futuros v2.0
+Title: [v2.0] Métricas especializadas e consolidação de Trabalhos Futuros v2.0
 Type: research
 Priority: High
 Status: Open

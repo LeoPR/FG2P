@@ -1,5 +1,5 @@
 ID: 026
-Title: Multilíngue & Tupi / Dialetos
+Title: [v2.0] Multilíngue & Tupi / Dialetos
 Type: feature
 Priority: High
 Status: Open

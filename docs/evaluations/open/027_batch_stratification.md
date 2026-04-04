@@ -1,5 +1,5 @@
 ID: 027
-Title: Estratificação de Batches Durante Treinamento
+Title: [v2.0] Estratificação de Batches Durante Treinamento
 Type: improvement
 Priority: Medium
 Status: Open
