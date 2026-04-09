@@ -1,0 +1,12 @@
+# latexmkrc — compilacao automatica para main.tex (STIL 2026, formato SBC)
+# Usar com: latexmk -pdf main
+
+$pdf_mode = 1;          # gerar PDF via pdflatex
+$bibtex_use = 2;        # rodar bibtex quando necessario
+$out_dir = './build';   # artefatos intermediarios vao para build/
+$clean_ext = "bbl blg aux log out toc fls fdb_latexmk synctex.gz";
+
+# Garantir que bibtex/pdflatex encontre arquivos na pasta fonte
+$ENV{'BIBINPUTS'} = '..;.';
+$ENV{'BSTINPUTS'} = '..;.';
+$ENV{'TEXINPUTS'} = '..;.';

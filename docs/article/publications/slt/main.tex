@@ -1,0 +1,740 @@
+% =============================================================
+% Distance-Aware Loss for Phonologically-Graded G2P in PT-BR
+% IEEE SLT 2026 — Double-blind submission (6 pages + 2 refs)
+% =============================================================
+%
+% COMPILATION:
+%   xelatex main && bibtex main && xelatex main && xelatex main
+%   OR
+%   pdflatex main && bibtex main && pdflatex main && pdflatex main
+% =============================================================
+
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% ---- Encoding & fonts ----------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{tipa}
+
+% ---- Math ----------------------------------------------------
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ---- Tables --------------------------------------------------
+\usepackage{booktabs}
+\usepackage{multirow}
+
+% ---- References ----------------------------------------------
+\usepackage{cite}
+
+% ---- Macros --------------------------------------------------
+\newcommand{\dpp}{d_{\mathrm{PP}}}        % PanPhon distance
+\newcommand{\LCE}{L_{\mathrm{CE}}}        % CE loss
+\newcommand{\lam}{\lambda}                % lambda shorthand
+
+% =============================================================
+\begin{document}
+% =============================================================
+
+\title{Distance-Aware Loss for Phonologically-Graded\\
+       Grapheme-to-Phoneme Conversion in Brazilian Portuguese}
+
+\author{%
+  \IEEEauthorblockN{[ANONYMOUS]}
+  \IEEEauthorblockA{[ANONYMOUS]}
+}
+
+\maketitle
+
+% ---- Abstract -----------------------------------------------
+\begin{abstract}
+Standard grapheme-to-phoneme (G2P) training with cross-entropy
+treats all phoneme substitutions equally, regardless of articulatory
+distance.
+We propose Distance-Aware (DA) Loss, which penalizes substitutions
+proportionally to PanPhon articulatory distance between predicted and
+target phonemes, weighted by the model's prediction confidence.
+Applied to Brazilian Portuguese with a BiLSTM encoder-decoder,
+DA~Loss systematically redistributes errors toward phonologically
+closer targets: Class~D (catastrophic) substitutions decrease
+19\,\% relative vs.\ a CE~baseline, while Class~B (near-miss)
+errors increase proportionally.
+
+Our system achieves PER~0.48\,\% and WER~5.33\,\% on a stratified
+28{,}782-word test set---57$\times$ larger than comparable PT-BR
+evaluations---with a Wilson 95\,\% CI of $\pm$0.03\,pp.
+Both Wilson CIs do not overlap with the closest reference system
+(upper bound 0.51\,\% vs.\ lower bound 0.56\,\%)---a statistically
+significant difference at 95\,\% confidence.
+Evaluation on 31~out-of-vocabulary words yields 100\,\% accuracy
+on genuine novel PT-BR words, consistent with phonological rule
+generalization beyond memorization.
+A factorial analysis of model capacity, syllable separators, and
+DA~Loss reveals that the interaction between these factors---not
+capacity alone---determines performance.
+\end{abstract}
+
+\begin{IEEEkeywords}
+grapheme-to-phoneme, distance-aware loss, Brazilian Portuguese,
+BiLSTM, phonological features, articulatory distance
+\end{IEEEkeywords}
+
+% =============================================================
+\section{Introduction}
+% =============================================================
+
+Grapheme-to-phoneme (G2P) conversion is a core component of
+text-to-speech synthesis, automatic speech recognition, and
+multilingual NLP pipelines.
+For Brazilian Portuguese (PT-BR), G2P presents well-documented
+challenges: graphemic ambiguity (grapheme ``c'' maps to /k/ in
+\textit{cama} but /s/ in \textit{cena}; ``r'' maps to
+/\textipa{\*r}/ in syllable onset but /x/ in word-final
+coda~\cite{barbosa2004brazilian}), vowel neutralization in
+unstressed positions (/e/$\leftrightarrow$/\textipa{E}/ and
+/o/$\leftrightarrow$/\textipa{O}/ merge), and position-dependent
+coda realization (/x/ in final position; /\textipa{G}/ before
+voiced consonants).
+Prior work on PT-BR G2P has addressed these with decision trees,
+n-gram models, and neural seq2seq
+architectures~\cite{neto2006brazilian}.
+
+Standard models trained with cross-entropy (CE) treat all phoneme
+errors equally: predicting /\textipa{E}/ when the target is /e/---a
+near-miss differing in one articulatory feature---incurs the same
+gradient penalty as predicting /k/ for /a/, spanning eight features.
+This phonological blindness distorts the training signal: the model
+learns \emph{that} it erred but not \emph{how severely}.
+
+We address this with \textbf{Distance-Aware (DA) Loss}, which adds a
+training signal proportional to the articulatory distance between
+predicted and target phonemes, weighted by prediction confidence.
+We apply this to Brazilian Portuguese using a BiLSTM encoder-decoder
+with Bahdanau attention~\cite{bahdanau2014neural}---deliberately
+chosen to isolate the contribution of the loss function from
+architectural novelty.
+
+\textbf{Comparison with LatPhon~\cite{chary2025latphon}.}
+LatPhon is a 4-layer multilingual Transformer (7.5M parameters, RoPE)
+reporting PER~0.86\,\% (Wilson 95\,\% CI [0.56\,\%, 1.16\,\%]) on
+$\approx$500~PT-BR words from the same IPA dictionary used here.
+Our system achieves PER~0.48\,\% (CI~[0.46\,\%, 0.51\,\%]) on
+28{,}782~words.
+Both systems report Wilson CIs; the intervals do not overlap---our
+upper bound (0.51\,\%) falls below LatPhon's lower bound
+(0.56\,\%), a statistically significant difference at 95\,\%
+confidence.
+The 57$\times$ difference in test set size confers 10$\times$ more
+precise CIs to our evaluation ($\pm$0.03\,pp vs.\
+$\pm$0.30\,pp).
+
+\textbf{Contributions:}
+\begin{enumerate}
+  \item DA~Loss: a phonologically-graded training objective combining
+        PanPhon articulatory distance with prediction confidence
+        (Sec.~\ref{sec:daloss})
+  \item Large-scale stratified evaluation with empirical evidence of
+        split bias impact (Sec.~\ref{sec:data})
+  \item Factorial analysis of capacity $\times$ separators $\times$
+        DA~Loss interaction (Sec.~\ref{sec:factorial})
+  \item Error quality taxonomy: Class~A--D classification revealing
+        systematic redistribution of catastrophic errors
+        (Sec.~\ref{sec:analysis})
+  \item OOV generalization evaluation across 6~diagnostic categories
+        (Sec.~\ref{sec:oov})
+\end{enumerate}
+
+% =============================================================
+\section{Related Work}
+\label{sec:related}
+% =============================================================
+
+Neural G2P systems have evolved from early RNN approaches to modern
+Transformer architectures.
+Rao et al.~\cite{rao2015g2p} demonstrated that LSTM-based
+encoder-decoders outperform n-gram joint-sequence
+models~\cite{bisani2008joint} on English G2P.
+For Portuguese, Neto et al.~\cite{neto2006brazilian} established
+early baselines with decision trees and HMMs.
+More recently, LatPhon~\cite{chary2025latphon} applied a
+multilingual Transformer with RoPE to 6~languages including PT-BR.
+
+\textbf{Phonological distance in training.}
+Distance-weighted objectives have been explored in speech
+recognition and synthesis, where confusing acoustically similar
+phonemes is less costly than distant substitutions.
+Our work differs in three aspects: (1)~we operate at the IPA
+grapheme-to-phoneme level rather than acoustic features;
+(2)~we use PanPhon articulatory distance~\cite{mortensen2016panphon}
+as a principled, language-independent distance metric;
+(3)~we weight the distance penalty by prediction confidence,
+creating a composite signal that maximally penalizes errors that are
+both confident and phonologically distant.
+
+\textbf{Evaluation methodology.}
+G2P evaluations typically use small test sets (300--1{,}000 words)
+with Wald confidence intervals.
+We evaluate on 28{,}782 stratified words with Wilson
+CIs~\cite{wilson1927probable}, providing 10$\times$ more precise
+uncertainty estimates.
+
+% =============================================================
+\section{Data and Evaluation Protocol}
+\label{sec:data}
+% =============================================================
+
+\subsection{Corpus}
+
+The training corpus consists of \textbf{95{,}937 grapheme--IPA pairs}
+from a Brazilian Portuguese phonetic dictionary.
+The input charset covers a--z (excluding k, w, y, absent from the
+dictionary) plus Portuguese diacritics.
+Words containing k, w, or~y are character-OOV and mapped to
+$\langle$UNK$\rangle$.
+Prior to training, 10{,}252 entries were corrected for ASCII-g
+(U+0067) vs.\ IPA-\textipa{g} (U+0261) conflation, required for
+correct PanPhon feature lookup.
+
+\subsection{Stratified Split}
+
+The corpus is divided \textbf{60/10/30} (train/val/test) using
+stratified sampling over three phonological variables: stress type
+(oxy\-tone/paroxytone/proparoxytone), syllable count bin
+(1, 2, 3, 4, 5+), and character length bin
+($\leq$4, 5--7, 8--10, 11+), yielding approximately 48~strata.
+A purely random split risks concentrating easy words in the test set,
+inflating metrics.
+Split quality: $\chi^2\!=\!0.95$ ($p\!=\!0.678$),
+Cram\'{e}r $V\!=\!0.0007$---no statistically significant
+distributional difference across subsets.
+
+\textbf{Empirical evidence of split bias.}
+An unstratified 70/10/20 split (Exp0, same 4.3M architecture, CE
+loss) achieved PER~1.12\,\%, while the stratified 60/10/30 split
+(Exp1) achieved 0.66\,\%---a 41\,\% PER reduction attributable
+entirely to evaluation protocol, not model
+improvement~\cite{kohavi1995crossvalidation}.
+Without stratification, the random partition can concentrate difficult
+words (proparoxytones, long words) in training and easy words in
+testing.
+This motivated stratification in all subsequent experiments and the
+deliberate choice of a large 30\,\% test set over maximizing
+training data.
+
+\subsection{Evaluation Metrics}
+
+\textbf{PER} (Phoneme Error Rate): Levenshtein distance over phoneme
+sequences, normalized by reference length~\cite{bisani2008joint}:
+\begin{equation}
+  \mathrm{PER} = \frac{\displaystyle\sum_i \mathrm{edit}(\hat{y}_i,\,
+                 y_i)}{\displaystyle\sum_i |y_i|} \times 100\%
+  \label{eq:per}
+\end{equation}
+
+\textbf{WER} (G2P Word Error Rate): fraction of words with any
+phoneme error (exact-match).
+\textbf{Wilson 95\,\% CI}~\cite{wilson1927probable,brown2001interval}:
+used throughout in place of Wald intervals, which underestimate
+uncertainty near $\hat{p}\!\to\!0$.
+For our test set ($\approx$181K reference phonemes), the Wilson CI on
+PER is $\pm$0.03\,pp---10$\times$ more precise than
+$\pm$0.30\,pp for $\approx$500-word evaluations.
+
+% =============================================================
+\section{Architecture}
+% =============================================================
+
+We use a \textbf{BiLSTM encoder-decoder with Bahdanau
+attention}~\cite{bahdanau2014neural}, established for supervised
+G2P~\cite{rao2015g2p}, and chosen to isolate the loss contribution
+from architectural novelty.
+
+\textbf{Encoder}: 2-layer BiLSTM over grapheme embeddings.
+Each position~$t$ yields $h_t\!=\![\overrightarrow{h}_t;\,
+\overleftarrow{h}_t]$, providing full bidirectional context---critical
+for resolving graphemic ambiguity.
+
+\textbf{Attention}: at each decoder step~$t$:
+\begin{align}
+  e_{t,j} &= v^\top \tanh(W_h h_j + W_s s_{t-1}), \nonumber \\
+  \alpha_{t,j} &= \mathrm{softmax}(e_{t,j}), \quad
+  c_t = \textstyle\sum_j \alpha_{t,j}\, h_j
+  \label{eq:attention}
+\end{align}
+
+\textbf{Decoder}: 2-layer LSTM with teacher forcing during training;
+autoregressive at inference.
+
+\textbf{Phoneme embeddings.}
+All main experiments use learned embeddings (random Glorot init).
+We additionally tested PanPhon-initialized embeddings (24-D
+articulatory features projected to 128-D), providing a geometric
+prior where similar phonemes start close in embedding space.
+With CE loss, PanPhon init produces qualitatively better errors
+(lower weighted PER) but does not improve raw PER, as CE does not
+reinforce the articulatory structure.
+DA~Loss operates independently of embedding initialization: it uses
+an external lookup table of PanPhon distances, not the embedding
+geometry.
+The two mechanisms are orthogonal and could potentially be combined;
+this remains unexplored.
+
+Three capacity configurations were evaluated
+(Table~\ref{tab:configs}).
+
+\begin{table}[t]
+  \caption{Architecture configurations}
+  \label{tab:configs}
+  \centering\small
+  \begin{tabular}{lccc}
+    \toprule
+    Config  & Embedding & Hidden & Parameters \\
+    \midrule
+    Small   & 128-D & 256-D & 4.3M \\
+    Medium  & 192-D & 384-D & 9.7M \\
+    Large   & 256-D & 512-D & 17.2M \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Training Protocol}
+
+All models are trained with Adam ($\beta_1\!=\!0.9$,
+$\beta_2\!=\!0.999$), learning rate $10^{-3}$, batch size 96,
+and early stopping with patience 10 on validation loss.
+Teacher forcing ratio is 1.0 during training.
+Batch size 96 was chosen empirically: with 34 phonological strata
+in the corpus, $\text{batch\_size} \approx 3 \times S$ ensures
+$\geq$3 samples per stratum per batch, reducing loss curve
+variance by $\sim$50\,\% relative to batch size 32.
+Models converge in 80--120 epochs; superior configurations
+consistently converge in fewer epochs with lower validation loss,
+supporting early stopping as a reliable quality indicator.
+All experiments use fixed random seed (42) and deterministic
+operations where available.
+
+% =============================================================
+\section{Distance-Aware Loss}
+\label{sec:daloss}
+% =============================================================
+
+\subsection{Formulation}
+
+\begin{equation}
+  \boxed{L = \LCE + \lam \cdot \dpp(\hat{y},\, y) \cdot p(\hat{y})}
+  \label{eq:daloss}
+\end{equation}
+
+\begin{itemize}
+  \item $\LCE = -\log p_\mathrm{correct}$: standard cross-entropy
+  \item $\dpp(\hat{y}, y) \in [0,1]$: normalized Euclidean distance
+        in PanPhon's 24-dimensional articulatory feature space
+        encoding voicing, nasality, place, and manner of
+        articulation~\cite{mortensen2016panphon}.
+        Example values: p$\leftrightarrow$b: 0.04 (voicing only);
+        s$\leftrightarrow$\textipa{S}: 0.15 (place);
+        a$\leftrightarrow$k: 0.90 (vowel vs.\ velar stop)
+  \item $p(\hat{y}) \in (0,1]$: softmax probability of the
+        \emph{predicted} (argmax) phoneme---independent of
+        $p_\mathrm{correct}$
+  \item $\lam$: coupling weight ($\lam\!=\!0.20$ throughout)
+\end{itemize}
+
+\textbf{Design rationale.}
+CE monitors $p_\mathrm{correct}$; DA monitors $p(\hat{y})$.
+These are independent: when the model is confidently wrong,
+$p_\mathrm{correct}$ is low while $p(\hat{y})$ is high.
+The confidence factor scales the articulatory penalty with the
+model's certainty---maximally penalizing errors that are both
+confident and phonologically distant.
+
+\textbf{Bounded signal.}
+DA~Loss is upper-bounded by $\lam\!\times\!1.0\!\times\!1.0=0.20$,
+while CE can reach $\approx$16 in early training.
+DA is effective primarily in the learning transition zone
+(CE~0.3--1.5), where the model is actively resolving phoneme
+ambiguities.
+
+\textbf{Numerical example.}
+Consider two errors with identical CE ($p_\mathrm{correct}\!=\!0.40$,
+CE$\,=\,0.916$):
+a near-miss e$\to$\textipa{E} ($d\!=\!0.10$, $p(\hat{y})\!=\!0.45$)
+adds DA$\,=\,0.009$, total $L\!=\!0.925$;
+a catastrophic a$\to$k ($d\!=\!0.90$, $p(\hat{y})\!=\!0.45$) adds
+DA$\,=\,0.081$, total $L\!=\!0.997$.
+CE alone is identical (0.916) in both cases.
+DA provides a 9$\times$ difference in phonological penalty, steering
+the model to ``break ties toward the closer candidate'' over training
+epochs.
+
+\textbf{Novelty scope.}
+Distance-weighted losses have been explored in ASR and TTS.
+Our contribution is the specific compositional formulation for
+IPA-level G2P: PanPhon distance as gradient signal, prediction
+confidence as weighting factor, and controlled coupling via~$\lam$
+preserving CE as primary learning axis.
+
+\subsection{Structural Token Override}
+
+PanPhon assigns zero vectors to non-phonemic tokens: syllable
+boundary ``\textbf{.}'' and stress marker ``\textbf{'}'' (U+02C8).
+Without correction, $d(., \text{'}) = 0$---DA provides no gradient
+signal for their confusion.
+We apply a post-normalization override: distance~1.0 between any
+structural token and any other symbol.
+\emph{The override must be applied after Euclidean normalization};
+applying it before yields $d\!\approx\!0.25$, not the intended
+maximum.
+
+\subsection{$\lambda$ Sweep}
+
+Table~\ref{tab:lambda} sweeps $\lam$ with fixed architecture (4.3M,
+no syllable separators).
+The inverted-U curve motivates $\lam\!=\!0.20$: too low leaves CE
+undifferentiated; too high competes with CE.
+
+\begin{table}[t]
+  \caption{$\lambda$ sweep, 4.3M architecture, no separators}
+  \label{tab:lambda}
+  \centering\small
+  \begin{tabular}{cccc}
+    \toprule
+    $\lambda$ & PER & WER & Behavior \\
+    \midrule
+    0.05 & 0.62\,\% & 5.36\,\% & Signal too weak \\
+    0.10 & 0.63\,\% & 5.35\,\% & Moderate improvement \\
+    \textbf{0.20} & \textbf{0.60\,\%} & \textbf{5.14\,\%} & \textbf{Optimal} \\
+    0.50 & 0.65\,\% & 5.57\,\% & Over-penalization \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% =============================================================
+\section{Experiments}
+\label{sec:results}
+% =============================================================
+
+\subsection{Main Results}
+
+Table~\ref{tab:results} presents the main experimental results.
+Stratified evaluation across 28{,}782 test words yields Wilson CI
+$\pm$0.03\,pp---57$\times$ larger than comparable PT-BR
+evaluations.
+
+\begin{table}[t]
+  \caption{Main results. Sep.\ = syllable boundary tokens.
+           Dist.\ = structural distance override.
+           Bold = recommended configurations.}
+  \label{tab:results}
+  \centering\small
+  \begin{tabular}{lccccc}
+    \toprule
+    System & Params & Loss & Sep. & PER & WER \\
+    \midrule
+    CE baseline         & 4.3M  & CE      & ---        & 0.66\,\% & 5.65\,\% \\
+    DA $\lam\!=\!0.2$   & 4.3M  & DA      & ---        & 0.60\,\% & 5.14\,\% \\
+    \textbf{DA} $\boldsymbol{\lam\!=\!0.2}$ & \textbf{9.7M} & \textbf{DA} & --- & \textbf{0.58\,\%} & \textbf{4.96\,\%} \\
+    CE + sep.           & 9.7M  & CE      & \checkmark & 0.52\,\% & 5.79\,\% \\
+    DA + sep.           & 9.7M  & DA      & \checkmark & 0.53\,\% & 5.73\,\% \\
+    \textbf{DA+dist}    & \textbf{17.2M} & \textbf{DA+dist} & \checkmark & \textbf{0.48\,\%} & \textbf{5.33\,\%} \\
+    \midrule
+    LatPhon~\cite{chary2025latphon} & 7.5M & CE & --- & 0.86\,\% & n/a \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{Separator trade-off.}
+Syllable boundary tokens improve PER ($-17$\,\% to $-20$\,\%) at
+the cost of WER ($+6$\,\% to $+8$\,\%).
+Each misplaced separator counts as a full word error under
+exact-match WER---a structural trade-off independent of architecture
+or loss.
+\textit{Recommendation}: use the 9.7M DA model (no separators)
+for WER-sensitive tasks; use the 17.2M DA+dist model for
+PER-sensitive tasks (TTS, forced alignment).
+
+\subsection{Factorial Analysis}
+\label{sec:factorial}
+
+A 2$\times$2 factorial (separators $\times$ DA~Loss) at 9.7M
+parameters isolates individual factor contributions
+(Table~\ref{tab:factorial}).
+
+\begin{table}[t]
+  \caption{2$\times$2 factorial: separators $\times$ DA Loss,
+           9.7M parameters, 60/10/30 split. Values are PER (\%).}
+  \label{tab:factorial}
+  \centering\small
+  \begin{tabular}{lcc}
+    \toprule
+    & CE & DA $\lam\!=\!0.2$ \\
+    \midrule
+    No separators   & 0.63\,\% & 0.58\,\% \\
+    With separators & 0.52\,\% & 0.53\,\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Without separators, DA improves PER (0.63\,$\to$\,0.58\,\%,
+$-8$\,\% relative).
+With separators, DA does not improve over CE at 9.7M
+(0.52\,$\to$\,0.53\,\%).
+Separators alone provide the largest single-factor PER improvement
+($-17$\,\%).
+The best result (0.48\,\%) requires \emph{all three factors}:
+17.2M capacity + DA + separators + distance override.
+
+\textbf{Capacity interaction.}
+At 17.2M without separators, DA~Loss does not improve PER relative
+to CE (0.61\,\% vs.\ 0.60\,\%).
+However, at 17.2M \emph{with} separators and corrected distances,
+DA achieves the best PER observed (0.48\,\%).
+This refutes the simple hypothesis that ``large models memorize and
+DA interferes''---the relevant variable is the interaction between
+capacity, structural representation, and distance correction, not
+capacity alone.
+Dedicated ablation is required for definitive conclusions about
+memorization.
+
+\subsection{Comparison with LatPhon}
+
+LatPhon~\cite{chary2025latphon} reports PER~0.86\,\%
+(Wilson CI [0.56\,\%, 1.16\,\%], $n\!\approx\!500$).
+Our 17.2M DA+dist model achieves PER~0.48\,\%
+(CI [0.46\,\%, 0.51\,\%], $n\!=\!28{,}782$).
+Both systems report Wilson CIs over the same lexical resource
+(ipa-dict); the intervals do not overlap---a statistically
+significant difference at 95\,\% confidence.
+Methodological differences preclude direct architectural comparison:
+LatPhon is a multilingual Transformer; our system is a monolingual
+BiLSTM with DA~Loss.
+The result is consistent with the hypothesis that methodological
+design (loss + evaluation protocol) can compensate for architectural
+differences.
+
+% =============================================================
+\section{Analysis}
+\label{sec:analysis}
+% =============================================================
+
+\subsection{Dominant Error Patterns}
+
+Table~\ref{tab:confusions} shows the top confusions.
+Over 60\,\% of errors are vowel neutralizations---phonological
+ambiguity inherent to PT-BR.
+The global /e/:/\textipa{E}/ corpus ratio is 7.1:1, but by position
+the pre-tonic ratio is 24.9:1 (/e/~dominant) while the tonic ratio
+is 0.33:1 (/\textipa{E}/~dominant).
+The model overgeneralizes the pre-tonic /e/ bias to tonic
+syllables---a corpus distribution artifact requiring explicit
+prosodic features to resolve.
+
+\begin{table}[t]
+  \caption{Top phoneme confusions, 17.2M DA+dist}
+  \label{tab:confusions}
+  \centering\small
+  \begin{tabular}{lrl}
+    \toprule
+    Substitution & Count & Mechanism \\
+    \midrule
+    \textipa{E}$\to$e & 255 & Unstressed neutralization \\
+    e$\to$\textipa{E} & 197 & Same (reverse) \\
+    \textipa{O}$\to$o & 131 & Mid-back neutralization \\
+    i$\to$e           & 121 & Vowel reduction \\
+    o$\to$\textipa{O} & 95  & Mid-back neutralization \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Error Quality: DA Loss Redistribution}
+
+Table~\ref{tab:classdist} quantifies the redistribution.
+DA~Loss reduces Class~D errors \textbf{19\,\% relative}
+(4.3M CE $\to$ 9.7M DA), independently of PER improvement.
+In downstream TTS, Class~B errors (e.g.,
+/e/$\leftrightarrow$/\textipa{E}/) are perceptually less salient
+than Class~D (vowel$\leftrightarrow$stop); formal MOS/ABX validation
+remains future work.
+
+\begin{table}[t]
+  \caption{Error class distribution. $\dagger$~Class~D inflated by
+           structural token confusions.}
+  \label{tab:classdist}
+  \centering\small
+  \begin{tabular}{lcccc}
+    \toprule
+    System & PER & Cls~B & Cls~D & D/errors \\
+    \midrule
+    CE base.\ (4.3M)            & 0.66\,\% & 0.39\,\% & 0.54\,\% & 50.9\,\% \\
+    DA $\lam\!=\!0.2$ (9.7M)    & 0.58\,\% & 0.36\,\% & 0.44\,\% & 48.4\,\% \\
+    DA+dist (17.2M+sep.)        & 0.48\,\% & 0.29\,\% & 0.53\,$\%^\dagger$ & 47.4\,\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{OOV Generalization}
+\label{sec:oov}
+
+The 17.2M DA+dist model was evaluated on 31~curated OOV words across
+6~categories (Table~\ref{tab:oov}).
+The 5/5 result on genuine novel PT-BR words---verified absent from
+training---includes correct: palatalization (d+i$\to$d\textipa{Z}),
+coda reduction (l$\to$w), rhotacism (rr$\to$x), and nasal vowel
+mapping (om$\to$\~{o}).
+
+The $N\!=\!31$ OOV bank is a \textbf{diagnostic probe}, not a
+replacement for the main 28{,}782-word test set.
+Its purpose is qualitative: demonstrating that specific phonological
+rules transfer to unseen words.
+A separate set of 35~neologisms (5~categories: anglicisms,
+borrowed verbs, native neologisms, proper names, invented words)
+provides additional evidence along the same axis.
+
+\textbf{Defined failure modes}: (1)~geminate consonants from
+Italian/English loans, absent from training;
+(2)~English-phonology anglicisms, genuinely OOV phonologically;
+(3)~characters k, w, y---hard character-level OOV.
+
+\begin{table}[t]
+  \caption{OOV generalization, 17.2M DA+dist}
+  \label{tab:oov}
+  \centering\small
+  \begin{tabular}{lcc}
+    \toprule
+    Category & Correct & Phon.\ Score \\
+    \midrule
+    PT-BR neologisms        & 6/9\,(67\,\%)   & 97\,\% \\
+    Geminate consonants     & 1/5\,(20\,\%)   & 81\,\% \\
+    Anglicisms (in-vocab)   & 1/5\,(20\,\%)   & 71\,\% \\
+    Char-OOV (k/w/y)        & 0/3\,(0\,\%)    & 68\,\% \\
+    \textbf{Real PT-BR OOV} & \textbf{5/5\,(100\,\%)} & \textbf{100\,\%} \\
+    Controls (in training)  & 4/4\,(100\,\%)  & 100\,\% \\
+    \midrule
+    \textbf{Total}          & \textbf{17/31\,(55\,\%)} & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% =============================================================
+\section{Discussion}
+\label{sec:discussion}
+% =============================================================
+
+\subsection{Memorization vs.\ Rule Learning}
+
+The 60/10/30 split is deliberate: we prioritize a large test set
+over maximizing training data.
+With 17.2M parameters and 57{,}562 training words, the model
+\emph{could} memorize---a hash table would be more compact.
+Yet the 100\,\% accuracy on genuine OOV PT-BR words (correct
+palatalization d+i$\to$d\textipa{Z}, coda reduction l$\to$w,
+nasal mapping om$\to$\~{o}) is consistent with phonological rule
+acquisition.
+Furthermore, reducing training data from 60\,\% to 50\,\% (Exp105)
+degrades PER only 10\,\% relative (0.49\,$\to$\,0.54\,\%),
+suggesting the corpus is well above the saturation threshold for
+this architecture---additional training data yields diminishing
+returns.
+
+\subsection{PER/WER Trade-off with Separators}
+
+The systematic trade-off between PER improvement ($-17$\,\% to
+$-20$\,\%) and WER degradation ($+6$\,\% to $+8$\,\%) with
+syllable boundary tokens is structural, not tunable.
+Each misplaced separator triggers a full word error under
+exact-match WER---the model has more opportunities for error per
+output sequence.
+This trade-off is independent of architecture, capacity, and loss
+function, persisting across all configurations tested.
+
+\textbf{Practical recommendation}: use the 9.7M DA model (no
+separators, WER~4.96\,\%) for word-level lookup and NLP tasks;
+use the 17.2M DA+dist model (with separators, PER~0.48\,\%) for
+TTS and forced alignment where sub-word accuracy matters.
+
+\subsection{Limits of DA Loss}
+
+Two boundaries are identified.
+\textbf{Structural tokens}: PanPhon assigns zero vectors to
+non-phonemic symbols (``.'', ``\textipa{"}''). The distance
+override corrects this partially, but positional confusions
+persist---the model distinguishes the tokens but still misplaces
+them in the sequence.
+\textbf{Signal scale}: DA is bounded by
+$\lam\!\times\!1.0\!\times\!1.0 = 0.20$, while early-training
+CE reaches $\sim$16.
+DA contributes $<$5\,\% of the gradient signal when the model is
+far from convergence, becoming effective primarily in the
+transition zone (CE~0.3--1.5, epochs 30--80).
+
+\subsection{Future Work}
+
+Three directions are promising:
+(1)~\textbf{phonotactic constraints}: PT-BR restricts codas to
+4~consonants and $\sim$78\,\% of syllables are open (CV)---an FSA
+encoding syllable structure could reduce separator placement errors;
+(2)~\textbf{continuous articulatory space}: replacing PanPhon's
+24-D binary features with a 7-D continuous vocal tract space would
+assign distinct coordinates to structural tokens, eliminating the
+need for distance overrides;
+(3)~\textbf{morphosyntactic context}: homographic heterophones
+(e.g., \textit{jogo} as noun /\textipa{O}/ vs.\ verb /o/) require
+sentential context beyond word-level G2P.
+
+% =============================================================
+\section{Conclusion}
+% =============================================================
+
+We presented Distance-Aware (DA) Loss, a phonologically-graded
+training objective for G2P that penalizes substitution errors
+proportionally to PanPhon articulatory distance, weighted by
+prediction confidence.
+Applied to Brazilian Portuguese, DA~Loss reduces catastrophic
+(Class~D) substitutions by 19\,\% relative while achieving
+PER~0.48\,\% (Wilson CI $\pm$0.03\,pp) and WER~5.33\,\% in the
+reference configuration, with a complementary no-separator
+configuration reaching WER~4.96\,\%, on the largest PT-BR G2P
+evaluation reported---28{,}782 stratified words.
+A factorial analysis reveals that the best performance requires
+the interaction of three factors---capacity, syllable separators,
+and DA~Loss with corrected structural distances---rather than any
+single factor.
+Genuine OOV generalization (5/5 novel PT-BR words) supports
+phonological rule acquisition beyond corpus memorization.
+
+DA~Loss is applicable to any language with PanPhon coverage;
+effectiveness beyond PT-BR remains to be validated experimentally.
+Limitations: geminate reduction for absent loan words,
+English-phonology anglicisms as genuine phonological OOV, and
+homograph disambiguation requiring morphosyntactic context beyond
+word-level G2P.
+
+% =============================================================
+% ACKNOWLEDGMENTS — commented out for double-blind review.
+% Restore for camera-ready version.
+% =============================================================
+% \section*{Acknowledgments}
+% [Restored in camera-ready]
+
+% =============================================================
+\section*{Use of Generative AI Tools}
+% =============================================================
+
+Generative AI tools (Claude, Anthropic) were used during manuscript
+preparation exclusively as editorial assistance: grammar and spell
+checking, bibliographic reference search, citation management,
+terminology consistency verification across sections, and \LaTeX{}
+formatting.
+The tool did not generate new text, hypotheses, figures, code, or
+data interpretations.
+All scientific content---experimental design, source code
+implementation, experiment execution, data collection and analysis,
+interpretation, and conclusions---is the sole work of the authors.
+
+% =============================================================
+\bibliographystyle{IEEEtran}
+\bibliography{slt_refs}
+% =============================================================
+
+\end{document}

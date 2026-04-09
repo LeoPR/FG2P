@@ -1,9 +1,0 @@
-# latexmkrc — ordem de compilação automática para main.tex
-# Usar com: latexmk -pdf main
-# Ou:       latexmk -xelatex main   (recomendado para IPA)
-
-# Sequência completa automática:
-#   pdflatex → bibtex → pdflatex → pdflatex
-$pdf_mode = 1;          # gerar PDF via pdflatex
-$bibtex_use = 2;        # rodar bibtex quando necessário
-$clean_ext = "bbl blg aux log out toc";

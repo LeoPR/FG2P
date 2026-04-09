@@ -3,7 +3,7 @@
 **Data**: 2026-03-01
 **Propósito**: Documentar a validação dos símbolos IPA usados no corpus `dicts/pt-br.tsv`, com foco nos alofones róticos e na distribuição complementar [x]/[ɣ]. Este documento serve como referência permanente para questões sobre a correção fonológica do dataset.
 
-**Referências cruzadas**: [ARTICLE.md §2.3](../article/ARTICLE.md) (auditoria do corpus) | [GLOSSARY.md](../article/GLOSSARY.md) (termos)
+**Referências cruzadas**: [ARTICLE.md §2.3](../article/ARTICLE.md) (auditoria do corpus) | [ARTICLE.md Apêndice A](../article/ARTICLE.md) (glossário)
 
 ---
 

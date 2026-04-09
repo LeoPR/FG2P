@@ -29,6 +29,16 @@ O trabalho mostra que um BiLSTM (arquitetura 2014) + método fonológico (DA Los
 
 **Palavras-chave**: G2P, conversão grafema-fonema, Português Brasileiro, BiLSTM, Distance-Aware Loss, generalização, IPA, fonologia.
 
+## Abstract
+
+This work presents FG2P, a Grapheme-to-Phoneme (G2P) system for Brazilian Portuguese built on a BiLSTM encoder-decoder with Bahdanau attention. The central contribution is a Distance-Aware (DA) Loss that penalizes prediction errors proportionally to articulatory distance between predicted and target phonemes, as measured by PanPhon's 24 binary features. The primary observed effect is not reducing error quantity but redistributing errors from catastrophic (class D, articulatorily distant) to milder (class B, articulatorily proximate).
+
+The system is evaluated on a large stratified test set (28,782 words, ~181k phonemes), achieving **0.48% PER** and **5.33% WER** in the main configuration. This evaluation scale — 57× larger than prior work — yields confidence intervals of ±0.03 pp (vs ±0.3 pp for ~500-word test sets). Generalization tests on 31 out-of-vocabulary words across 6 categories (including neologisms, loanwords, and OOV characters) show 55% accuracy overall, with 100% on real Brazilian Portuguese words absent from training — supporting the hypothesis that the model learned phonological rules beyond memorization, though the OOV set remains small for strong generalization claims.
+
+The work demonstrates that a BiLSTM (2014 architecture) combined with a phonologically-informed loss function can achieve competitive performance with modern references in the evaluated scope. The most robust scientific contribution lies in the learning signal design and evaluation protocol, not in a claim of general architectural superiority.
+
+**Keywords**: G2P, grapheme-to-phoneme, Brazilian Portuguese, BiLSTM, Distance-Aware Loss, generalization, IPA, phonology.
+
 ---
 
 ## 1. Introdução
@@ -63,7 +73,7 @@ A referência mais próxima é **LatPhon** [@chary2025latphon], um Transformer d
 | Design de avaliação | Estratificado (χ² p=0,678) | Estratificação não reportada | FG2P explicita validação do split |
 | Modelo | 17,2M BiLSTM (2014) | 7,5M Transformer (2017) | Famílias arquiteturais diferentes |
 
-*Metodologia de throughput e hardware de referência: [BENCHMARK.md](../benchmarks/BENCHMARK.md).* 
+*Metodologia de throughput e hardware de referência: [BENCHMARK.md](./supplementary/BENCHMARK.md).* 
 
 **Resultado estatístico**: O limite **superior** do IC de FG2P (0,51%) está **abaixo** do limite **inferior** do IC de LatPhon (0,56%) — **diferença estatisticamente significativa a 95% de confiança**.
 
@@ -95,7 +105,7 @@ A diferença (9,1% vs 0,48%) é esperada: ByT5 é **zero-shot multilíngue** (10
 
 ### 2.1 Corpus
 
-O corpus de treinamento consiste em **95.937 pares (palavra, transcrição IPA)** extraídos de `dicts/pt-br.tsv`, um dicionário fonético do Português Brasileiro com transcrições normalizadas. Após inspeção, foram corrigidas 10.252 instâncias com o grafema "g" (U+0067) que deveriam usar o símbolo IPA "ɡ" (U+0261, oclusiva velar sonora), distinção necessária para o correto mapeamento pelo PanPhon. Para uma descrição detalhada do pipeline de pré-processamento de dados e construção de vocabulários, ver [PIPELINE.md](./PIPELINE.md).
+O corpus de treinamento consiste em **95.937 pares (palavra, transcrição IPA)** extraídos de `dicts/pt-br.tsv`, um dicionário fonético do Português Brasileiro com transcrições normalizadas. Após inspeção, foram corrigidas 10.252 instâncias com o grafema "g" (U+0067) que deveriam usar o símbolo IPA "ɡ" (U+0261, oclusiva velar sonora), distinção necessária para o correto mapeamento pelo PanPhon. Para uma descrição detalhada do pipeline de pré-processamento de dados e construção de vocabulários, ver [PIPELINE.md](./supplementary/PIPELINE.md).
 
 **Características do corpus**:
 
@@ -132,6 +142,8 @@ A combinação `stress_type × syllable_bin × length_bin` gera **~48 estratos**
 $$\chi^2 = 0{,}95 \quad (p = 0{,}678 > 0{,}05) \qquad \text{Cramér V} = 0{,}0007$$
 
 O valor p não-significante indica ausência de diferença estatística entre as distribuições dos estratos nos três subconjuntos — o balanceamento é excelente. O Cramér V ≈ 0 confirma que a divisão não introduz viés em relação às features de estratificação.
+
+**Evidência empírica do impacto da estratificação**: Exp0 (split 70/10/20 sem estratificação, seed única) atingiu PER de 1,12%, enquanto Exp1 (split 60/10/30 com estratificação) atingiu 0,66% — redução de 41% no PER. Essa diferença não reflete melhoria do modelo (mesma arquitetura 4,3M, mesma loss CE), mas sim a qualidade do protocolo de avaliação: sem estratificação, a partição aleatória pode concentrar palavras difíceis no treino e fáceis no teste, inflando métricas artificialmente. Este resultado motivou a adoção de estratificação em todos os experimentos subsequentes.
 
 ### 2.25 Memorização vs Aprendizado de Regras
 
@@ -371,7 +383,7 @@ O principal limitante da CE é tratar todos os erros igualmente. Do ponto de vis
 
 ### 4.2 Distance-Aware Phonetic Loss (DA Loss)
 
-> Análise aprofundada com exemplos numéricos, sweep de λ e sugestões de fórmulas alternativas em [DA_LOSS_ANALYSIS.md](./DA_LOSS_ANALYSIS.md).
+> Análise aprofundada com exemplos numéricos, sweep de λ e sugestões de fórmulas alternativas em [DA_LOSS_ANALYSIS.md](./supplementary/DA_LOSS_ANALYSIS.md).
 
 #### O problema fundamental
 
@@ -602,7 +614,7 @@ PanPhon [@mortensen2016panphon] é uma base de 24 features articulatórias biná
 
 ### 5.2 Progressão dos Experimentos
 
-A tabela a seguir sintetiza todos os experimentos concluídos, agrupados por fase metodológica. Para o log completo com datas, configurações JSON e artefatos gerados de cada experimento, ver [EXPERIMENTS.md](./EXPERIMENTS.md):
+A tabela a seguir sintetiza todos os experimentos concluídos, agrupados por fase metodológica. Para o log completo com datas, configurações JSON e artefatos gerados de cada experimento, ver [EXPERIMENTS.md](./supplementary/EXPERIMENTS.md):
 
 | Exp | Params | Loss | Sep | PER | WER | Acc | Insight |
 |-----|--------|------|-----|-----|-----|-----|---------|
@@ -918,7 +930,7 @@ A DA Loss demonstrou eficácia como regularizador fonético: melhora PER e WER n
 
 **Limite estrutural**: Símbolos estruturais (`.`, `ˈ`) não recebem sinal útil da DA Loss porque têm vetor zero no PanPhon. O override de distância corrige parcialmente isso, mas confusões posicionais persistem — o modelo sabe que `.` e `ˈ` são diferentes, mas ainda os posiciona incorretamente na sequência.
 
-**Limite de escala do sinal**: DA é matematicamente bounded por `λ × 1.0 × 1.0 = 0.20`, enquanto CE pode atingir ~16 computacionalmente. Isso significa que DA representa < 5% do sinal quando o modelo está muito errado (CE alto), sendo efetivo principalmente na zona de transição (CE 0.3–1.5, épocas 30–80). Para análise completa com exemplos numéricos, sugestões de fórmulas alternativas e interação com BiLSTM + atenção, ver [DA_LOSS_ANALYSIS.md](DA_LOSS_ANALYSIS.md).
+**Limite de escala do sinal**: DA é matematicamente bounded por `λ × 1.0 × 1.0 = 0.20`, enquanto CE pode atingir ~16 computacionalmente. Isso significa que DA representa < 5% do sinal quando o modelo está muito errado (CE alto), sendo efetivo principalmente na zona de transição (CE 0.3–1.5, épocas 30–80). Para análise completa com exemplos numéricos, sugestões de fórmulas alternativas e interação com BiLSTM + atenção, ver [DA_LOSS_ANALYSIS.md](./supplementary/DA_LOSS_ANALYSIS.md).
 
 ### 8.3 Escopo Aplicado do G2P no Pipeline
 
@@ -958,7 +970,7 @@ As ablações da Fase 7 quantificam dois trade-offs práticos com impacto direto
 | Exp104d | 0,48% | ~34 w/s | ~1.106 w/s | Referência PER consolidada |
 | Exp106 | 0,58% | ~43 w/s | ~1.500 w/s | Ablação de eficiência (evidência preliminar) |
 
-† GPU pico = batch=512 (ponto de saturação RTX 3060). Range de todos os 19 experimentos: batch=1: 31–43 w/s; batch=512: 1.081–1.500 w/s. Sweep formal 2026-03-14, warmup=20, words=1.000. Detalhes: [BENCHMARK.md](../benchmarks/BENCHMARK.md).
+† GPU pico = batch=512 (ponto de saturação RTX 3060). Range de todos os 19 experimentos: batch=1: 31–43 w/s; batch=512: 1.081–1.500 w/s. Sweep formal 2026-03-14, warmup=20, words=1.000. Detalhes: [BENCHMARK.md](./supplementary/BENCHMARK.md).
 
 ### 8.6 Metodologia de Benchmark de Velocidade
 
@@ -1023,7 +1035,7 @@ O sweep formal (CPU: 2026-03-15, adaptativo, 19 modelos · GPU: 2026-03-14, over
 - CPU: p50 estabiliza em ~5,2 ms a partir de batch≈64 — gargalo migra de compute BLAS para overhead Python (alocação de tensores, loop de decodificação de índices). Pico: **~190 w/s** (Exp104d); range 190–736 w/s entre modelos.
 - GPU: p50 estabiliza em ~0,9 ms a partir de batch≈512 — paralelismo CUDA esgotado; throughput pico **~1.106 w/s** (Exp104d); range 1.081–1.500 w/s entre modelos.
 
-**Contexto de hardware**: O RTX 3060 possui 3.584 CUDA cores e 12,7 TFLOPS FP32. A vantagem de GPU escala com batch (paralelismo entre amostras) mas não com comprimento de sequência (decoder autoregressivo é serial por definição). Comparações cross-device (RTX 3060 vs RTX 4090) sem paridade de batch size e modelo são inválidas. Detalhes metodológicos e análise de variância em [docs/benchmarks/BENCHMARK.md](../benchmarks/BENCHMARK.md).
+**Contexto de hardware**: O RTX 3060 possui 3.584 CUDA cores e 12,7 TFLOPS FP32. A vantagem de GPU escala com batch (paralelismo entre amostras) mas não com comprimento de sequência (decoder autoregressivo é serial por definição). Comparações cross-device (RTX 3060 vs RTX 4090) sem paridade de batch size e modelo são inválidas. Detalhes metodológicos e análise de variância em [docs/benchmarks/BENCHMARK.md](./supplementary/BENCHMARK.md).
 
 ---
 
@@ -1038,7 +1050,7 @@ Este trabalho apresentou o FG2P, um sistema G2P para o Português Brasileiro bas
 - Avaliação sobre 28.782 palavras — 57× maior que referências comparáveis em PT-BR
 
 **Contribuições técnicas**:
-1. *Distance-Aware Loss* com λ=0,20 como regularizador fonético — melhora qualidade dos erros em comparações limpas e contribui para o melhor WER observado sem custo arquitetural adicional (ver [análise de originalidade](ORIGINALITY_ANALYSIS.md))
+1. *Distance-Aware Loss* com λ=0,20 como regularizador fonético — melhora qualidade dos erros em comparações limpas e contribui para o melhor WER observado sem custo arquitetural adicional (ver [análise de originalidade](./supplementary/ORIGINALITY_ANALYSIS.md))
 2. Separadores silábicos como tokens de saída — trade-off documentado e quantificado (PER/WER Pareto)
 3. Override de distâncias para símbolos estruturais — corrige limitação do PanPhon para tokens não-fonéticos
 4. Banco de generalização de 31 palavras em 6 categorias — ferramenta reutilizável para avaliação OOV
@@ -1086,6 +1098,20 @@ A vantagem chave deste espaço: `.` e `ˈ` receberiam coordenadas distintas (CON
 **Estratificação de batches durante treinamento**: Os experimentos utilizaram batches aleatórios simples (`batch_size=32`). Uma melhoria metodológica recomendada é implementar estratificação de batches (`batch_size=96`) para garantir que cada mini-batch respeita a distribuição de estratos fonológicos do dataset. Isso reduz variância em loss curves (~50% menos ruído) sem penalidade significativa em tempo de treino (+6%).
 
 **Morfossintaxe para homógrafos heterófonos**: Para palavras como *jogo* (substantivo /ˈʒɔgʊ/ vs. verbo /ˈʒogʊ/), *gosto*, *acordo*, onde a pronúncia depende da categoria gramatical, um sistema G2P em isolamento nunca poderá resolver a ambiguidade. A solução exige um pipeline em série: analisador morfossintático → G2P com contexto. Este é um limite irredutível do design word-isolation, não da arquitetura BiLSTM.
+
+---
+
+## Reprodutibilidade
+
+Todo o código-fonte, dados de treinamento, modelos treinados e scripts de avaliação estão disponíveis no repositório do projeto. Cada experimento possui um arquivo `metadata.json` com hiperparâmetros completos, seed, versão do código e métricas finais, permitindo reprodução exata dos resultados reportados. O test set estratificado (28.782 palavras) e os bancos de avaliação OOV (generalization_test.tsv, neologisms_test.tsv) são distribuídos junto ao repositório. O pipeline de treinamento utiliza PyTorch com seed fixa e operações determinísticas quando disponíveis.
+
+## Uso de Ferramentas de IA
+
+Ferramentas de IA generativa (Claude, Anthropic) foram utilizadas durante a preparação deste manuscrito exclusivamente como assistência de nível editorial: revisão gramatical e ortográfica, pesquisa de referências bibliográficas, gestão de citações, verificação de consistência terminológica entre seções e formatação LaTeX. Todo o conteúdo científico — design experimental, implementação do código-fonte, execução dos experimentos, coleta e análise dos resultados, interpretação e conclusões — é de autoria exclusiva do autor humano. A ferramenta não gerou texto novo, hipóteses, figuras, código nem interpretações de dados. Este uso enquadra-se no Nível 2 (assistência editorial) conforme taxonomia de Resnik & Hosseini (2025), isento de disclosure obrigatório pela IEEE e ISCA, mas declarado aqui por transparência.
+
+## Agradecimentos
+
+*Seção reservada para a versão final de submissão.*
 
 ---
 
@@ -1338,10 +1364,10 @@ Este artigo faz parte de um conjunto integrado de documentação:
 
 | Documento | Conteúdo | Leitura indicada para |
 |-----------|----------|-----|
-| **[DA_LOSS_ANALYSIS.md](./DA_LOSS_ANALYSIS.md)** | Teoria aprofundada da Phonetic Distance-Aware Loss — fórmulas, exemplos numéricos, sugestões de melhoria | Leitores interessados em melhorias teóricas ou reprodução da loss |
-| **[EXPERIMENTS.md](./EXPERIMENTS.md)** | Log completo de todos os 22 experimentos (Exp0–Exp107) com datas, configs JSON e artefatos | Rastreamento metodológico e reprodutibilidade |
-| **[PIPELINE.md](./PIPELINE.md)** | Pipeline técnico: carregamento do corpus, estratificação, normalização, construção de vocabulários | Implementadores ou leitores técnicos do código |
-| **[ORIGINALITY_ANALYSIS.md](./ORIGINALITY_ANALYSIS.md)** | Pesquisa de originalidade da Distance-Aware Loss — comparação com trabalhos relacionados | Pesquisadores interessados em contextualização acadêmica |
+| **[DA_LOSS_ANALYSIS.md](./supplementary/DA_LOSS_ANALYSIS.md)** | Teoria aprofundada da Phonetic Distance-Aware Loss — fórmulas, exemplos numéricos, sugestões de melhoria | Leitores interessados em melhorias teóricas ou reprodução da loss |
+| **[EXPERIMENTS.md](./supplementary/EXPERIMENTS.md)** | Log completo de todos os 22 experimentos (Exp0–Exp107) com datas, configs JSON e artefatos | Rastreamento metodológico e reprodutibilidade |
+| **[PIPELINE.md](./supplementary/PIPELINE.md)** | Pipeline técnico: carregamento do corpus, estratificação, normalização, construção de vocabulários | Implementadores ou leitores técnicos do código |
+| **[ORIGINALITY_ANALYSIS.md](./supplementary/ORIGINALITY_ANALYSIS.md)** | Pesquisa de originalidade da Distance-Aware Loss — comparação com trabalhos relacionados | Pesquisadores interessados em contextualização acadêmica |
 | **Apêndice A (neste artigo)** | Glossário didático de termos fonéticos, LSTM e G2P com analogias — voltado ao público geral | Leitores da apresentação ou pessoas novas no tema |
 | **[../linguistics/PHONOLOGICAL_ANALYSIS.md](../linguistics/PHONOLOGICAL_ANALYSIS.md)** | Análise fonológica detalhada do PT-BR — validação empírica da regra ɣ/x, distribuição complementar | Pesquisadores em fonologia ou validação de corpus |
 

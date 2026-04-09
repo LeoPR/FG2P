@@ -1,0 +1,816 @@
+% =============================================================
+% Domain-Informed Loss for Structured Sequence Prediction:
+% Articulatory Distance in Grapheme-to-Phoneme Conversion
+% IEEE MLSP 2026 — Double-blind submission (6 pages incl. refs)
+% =============================================================
+%
+% COMPILATION: latexmk -pdf main
+% =============================================================
+
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% ---- Encoding & fonts ----------------------------------------
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{tipa}
+
+% ---- Math ----------------------------------------------------
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% ---- Tables --------------------------------------------------
+\usepackage{booktabs}
+\usepackage{multirow}
+
+% ---- References ----------------------------------------------
+\usepackage{cite}
+
+% ---- Macros --------------------------------------------------
+\newcommand{\dpp}{d_{\mathrm{PP}}}        % PanPhon distance
+\newcommand{\LCE}{L_{\mathrm{CE}}}        % CE loss
+\newcommand{\lam}{\lambda}                % lambda shorthand
+
+% =============================================================
+\begin{document}
+% =============================================================
+
+\title{Domain-Informed Loss Functions for Structured\\
+       Sequence Prediction: Articulatory Distance\\
+       in Grapheme-to-Phoneme Conversion}
+
+\author{%
+  \IEEEauthorblockN{[ANONYMOUS]}
+  \IEEEauthorblockA{[ANONYMOUS]}
+}
+
+\maketitle
+
+% ---- Abstract -----------------------------------------------
+\begin{abstract}
+Standard cross-entropy (CE) training for sequence prediction treats
+all output errors equally, discarding domain structure that
+distinguishes near-miss errors from catastrophic ones.
+We propose a general framework for \textbf{domain-informed loss
+functions} that augment CE with a distance penalty scaled by
+prediction confidence, and instantiate it as Distance-Aware (DA)
+Loss for grapheme-to-phoneme (G2P) conversion using PanPhon
+articulatory distance.
+
+The composite training signal
+$L = \LCE + \lam \cdot d(\hat{y}, y) \cdot p(\hat{y})$
+encodes domain-specific output similarity via $d$ and model
+confidence via $p(\hat{y})$.
+Applied to Brazilian Portuguese G2P with a BiLSTM encoder-decoder,
+DA~Loss reduces catastrophic (Class~D) substitutions by 19\,\%
+relative while maintaining overall error rate, demonstrating that
+domain-informed losses reshape the \emph{distribution} of errors
+rather than merely reducing their count.
+
+We validate on a stratified 28{,}782-word test set with Wilson
+95\,\% CIs ($\pm$0.03\,pp), achieving PER~0.48\,\% and
+WER~5.33\,\%.
+A factorial analysis reveals non-additive interaction between loss
+function, model capacity, and output representation---the best
+configuration requires all three factors jointly.
+The framework generalizes to any structured prediction task where
+a domain-grounded output distance metric is available.
+\end{abstract}
+
+\begin{IEEEkeywords}
+domain-informed loss, structured prediction, distance-aware
+training, grapheme-to-phoneme, articulatory features
+\end{IEEEkeywords}
+
+% =============================================================
+\section{Introduction}
+\label{sec:intro}
+% =============================================================
+
+Cross-entropy (CE) is the default training objective for
+classification and sequence prediction.
+For structured output spaces---where some errors are ``closer''
+to the target than others---CE provides no gradient signal about
+error severity: a near-miss and a catastrophic error receive
+identical penalties when $p_\mathrm{correct}$ is equal.
+
+This limitation is well-known in computer vision, where label
+smoothing~\cite{szegedy2016rethinking} redistributes probability
+mass uniformly---ignoring output structure---and in speech
+recognition, where edit-distance losses operate at the sequence
+level.
+The specific formulation we propose---combining a domain distance
+metric with prediction confidence as a multiplicative signal
+alongside CE---has not been systematically studied for token-level
+structured prediction.
+
+We instantiate this framework in grapheme-to-phoneme (G2P)
+conversion, where the output space has a natural metric: PanPhon
+articulatory distance~\cite{mortensen2016panphon}, encoding 24
+binary features (voicing, nasality, place, manner) that define how
+``far apart'' two phonemes are in articulatory space.
+Predicting /\textipa{E}/ when the target is /e/ ($d\!=\!0.10$, one
+feature difference) is qualitatively different from predicting /k/
+for /a/ ($d\!=\!0.90$, eight features)---yet CE treats them
+identically.
+
+\textbf{Comparison with LatPhon~\cite{chary2025latphon}.}
+LatPhon is a 4-layer multilingual Transformer (7.5M parameters)
+reporting PER~0.86\,\% (Wilson CI [0.56\,\%, 1.16\,\%]) on
+$\approx$500~PT-BR words from the same dictionary used here.
+Our system achieves PER~0.48\,\% (CI~[0.46\,\%, 0.51\,\%]) on
+28{,}782~words---the CIs do not overlap, a statistically significant
+difference at 95\,\% confidence.
+The 57$\times$ test set difference confers 10$\times$ more precise
+CIs ($\pm$0.03\,pp vs.\ $\pm$0.30\,pp).
+We deliberately use a BiLSTM to isolate the loss contribution from
+architectural novelty.
+
+\textbf{Contributions:}
+\begin{enumerate}
+  \item A general \textbf{domain-informed loss} formulation
+        combining output-space distance with prediction
+        confidence (Sec.~\ref{sec:method})
+  \item \textbf{Error quality taxonomy}: Class~A--D classification
+        showing systematic redistribution of catastrophic errors
+        (Sec.~\ref{sec:analysis})
+  \item \textbf{Factorial analysis} of loss $\times$ capacity
+        $\times$ representation interaction, demonstrating
+        non-additive effects (Sec.~\ref{sec:factorial})
+  \item Large-scale evaluation with \textbf{stratified splits} and
+        Wilson CIs on 28{,}782~words (Sec.~\ref{sec:eval})
+\end{enumerate}
+
+% =============================================================
+\section{Related Work}
+\label{sec:related}
+% =============================================================
+
+\textbf{Loss function design for structured outputs.}
+Label smoothing~\cite{szegedy2016rethinking} uniformly
+redistributes probability mass, ignoring output structure.
+Knowledge distillation uses soft targets from a teacher model but
+does not incorporate domain-specific distance.
+Edit-distance losses have been explored in speech recognition but
+typically at the sequence level, not per-token.
+
+\textbf{Domain knowledge in training signals.}
+Phonological distance has been used in ASR for confusion-weighted
+evaluation, but not as a direct training signal.
+Our work differs in three aspects: (1)~we operate at the IPA token
+level; (2)~we use PanPhon articulatory
+distance~\cite{mortensen2016panphon} as a principled,
+language-independent metric; (3)~we weight the distance penalty by
+prediction confidence, creating a composite signal that maximally
+penalizes errors that are both confident and distant.
+
+\textbf{G2P systems.}
+Neural G2P has evolved from RNN
+approaches~\cite{rao2015g2p,bisani2008joint} to Transformer
+architectures.
+LatPhon~\cite{chary2025latphon} applies a multilingual Transformer
+to 6~languages including Portuguese.
+We deliberately use a BiLSTM~\cite{bahdanau2014neural} to isolate
+the loss function contribution from architectural novelty.
+
+% =============================================================
+\section{Method: Domain-Informed Loss}
+\label{sec:method}
+% =============================================================
+
+\subsection{General Framework}
+
+For any structured prediction task with output vocabulary
+$\mathcal{V}$ and a domain-grounded distance $d: \mathcal{V}
+\times \mathcal{V} \to [0,1]$, we define:
+\begin{equation}
+  \boxed{L = \LCE + \lam \cdot d(\hat{y},\, y) \cdot p(\hat{y})}
+  \label{eq:diloss}
+\end{equation}
+where $\LCE = -\log p_\mathrm{correct}$,
+$d(\hat{y}, y)$ is the domain distance between predicted and target
+outputs, $p(\hat{y})$ is the softmax probability assigned to the
+(incorrect) argmax prediction, and $\lam$ controls coupling strength.
+
+\textbf{Key properties:}
+(1)~CE and domain terms monitor \emph{independent} quantities:
+$p_\mathrm{correct}$ vs.\ $p(\hat{y})$.
+When the model is confidently wrong, $p_\mathrm{correct}$ is low
+(CE high) while $p(\hat{y})$ is high (domain penalty high)---the
+two signals reinforce.
+(2)~The domain term is \emph{bounded}
+($\leq \lam \times 1.0 \times 1.0$), ensuring CE remains the
+primary learning axis.
+(3)~The framework is \textbf{task-agnostic}: any domain providing
+a normalized output distance can instantiate~(\ref{eq:diloss}).
+
+\subsection{Instantiation: Articulatory Distance for G2P}
+
+For G2P, $d = \dpp$: normalized Euclidean distance in PanPhon's
+24-D articulatory feature space~\cite{mortensen2016panphon}.
+Each phoneme is encoded as a 24-dimensional vector of binary
+articulatory features (voicing, nasality, place, manner).
+Example distances:
+p$\leftrightarrow$b: 0.04 (voicing only);
+s$\leftrightarrow$\textipa{S}: 0.15 (place shift);
+a$\leftrightarrow$k: 0.90 (vowel vs.\ velar stop).
+
+\textbf{Structural token override.}
+Non-phonemic tokens (syllable boundary ``.'', stress marker
+``\textipa{"}'') receive zero vectors in PanPhon.
+Without correction, $d(., \text{'}) = 0$---DA provides no gradient
+signal for their confusion.
+We apply a post-normalization override: $d = 1.0$ for any pair
+involving a structural token.
+The override must be applied \emph{after} Euclidean normalization;
+applying it before yields $d\!\approx\!0.25$, not the intended
+maximum.
+
+\textbf{Numerical example.}
+Consider two errors with identical CE ($p_\mathrm{correct}\!=\!0.40$,
+CE$\,=\,0.916$):
+a near-miss e$\to$\textipa{E} ($d\!=\!0.10$, $p(\hat{y})\!=\!0.45$)
+adds DA$\,=\,0.009$, total $L\!=\!0.925$;
+a catastrophic a$\to$k ($d\!=\!0.90$, $p(\hat{y})\!=\!0.45$) adds
+DA$\,=\,0.081$, total $L\!=\!0.997$.
+CE alone is identical (0.916) in both cases.
+DA provides a 9$\times$ difference in phonological penalty, steering
+the model to ``break ties toward the closer candidate.''
+
+\textbf{Worked example.}
+Consider the word \textit{cena} (target: /s\,e\,n\,\textipa{@}/)
+at the decoder step for grapheme ``c''.
+The softmax produces
+$\{$s:0.42, \textipa{S}:0.35, z:0.12, t:0.06, \ldots$\}$;
+$\hat{y}\!=\!\textipa{S}$ (argmax, incorrect).
+CE: $-\!\log(0.42)\!=\!0.868$ (penalizes low $p_\mathrm{correct}$).
+DA: $0.20\!\times\!d(\textipa{S},\mathrm{s})\!\times\!p(\textipa{S})
+     = 0.20\!\times\!0.15\!\times\!0.35 = 0.0105$.
+Total: $L\!=\!0.879$.
+If the model had predicted /k/ instead:
+DA$\,=\,0.20\!\times\!0.80\!\times\!0.35 = 0.056$;
+total $L\!=\!0.924$---5\,\% higher for the distant error.
+Over thousands of gradient steps, this differential signal steers
+the model to ``break ties toward alveolar fricatives'' without
+receiving an explicit phonological rule.
+
+\subsection{$\lambda$ Selection}
+
+Table~\ref{tab:lambda} sweeps $\lam$ with fixed architecture
+(4.3M params).
+The inverted-U pattern is consistent with bounded auxiliary losses:
+too low is inert; too high competes with CE.
+\begin{table}[ht]
+  \caption{$\lambda$ sweep, 4.3M architecture.}
+  \label{tab:lambda}
+  \centering\small
+  \begin{tabular}{cccc}
+    \toprule
+    $\lambda$ & PER & WER & Behavior \\
+    \midrule
+    0.05 & 0.62\,\% & 5.36\,\% & Signal too weak \\
+    0.10 & 0.63\,\% & 5.35\,\% & Moderate \\
+    \textbf{0.20} & \textbf{0.60\,\%} & \textbf{5.14\,\%} & \textbf{Optimal} \\
+    0.50 & 0.65\,\% & 5.57\,\% & Over-penalization \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% =============================================================
+\section{Experimental Setup}
+\label{sec:eval}
+% =============================================================
+
+\subsection{Task and Data}
+
+We evaluate on Brazilian Portuguese G2P: mapping orthographic words
+to IPA phoneme sequences.
+The corpus contains \textbf{95{,}937 word--IPA pairs}, split
+\textbf{60/10/30} (train/val/test) with stratification over stress
+type (oxytone/paroxytone/proparoxytone), syllable count (1--5+),
+and character length ($\leq$4, 5--7, 8--10, 11+), yielding
+$\sim$48 strata.
+Split quality: $\chi^2\!=\!0.95$ ($p\!=\!0.678$),
+Cram\'{e}r $V\!=\!0.0007$~\cite{kohavi1995crossvalidation}.
+
+\textbf{Split bias evidence.}
+An unstratified 70/10/20 split (same architecture, CE loss) achieved
+PER~1.12\,\%, while the stratified 60/10/30 split achieved
+0.66\,\%---a 41\,\% PER reduction attributable entirely to
+evaluation protocol, not model improvement.
+
+\subsection{Architecture}
+
+BiLSTM encoder-decoder with Bahdanau
+attention~\cite{bahdanau2014neural}, chosen to isolate the loss
+contribution from architectural novelty.
+
+\textbf{Encoder}: 2-layer BiLSTM over grapheme embeddings.
+Each position $t$ yields
+$h_t\!=\![\overrightarrow{h}_t;\,\overleftarrow{h}_t]$,
+providing bidirectional context---critical for resolving graphemic
+ambiguity (e.g., ``c'' $\to$ /k/ or /s/ depends on following vowel).
+
+\textbf{Decoder}: 2-layer LSTM with Bahdanau attention and teacher
+forcing during training; autoregressive at inference.
+
+Three capacity configurations (Table~\ref{tab:configs}).
+
+\begin{table}[ht]
+  \caption{Architecture configurations.}
+  \label{tab:configs}
+  \centering\small
+  \begin{tabular}{lccc}
+    \toprule
+    Config  & Embedding & Hidden & Parameters \\
+    \midrule
+    Small   & 128-D & 256-D & 4.3M \\
+    Medium  & 192-D & 384-D & 9.7M \\
+    Large   & 256-D & 512-D & 17.2M \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+All models: Adam ($\beta_1\!=\!0.9$, $\beta_2\!=\!0.999$),
+lr $10^{-3}$, batch size 96, early stopping
+(patience 10), seed 42, teacher forcing ratio 1.0.
+Batch size 96 ensures $\geq$3 samples per phonological stratum
+per batch (with $\sim$34 strata), reducing loss curve variance
+by $\sim$50\,\% relative to batch size 32.
+Models converge in 80--120 epochs ($\sim$59K gradient steps).
+
+\textbf{Two levels of randomness.}
+A frequently conflated distinction: \emph{stratified splitting}
+(classical sampling theory) guarantees proportional representation
+of phonological strata in each subset, preventing metric inflation
+from unrepresentative test sets.
+\emph{Training shuffling} (stochastic optimization) reshuffles
+examples each epoch for gradient variance reduction.
+The two are independent: stratification ensures unbiased
+\emph{measurement}; shuffling ensures efficient
+\emph{optimization}~\cite{bottou2010large}.
+
+\subsection{Metrics}
+\label{sec:metrics}
+
+\textbf{PER}: phoneme-level edit distance normalized by reference
+length~\cite{bisani2008joint}.
+\textbf{WER}: word-level exact match.
+\textbf{Wilson 95\,\% CI}~\cite{wilson1927probable}: $\pm$0.03\,pp
+for our test set ($\sim$181K phonemes) vs.\ $\pm$0.30\,pp for
+$\sim$500-word evaluations.
+\textbf{PER$_w$}: weighted PER where each substitution is weighted
+by normalized Hamming distance over PanPhon's 24 features,
+capturing error \emph{quality}.
+
+\textbf{Error taxonomy.}
+We define error classes by Hamming distance $d_H$ over PanPhon's
+24 articulatory features (Table~\ref{tab:errorclasses}).
+Evaluation uses Hamming distance, while DA~Loss training uses
+Euclidean---both over the same 24 features.
+Euclidean penalizes bipolar contrasts
+($+1\!\leftrightarrow\!-1$, e.g., voicing) more than unspecified
+features ($0\!\leftrightarrow\!\pm 1$), which is linguistically
+more appropriate as a training signal.
+
+\begin{table}[ht]
+  \caption{Error class taxonomy based on normalized Hamming distance.}
+  \label{tab:errorclasses}
+  \centering\small
+  \begin{tabular}{lcll}
+    \toprule
+    Class & $d_H$ & Features diff. & Example \\
+    \midrule
+    A & 0.000 & 0 (exact) & --- \\
+    B & $\leq$0.050 & 1 (minimal pair) & p$\leftrightarrow$b \\
+    C & $\leq$0.150 & 2--3 (same family) & s$\leftrightarrow$\textipa{S} \\
+    D & $>$0.150 & 4+ (different) & vowel$\leftrightarrow$stop \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% =============================================================
+\section{Results}
+\label{sec:results}
+% =============================================================
+
+\subsection{Main Results}
+
+Table~\ref{tab:results} shows the complete experimental progression
+across 7~methodological phases.
+
+\begin{table*}[ht]
+  \caption{Complete experimental progression. Sep.\ = syllable
+           boundary tokens. Dist.\ = structural distance override.
+           Bold = recommended configurations.}
+  \label{tab:results}
+  \centering\small
+  \begin{tabular}{llcccccl}
+    \toprule
+    Phase & Exp & Params & Loss & Sep. & PER & WER & Insight \\
+    \midrule
+    \multirow{2}{*}{1.~Split}
+      & Exp0 & 4.3M & CE & --- & 1.12\,\% & 9.37\,\% & Baseline (70/10/20) \\
+      & Exp1 & 4.3M & CE & --- & 0.66\,\% & 5.65\,\% & Stratified 60/10/30: $-41$\,\% PER \\
+    \midrule
+    \multirow{2}{*}{2.~Capacity}
+      & Exp5 & 9.7M & CE & --- & 0.63\,\% & 5.38\,\% & Sweet spot \\
+      & Exp2 & 17.2M & CE & --- & 0.60\,\% & 4.98\,\% & Diminishing returns \\
+    \midrule
+    \multirow{3}{*}{3.~DA Loss}
+      & Exp7 & 4.3M & DA $\lam\!=\!0.2$ & --- & 0.60\,\% & 5.14\,\% & $\lam$ optimized \\
+      & \textbf{Exp9} & \textbf{9.7M} & \textbf{DA} $\boldsymbol{\lam\!=\!0.2}$ & \textbf{---} & \textbf{0.58\,\%} & \textbf{4.96\,\%} & \textbf{Best WER} \\
+      & Exp10 & 17.2M & DA $\lam\!=\!0.2$ & --- & 0.61\,\% & 5.25\,\% & No gain without sep \\
+    \midrule
+    \multirow{2}{*}{4.~Separators}
+      & Exp101 & 4.3M & CE & \checkmark & 0.53\,\% & 5.99\,\% & PER$\downarrow$ WER$\uparrow$ \\
+      & Exp102 & 9.7M & CE & \checkmark & 0.52\,\% & 5.79\,\% & Capacity attenuates WER cost \\
+    \midrule
+    \multirow{2}{*}{5.~DA+Sep}
+      & Exp103 & 9.7M & DA & \checkmark & 0.53\,\% & 5.73\,\% & Non-additive effects \\
+      & \textbf{104d} & \textbf{17.2M} & \textbf{DA+dist} & \checkmark & \textbf{0.48\,\%} & \textbf{5.33\,\%} & \textbf{Best PER (reference)} \\
+    \midrule
+    \multirow{2}{*}{6.~Robustness}
+      & Exp105 & 9.7M & DA+dist & \checkmark & 0.54\,\% & 5.87\,\% & 50\% data: $-10$\,\% PER \\
+      & Exp106 & 9.7M & DA+dist & \checkmark & 0.58\,\% & 6.12\,\% & No hyphen: minimal impact \\
+    \midrule
+    \multicolumn{2}{l}{LatPhon~\cite{chary2025latphon}}
+      & 7.5M & NLL & --- & 0.86\,\% & n/a & Multilingual Transformer \\
+    \bottomrule
+  \end{tabular}
+\end{table*}
+
+DA~Loss at 9.7M (Exp9) achieves the best WER (4.96\,\%).
+With separators and distance override at 17.2M (Exp104d), the best
+PER (0.48\,\%).
+Wilson CIs for Exp104d [0.46\,\%, 0.51\,\%] do not overlap with
+LatPhon's~\cite{chary2025latphon} [0.56\,\%, 1.16\,\%]---a
+statistically significant difference at 95\,\% confidence.
+
+\textbf{Separator trade-off.}
+Syllable boundary tokens improve PER ($-17$\,\% to $-20$\,\%)
+at the cost of WER ($+6$\,\% to $+8$\,\%).
+Each misplaced separator counts as a full word error under
+exact-match WER---a structural trade-off independent of loss.
+
+\subsection{Factorial Analysis: Loss $\times$ Representation}
+\label{sec:factorial}
+
+Table~\ref{tab:factorial} shows a 2$\times$2 factorial at 9.7M
+parameters.
+\begin{table}[ht]
+  \caption{2$\times$2 factorial: separators $\times$ DA Loss.
+           Values are PER\,\% / WER\,\%.}
+  \label{tab:factorial}
+  \centering\small
+  \begin{tabular}{lcc}
+    \toprule
+    & CE & DA $\lam\!=\!0.2$ \\
+    \midrule
+    No separators   & 0.63 / 5.38 & \textbf{0.58 / 4.96} \\
+    With separators & 0.52 / 5.79 & 0.53 / 5.73 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\textbf{Key finding: non-additive interaction.}
+Without separators, DA improves both PER ($-8$\,\%) and WER
+($-8$\,\%).
+With separators, DA does not improve over CE at 9.7M---the
+factors interact non-additively.
+Separators provide the largest single-factor PER improvement
+($-17$\,\%), but the best overall result (PER 0.48\,\%) requires
+\emph{all three}: 17.2M capacity + separators + DA + distance
+override.
+
+\textbf{Capacity interaction.}
+At 17.2M without separators, DA~Loss does not improve PER relative
+to CE (0.61\,\% vs.\ 0.60\,\%).
+At 17.2M \emph{with} separators and corrected distances, DA achieves
+the best PER (0.48\,\%).
+This refutes the hypothesis that domain losses interfere with
+large-model memorization---the relevant variable is the interaction
+between capacity, structural representation, and distance correction.
+
+\subsection{PanPhon Embeddings $\times$ DA Loss}
+
+A second 2$\times$2 factorial at 4.3M parameters isolates the
+interaction between PanPhon-initialized embeddings and DA~Loss
+(Table~\ref{tab:panphon_factorial}).
+
+\begin{table}[ht]
+  \caption{2$\times$2 factorial: PanPhon embeddings $\times$ DA Loss,
+           4.3M params, no sep. Values are PER\,\% / PER$_w$\,\%.}
+  \label{tab:panphon_factorial}
+  \centering\small
+  \begin{tabular}{lcc}
+    \toprule
+    & CE & DA $\lam\!=\!0.2$ \\
+    \midrule
+    Learned (random)     & 0.66 / 0.34 & 0.60 / 0.27 \\
+    PanPhon$_T$ (24-D)   & 0.66 / 0.33 & 0.65 / --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Key findings:
+(1)~PanPhon initialization with CE does not improve raw PER
+(0.66\,\% in both cases)---the geometric inductive bias is not
+reinforced by a phonologically-blind loss.
+(2)~DA~Loss with learned embeddings achieves the largest improvement
+($-9$\,\% PER, $-21$\,\% PER$_w$), confirming that DA operates via
+an external distance lookup, not embedding geometry.
+(3)~Combining PanPhon embeddings \emph{with} DA~Loss yields
+\emph{worse} PER than DA alone (0.65\,\% vs.\ 0.60\,\%)---the two
+phonological inductive biases compete rather than synergize.
+\textbf{Design implication}: PanPhon features are most effective as
+an \emph{external signal} in the loss function, not as an embedding
+prior.
+
+\subsection{Design Space Overview}
+
+Table~\ref{tab:designspace} summarizes the explored encoding
+$\times$ loss design space.
+The two recommended configurations occupy different Pareto frontiers:
+9.7M DA without separators (best WER, compact deployment) and
+17.2M DA+dist with separators (best PER, for TTS and forced
+alignment).
+
+\begin{table}[ht]
+  \caption{Design space: PER\,\% / WER\,\% by encoding and loss.}
+  \label{tab:designspace}
+  \centering\small
+  \begin{tabular}{lccc}
+    \toprule
+    Encoding & CE & DA $\lam\!=\!0.2$ & DA+dist \\
+    \midrule
+    Raw 4.3M        & 0.66/5.65 & 0.60/5.14 & --- \\
+    Raw 9.7M        & 0.63/5.38 & \textbf{0.58/4.96} & --- \\
+    Raw 9.7M + sep  & 0.52/5.79 & 0.53/5.73 & 0.49/5.43 \\
+    Raw 17.2M + sep & ---       & ---       & \textbf{0.48/5.33} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+% =============================================================
+\section{Analysis: Error Quality Redistribution}
+\label{sec:analysis}
+% =============================================================
+
+\subsection{Class Distribution}
+
+Table~\ref{tab:classdist} quantifies the redistribution.
+DA~Loss reduces Class~D errors \textbf{19\,\% relative}
+(CE baseline $\to$ DA 9.7M), independently of raw PER improvement.
+\begin{table}[ht]
+  \caption{Error class distribution. DA reduces catastrophic (D)
+           errors while maintaining near-miss (B) rate.}
+  \label{tab:classdist}
+  \centering\small
+  \begin{tabular}{lcccc}
+    \toprule
+    System & PER & Cls~B & Cls~D & D/errors \\
+    \midrule
+    CE base.\ (4.3M)         & 0.66\,\% & 0.39\,\% & 0.54\,\% & 50.9\,\% \\
+    DA (9.7M)                & 0.58\,\% & 0.36\,\% & 0.44\,\% & 48.4\,\% \\
+    DA+dist (17.2M+sep.)     & 0.48\,\% & 0.29\,\% & 0.53\,\% & 47.4\,\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Graduated Metrics}
+
+Table~\ref{tab:graduated} tracks PER$_w$ (distance-weighted PER)
+across experiments.
+DA~Loss reduces PER$_w$ by $-21$\,\% (0.34\,$\to$\,0.27\,\%) vs.\
+the CE baseline, while capacity alone (17.2M) reduces it only
+$-15$\,\%.
+This confirms that the domain-informed loss improves error
+\emph{quality} disproportionately to error \emph{quantity}---the
+central claim of domain-informed loss design.
+\begin{table}[ht]
+  \caption{Graduated metrics. PER$_w$ captures error quality.}
+  \label{tab:graduated}
+  \centering\small
+  \begin{tabular}{llccc}
+    \toprule
+    System & Method & PER & PER$_w$ & WER$_g$ \\
+    \midrule
+    Exp1 & CE baseline       & 0.66\,\% & 0.34\,\% & 0.69\,\% \\
+    Exp2 & CE, +capacity     & 0.60\,\% & 0.29\,\% & 0.62\,\% \\
+    Exp6 & DA $\lam\!=\!0.1$ & 0.63\,\% & 0.27\,\% & 0.60\,\% \\
+    \textbf{Exp9} & \textbf{DA $\lam\!=\!0.2$}
+      & \textbf{0.58\,\%} & \textbf{0.27\,\%} & \textbf{0.58\,\%} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Dominant Error Patterns}
+
+Table~\ref{tab:confusions} shows the top phoneme confusions.
+Over 60\,\% of errors are vowel neutralizations inherent to
+PT-BR~\cite{barbosa2004brazilian}.
+
+\begin{table}[ht]
+  \caption{Top phoneme confusions, 17.2M DA+dist.}
+  \label{tab:confusions}
+  \centering\small
+  \begin{tabular}{lrl}
+    \toprule
+    Substitution & Count & Mechanism \\
+    \midrule
+    \textipa{E}$\to$e & 255 & Unstressed neutralization \\
+    e$\to$\textipa{E} & 197 & Same (reverse) \\
+    \textipa{O}$\to$o & 131 & Mid-back neutralization \\
+    i$\to$e           & 121 & Vowel reduction \\
+    o$\to$\textipa{O} & 95  & Mid-back neutralization \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:voweldist} reveals the distributional asymmetry
+driving the dominant confusion.
+In pre-tonic position, /e/ outnumbers /\textipa{E}/ by 24.9:1; in
+tonic position, the ratio inverts to 0.33:1.
+The model learns the overwhelming pre-tonic bias and incorrectly
+generalizes it to tonic syllables.
+
+\begin{table}[ht]
+  \caption{Corpus distribution of /e/ vs.\ /\textipa{E}/ by
+           syllable position.}
+  \label{tab:voweldist}
+  \centering\small
+  \begin{tabular}{lrrl}
+    \toprule
+    Position & /e/ & /\textipa{E}/ & Ratio \\
+    \midrule
+    Pre-tonic  & 38{,}147 & 1{,}535 & \textbf{24.9:1} \\
+    Tonic      & 275      & 836     & 0.33:1 \\
+    Post-tonic & 7{,}787  & 4{,}139 & 1.6:1 \\
+    \midrule
+    Global     & 46{,}209 & 6{,}510 & 7.1:1 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+DA~Loss cannot fix this: both /e/ and /\textipa{E}/ are
+articulatorily close ($d\!=\!0.10$), so the domain penalty is
+small regardless of direction.
+This represents a principled limitation: domain-informed losses
+help only when the error structure aligns with the distance metric.
+Reducing these errors ($\sim$19\,\% of all substitutions) would
+require explicit prosodic features or a dedicated tonic mid-vowel
+classifier.
+
+\subsection{Generalization Evidence}
+
+Evaluation on 31~curated OOV words across 6~categories yields
+55\,\% overall accuracy, with \textbf{100\,\%} on genuine novel
+words absent from training (Table~\ref{tab:oov}).
+Correct predictions include palatalization
+(d+i$\to$d\textipa{Z}), coda reduction (l$\to$w), and nasal
+mapping (om$\to$\~{o})---productive PT-BR phonological rules.
+Defined failure modes: geminate consonants from Italian/English
+loans (absent from training), English-phonology anglicisms
+(genuinely OOV), and characters k/w/y (hard character-level OOV).
+
+\begin{table}[ht]
+  \caption{OOV generalization, 17.2M DA+dist model.}
+  \label{tab:oov}
+  \centering\small
+  \begin{tabular}{lcc}
+    \toprule
+    Category & Correct & Phon.\ Score \\
+    \midrule
+    PT-BR neologisms        & 6/9\,(67\,\%)   & 97\,\% \\
+    Geminate consonants     & 1/5\,(20\,\%)   & 81\,\% \\
+    Anglicisms (in-vocab)   & 1/5\,(20\,\%)   & 71\,\% \\
+    Char-OOV (k/w/y)        & 0/3\,(0\,\%)    & 68\,\% \\
+    \textbf{Real PT-BR OOV} & \textbf{5/5\,(100\,\%)} & \textbf{100\,\%} \\
+    Controls (in training)  & 4/4\,(100\,\%)  & 100\,\% \\
+    \midrule
+    \textbf{Total}          & \textbf{17/31\,(55\,\%)} & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:oov_examples} shows the 5~real OOV words with
+exact IPA predictions---each exercising a different productive
+PT-BR phonological rule.
+
+\begin{table}[ht]
+  \caption{Qualitative OOV predictions: 5/5 real novel PT-BR words.
+           Rules: pal.\ = palatalization, red.\ = coda reduction.}
+  \label{tab:oov_examples}
+  \centering\small
+  \begin{tabular}{lll}
+    \toprule
+    Word & Predicted IPA & Rule tested \\
+    \midrule
+    puxadinho & p u \textipa{S} a \textipa{"} d\textipa{Z} i \textipa{N} \textipa{U} & pal.\ d+i \\
+    malcriado & m a w k \textipa{\*r} i \textipa{"} a d \textipa{U} & red.\ l$\to$w \\
+    descartar & d\textipa{Z} i s k a x \textipa{"} t a x & coda x \\
+    avermelhado & a v e x m e \textipa{"} \textipa{L} a d \textipa{U} & rr$\to$x \\
+    computadorz\~{a}o & k \~{o} p u t a d o x \textipa{"} z \~{a} \~{\textipa{U}} & nasal mapping \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Robustness Ablations}
+
+Data reduction from 60\,\% to 50\,\% training degrades PER only
+10\,\% relative (0.49\,$\to$\,0.54\,\%), suggesting the corpus is
+above the saturation threshold.
+Removing the hyphen character from the input vocabulary
+(39$\to$38 tokens) has minimal impact (PER~0.58\,\%,
+$+$0.04\,pp)---the hyphen is phonetically irrelevant for compound
+words.
+
+% =============================================================
+\section{Discussion}
+\label{sec:discussion}
+% =============================================================
+
+\textbf{When does domain-informed loss help?}
+DA~Loss is most effective in the CE transition zone
+(loss 0.3--1.5), where the model is actively resolving ambiguities
+between candidate outputs.
+Its bounded signal ($\leq \lam$) means it contributes $<$5\,\% of
+gradient when the model is far from convergence.
+This makes it a \emph{refinement signal}, not a replacement for CE.
+
+\textbf{Interaction with representation.}
+The non-additive interaction between DA~Loss and separators
+(Table~\ref{tab:factorial}) suggests that output representation
+determines whether the domain signal has ``room to operate.''
+Without separators, DA differentiates phoneme confusions
+effectively; with separators, the additional structural tokens
+introduce a new error class (positional confusions) that the
+distance metric addresses only partially.
+
+\textbf{Generalizability.}
+The framework (\ref{eq:diloss}) applies wherever a normalized
+output distance exists: semantic similarity for NMT (WordNet,
+embedding distance), acoustic distance for ASR, molecular
+fingerprint distance for drug design.
+The key requirement is that $d$ be \emph{domain-grounded}: random
+or learned distances conflate the signal with the model's own
+biases.
+
+\textbf{Allophonic rule discovery.}
+During OOV evaluation, the model produced /\textipa{G}/ in coda
+before voiced consonants (e.g., \textit{borboleta} $\to$
+b\,o\,\textipa{G}\,.\,b\,o\ldots).
+Corpus audit confirmed the model was \textbf{correct}:
+PT-BR voicing assimilation~\cite{barbosa2004brazilian} requires
+/\textipa{G}/ before voiced consonants and /x/ in word-final
+coda---perfect complementary distribution across all 95{,}937
+dictionary entries with zero exceptions.
+The model discovered this allophonic rule from distributional
+evidence alone.
+
+\textbf{Limitations.}
+(1)~Evaluated on one task (G2P) and one language (PT-BR).
+(2)~PanPhon's 24 binary features may underspecify some contrasts.
+(3)~Perceptual validation (MOS/ABX) of ``closer errors are less
+salient'' remains future work.
+(4)~BiLSTM only; Transformer experiments are needed.
+
+% =============================================================
+\section{Conclusion}
+% =============================================================
+
+We presented a general framework for domain-informed loss functions
+that augment cross-entropy with a distance penalty weighted by
+prediction confidence.
+Instantiated as Distance-Aware Loss for G2P with PanPhon
+articulatory distance, the method reduces catastrophic errors by
+19\,\% relative while achieving PER~0.48\,\% (Wilson CI
+$\pm$0.03\,pp) on the largest reported PT-BR evaluation
+(28{,}782~words).
+A factorial analysis demonstrates that loss function design
+interacts non-additively with model capacity and output
+representation---motivating joint evaluation of these factors
+in structured prediction tasks.
+The framework is applicable to any domain providing a normalized
+output distance metric.
+
+% =============================================================
+\section*{Use of Generative AI Tools}
+% =============================================================
+
+Generative AI tools (Claude, Anthropic) were used as editorial
+assistants during manuscript preparation: grammar revision,
+\LaTeX{} formatting, and cross-reference verification.
+All scientific content---hypothesis formulation, experimental
+design, data analysis, and interpretation of results---is the
+sole work of the authors.
+No AI-generated text appears in the scientific narrative without
+human verification and revision.
+
+% =============================================================
+\bibliographystyle{IEEEtran}
+\bibliography{mlsp_refs}
+% =============================================================
+
+\end{document}

@@ -1,0 +1,632 @@
+\documentclass[12pt]{article}
+
+\usepackage{sbc-template}
+\usepackage{graphicx,url}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{textcomp}
+
+% IPA symbols — use tipa but avoid the babel-active " character
+\usepackage{tipa}
+\newcommand{\ipaE}{\textipa{E}}%  open-mid front unrounded = ɛ
+\newcommand{\ipaO}{\textipa{O}}%  open-mid back rounded = ɔ
+\newcommand{\ipaG}{\textipa{G}}%  voiced velar fricative = ɣ
+\newcommand{\ipag}{\textipa{g}}%  IPA g (U+0261)
+\newcommand{\stressmark}{\raisebox{0.25ex}{\textquotesingle}}% ˈ (IPA stress)
+
+\sloppy
+
+\title{Distance-Aware Loss: Penalidade Fonologicamente Graduada\\para Convers\~ao Grafema-Fonema no Portugu\^es Brasileiro}
+
+\author{[AN\^ONIMO]\inst{1}}
+
+\address{[Afilia\c{c}\~ao anonimizada]
+  \email{[email anonimizado]}
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este trabalho apresenta uma fun\c{c}\~ao de custo fonologicamente informada
+--- a \emph{Distance-Aware} (DA) Loss --- para sistemas de convers\~ao
+grafema-fonema (G2P) no Portugu\^es Brasileiro. Diferente da CrossEntropy
+padr\~ao, que trata todos os erros de substitui\c{c}\~ao igualmente, a DA
+Loss penaliza erros proporcionalmente \`a dist\^ancia articulat\'oria entre
+o fonema predito e o alvo, ponderada pela confian\c{c}a do modelo.
+A dist\^ancia \'e calculada sobre 24 features articulat\'orias do
+PanPhon. Aplicada a um BiLSTM encoder-decoder com aten\c{c}\~ao de Bahdanau,
+a DA Loss redistribui sistematicamente os erros das classes catastr\'oficas
+(Classe~D) para classes mais pr\'oximas (Classe~B). O sistema \'e avaliado
+sobre um conjunto de teste estratificado de 28.782 palavras
+(${\sim}$181k fonemas) --- escala 57$\times$ maior que avalia\c{c}\~oes
+compar\'aveis em PT-BR --- alcan\c{c}ando PER de 0,48\% (IC Wilson 95\%
+[0,46\%; 0,51\%]) e WER de 5,33\% na configura\c{c}\~ao de refer\^encia;
+uma configura\c{c}\~ao complementar sem separadores sil\'abicos atinge
+WER de 4,96\%. Testes em 31 palavras fora do
+vocabul\'ario mostram 100\% de acur\'acia em palavras reais in\'editas
+do PT-BR, evid\^encia consistente com generaliza\c{c}\~ao de regras
+fonol\'ogicas.
+\end{abstract}
+
+\begin{resumo}
+  This work presents a phonologically-informed loss function ---
+  Distance-Aware (DA) Loss --- for Grapheme-to-Phoneme (G2P) systems
+  in Brazilian Portuguese. Unlike standard cross-entropy, DA~Loss
+  penalizes substitution errors proportionally to the articulatory
+  distance between predicted and target phonemes, weighted by the
+  model's prediction confidence. Applied to a BiLSTM encoder-decoder,
+  DA~Loss systematically redistributes errors from catastrophic
+  (Class~D) to phonologically closer substitutions (Class~B). The
+  system is evaluated on a stratified 28{,}782-word test set
+  (${\sim}$181k phonemes), achieving 0.48\% PER (Wilson 95\% CI
+  [0.46\%; 0.51\%]) and 5.33\% WER; a complementary configuration
+  without syllable separators reaches 4.96\% WER. Generalization tests
+  on 31 out-of-vocabulary words yield 100\% accuracy on genuine novel
+  PT-BR words.
+\end{resumo}
+
+\section{Introdu\c{c}\~ao}
+
+A convers\~ao autom\'atica de texto escrito em representa\c{c}\~ao
+fon\'etica --- tarefa \emph{Grapheme-to-Phoneme} (G2P) --- \'e componente
+fundamental de sistemas de s\'{\i}ntese de fala (TTS), reconhecimento de
+fala e processamento de linguagem natural. Para o Portugu\^es Brasileiro,
+a tarefa apresenta desafios espec\'{\i}ficos:
+(i)~\textbf{ambiguidade graf\^emica} --- o grafema ``c'' realiza-se como
+/k/ em ``cama'' mas /s/ em ``cena''; o ``r'' em coda realiza-se /x/ em
+final de palavra mas /\ipaG{}/ antes de consoante vozeada;
+(ii)~\textbf{neutraliza\c{c}\~ao voc\'alica} --- em s\'{\i}labas \'atonas,
+/\ipaE{}/$\leftrightarrow$/e/ e /\ipaO{}/$\leftrightarrow$/o/
+neutralizam-se; (iii)~\textbf{suprassegmentais} --- o acento t\^onico
+(\textsuperscript{\textprimstress})\footnote{S\'{\i}mbolo IPA para acento prim\'ario,
+representado como token separado na sa\'{\i}da do modelo.} e fronteiras
+sil\'abicas (.) s\~ao tokens n\~ao-articulat\'orios que exigem tratamento
+especial na fun\c{c}\~ao de custo.
+
+Modelos seq2seq treinados com CrossEntropy (CE) tratam todos os erros
+igualmente: predizer /\ipaE{}/ quando o correto \'e /e/ --- par
+m\'{\i}nimo com 1 feature de diferen\c{c}a --- incorre na mesma
+penalidade que predizer /k/ para /a/ --- erro de 8+ features. Essa
+cegueira fonol\'ogica distorce o sinal de treinamento: o modelo aprende
+\emph{que} errou, mas n\~ao \emph{o quanto} errou.
+
+Este trabalho prop\~oe a \textbf{Distance-Aware (DA) Loss}, que adiciona
+ao sinal de treinamento um termo proporcional \`a dist\^ancia
+articulat\'oria entre o fonema predito e o alvo, ponderado pela
+confian\c{c}a do modelo. Aplicamos essa fun\c{c}\~ao a um BiLSTM
+encoder-decoder com aten\c{c}\~ao de Bahdanau
+\cite{bahdanau2014neural} --- arquitetura deliberadamente escolhida para
+isolar a contribui\c{c}\~ao da fun\c{c}\~ao de custo de novidades
+arquiteturais.
+
+\textbf{Compara\c{c}\~ao com LatPhon.} A refer\^encia mais pr\'oxima \'e
+o LatPhon \cite{chary2025latphon}, um Transformer multil\'{\i}ngue de 4
+camadas (7,5M par\^ametros, RoPE) que reporta PER de 0,86\% (IC Wilson
+95\% [0,56\%; 1,16\%]) em ${\sim}$500 palavras PT-BR do mesmo dicion\'ario
+fon\'etico. Nosso sistema alcan\c{c}a PER de 0,48\% (IC [0,46\%; 0,51\%])
+em 28.782 palavras. Os intervalos de confian\c{c}a n\~ao se
+sobrep\~oem --- o limite superior do nosso sistema (0,51\%) fica abaixo
+do limite inferior do LatPhon (0,56\%), diferen\c{c}a estatisticamente
+significativa a 95\% de confian\c{c}a.
+
+\textbf{Contribui\c{c}\~oes}: (1) DA Loss: objetivo de treinamento
+fonologicamente graduado combinando dist\^ancia PanPhon com confian\c{c}a
+de predi\c{c}\~ao; (2) avalia\c{c}\~ao em larga escala com split
+estratificado; (3) an\'alise fatorial de capacidade $\times$ separadores
+$\times$ DA Loss; (4) taxonomia de qualidade de erros (Classes~A--D);
+(5) avalia\c{c}\~ao de generaliza\c{c}\~ao OOV em 6 categorias.
+
+\section{Dados e Protocolo de Avalia\c{c}\~ao}
+
+\subsection{Corpus}
+
+O corpus de treinamento consiste em \textbf{95.937 pares}
+(palavra, transcri\c{c}\~ao IPA) de um dicion\'ario fon\'etico do
+Portugu\^es Brasileiro. O charset de entrada cobre a--z (exceto k, w, y,
+ausentes do dicion\'ario) mais diacr\'{\i}ticos portugueses. Palavras
+contendo k, w ou y s\~ao tratadas como OOV de caractere. Previamente ao
+treinamento, 10.252 entradas foram corrigidas para a distin\c{c}\~ao
+ASCII-g (U+0067) vs.\ IPA-\ipag{} (U+0261), necess\'aria para
+\emph{lookup} correto de features PanPhon.
+
+\subsection{Split Estratificado}
+
+O corpus \'e dividido \textbf{60/10/30} (treino/valida\c{c}\~ao/teste)
+com estratifica\c{c}\~ao por tr\^es vari\'aveis fonol\'ogicas: tipo de
+acento (ox\'{\i}tona / parox\'{\i}tona / proparox\'{\i}tona), faixa de
+contagem de s\'{\i}labas (1, 2, 3, 4, 5+) e faixa de comprimento em
+grafemas ($\leq$4, 5--7, 8--10, 11+). A combina\c{c}\~ao gera
+${\sim}$48 estratos. Qualidade do split: $\chi^2{=}0{,}95$ ($p{=}0{,}678$),
+Cram\'er $V{=}0{,}0007$ --- aus\^encia de diferen\c{c}a distribucional
+significativa.
+
+\textbf{Evid\^encia emp\'{\i}rica de vi\'es de split.} Um split
+n\~ao-estratificado 70/10/20 (Exp0, mesma arquitetura 4,3M, CE) atingiu
+PER de 1,12\%, enquanto o split estratificado 60/10/30 (Exp1) atingiu
+0,66\% --- redu\c{c}\~ao de 41\% no PER atribu\'{\i}vel inteiramente ao
+protocolo de avalia\c{c}\~ao \cite{kohavi1995crossvalidation}.
+
+\subsection{M\'etricas}
+
+\textbf{PER} (Phoneme Error Rate): dist\^ancia de Levenshtein sobre
+sequ\^encias de fonemas, normalizada pelo comprimento da refer\^encia
+\cite{morris2004cer,bisani2008joint}. \textbf{WER}: fra\c{c}\~ao de
+palavras com qualquer erro. \textbf{IC Wilson 95\%}
+\cite{wilson1927probable,brown2001interval}: para ${\sim}$181k fonemas,
+IC de $\pm$0,03 p.p.
+
+\textbf{M\'etricas graduadas}: \textbf{PER$_w$} (PER ponderado), onde
+cada substitui\c{c}\~ao \'e ponderada pela dist\^ancia PanPhon. Classes
+de erro: A (exato), B ($\leq$0,050, par m\'{\i}nimo), C ($\leq$0,150,
+mesma fam\'{\i}lia), D ($>$0,150, classes diferentes).
+
+\section{Arquitetura}
+
+Utilizamos um \textbf{BiLSTM encoder-decoder com aten\c{c}\~ao de
+Bahdanau} \cite{bahdanau2014neural}, arquitetura estabelecida para G2P
+supervisionado \cite{rao2015g2p}.
+
+\textbf{Encoder}: BiLSTM de 2 camadas. Para cada posi\c{c}\~ao $t$,
+$h_t = [\overrightarrow{h_t}; \overleftarrow{h_t}]$ fornece contexto
+bidirecional completo.
+
+\textbf{Aten\c{c}\~ao}: a cada passo de decodifica\c{c}\~ao $t$:
+\begin{equation}
+e_{t,j} = v^\top \tanh(W_h h_j + W_s s_{t-1}), \quad
+\alpha_{t,j} = \frac{\exp(e_{t,j})}{\sum_k \exp(e_{t,k})}, \quad
+c_t = \sum_j \alpha_{t,j} h_j
+\end{equation}
+
+\textbf{Decoder}: LSTM de 2 camadas, \emph{teacher forcing} no treino,
+autoregressivo na infer\^encia.
+
+\textbf{Configura\c{c}\~oes testadas} (Tabela~\ref{tab:configs}).
+
+\begin{table}[ht]
+\centering
+\caption{Configura\c{c}\~oes de arquitetura avaliadas.}
+\label{tab:configs}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Config} & \textbf{Embedding} & \textbf{Hidden} & \textbf{Par\^ametros} \\
+\midrule
+Pequena       & 128D & 256D & 4,3M \\
+Intermedi\'aria & 192D & 384D & 9,7M \\
+Grande        & 256D & 512D & 17,2M \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Embeddings fon\^emicos.}
+Os experimentos principais utilizam embeddings aprendidos (inicializa\c{c}\~ao
+Glorot). Adicionalmente, testamos embeddings inicializados com PanPhon
+(24 features articulat\'orias projetadas para 128D), provendo um prior
+geom\'etrico onde fonemas similares come\c{c}am pr\'oximos no espa\c{c}o
+de embedding. Com CE, o PanPhon init produz erros qualitativamente
+melhores (menor PER$_w$) mas n\~ao melhora o PER absoluto, pois a CE
+n\~ao refor\c{c}a a estrutura articulat\'oria. A DA~Loss opera
+independentemente da inicializa\c{c}\~ao do embedding: utiliza uma
+tabela externa de dist\^ancias PanPhon, n\~ao a geometria do embedding.
+Os dois mecanismos s\~ao ortogonais.
+
+\subsection{Protocolo de Treinamento}
+
+Todos os modelos s\~ao treinados com Adam ($\beta_1{=}0{,}9$,
+$\beta_2{=}0{,}999$), taxa de aprendizado $10^{-3}$,
+\emph{batch size}~96 e \emph{early stopping} com paci\^encia~10
+sobre a loss de valida\c{c}\~ao. O \emph{teacher forcing ratio}
+\'e 1,0 durante o treinamento.
+
+O \emph{batch size} de 96 foi escolhido empiricamente: com 34 estratos
+fonol\'ogicos no corpus, $\text{batch\_size} \approx 3 \times S$
+garante $\geq$3 amostras por estrato por batch, reduzindo a
+vari\^ancia da curva de loss em ${\sim}$50\% em rela\c{c}\~ao a
+\emph{batch size}~32. Os modelos convergem entre 80--120 \'epocas;
+configura\c{c}\~oes superiores convergem consistentemente em menos
+\'epocas com menor loss de valida\c{c}\~ao, sustentando o
+\emph{early stopping} como indicador confi\'avel de qualidade.
+Todos os experimentos usam seed fixa (42) e opera\c{c}\~oes
+determin\'{\i}sticas quando dispon\'{\i}veis.
+
+\section{Distance-Aware Loss}
+
+\subsection{O Problema}
+
+A CE trata todos os erros igualmente. Fonologicamente, isso \'e
+inadequado: substituir /\ipaE{}/ por /e/ (1 feature de diferen\c{c}a,
+$d{=}0{,}10$) \'e qualitativamente diferente de substituir /a/ por /k/
+(8+ features, $d{=}0{,}90$). Ambos recebem CE${}= 1{,}0$.
+
+\subsection{A F\'ormula}
+
+\begin{equation}
+L = L_{CE} + \lambda \cdot d_{\text{PanPhon}}(\hat{y}_i, y_i)
+    \cdot p_i^{(\hat{y}_i)}
+\end{equation}
+
+\noindent onde $d_{\text{PanPhon}}$ \'e a dist\^ancia calculada sobre 24
+features articulat\'orias bin\'arias do PanPhon
+\cite{mortensen2016panphon}, normalizada para $[0,1]$;
+$p_i^{(\hat{y}_i)}$ \'e a probabilidade atribu\'{\i}da ao fonema predito
+(fator de confian\c{c}a); e $\lambda$ \'e o peso do sinal fonol\'ogico.
+
+A DA Loss adiciona penalidade proporcional a: (i) o quanto o modelo errou
+(dist\^ancia) e (ii) o qu\~ao confiante estava no erro (probabilidade).
+
+\textbf{Raz\~ao de design.} A CE monitora $p_\text{correto}$; a DA
+monitora $p(\hat{y})$. Estas s\~ao independentes: quando o modelo erra
+com confian\c{c}a, $p_\text{correto}$ \'e baixo enquanto $p(\hat{y})$
+\'e alto. O fator de confian\c{c}a escala a penalidade articulat\'oria
+com a certeza do modelo --- penalizando maximamente erros que s\~ao
+simultaneamente confiantes e fonologicamente distantes.
+
+\textbf{Sinal bounded.} A DA Loss \'e limitada superiormente por
+$\lambda \times 1{,}0 \times 1{,}0 = 0{,}20$, enquanto a CE pode
+atingir ${\sim}$16 no in\'{\i}cio do treinamento. A DA \'e efetiva
+principalmente na zona de transi\c{c}\~ao (CE entre 0,3--1,5), quando
+o modelo est\'a resolvendo ambiguidades entre fonemas candidatos.
+
+\textbf{Exemplo num\'erico.} Considere dois erros com CE id\^entica
+($p_\text{correto}{=}0{,}40$, CE${=}0{,}916$): (a) near-miss
+e$\to$\ipaE{} ($d{=}0{,}10$, $p(\hat{y}){=}0{,}45$) adiciona
+DA${=}0{,}009$, total $L{=}0{,}925$; (b) catastr\'ofico a$\to$k
+($d{=}0{,}90$, $p(\hat{y}){=}0{,}45$) adiciona DA${=}0{,}081$, total
+$L{=}0{,}997$. A CE sozinha \'e id\^entica (0,916) em ambos os casos.
+A DA fornece uma diferen\c{c}a de 9$\times$ na penalidade fonol\'ogica.
+
+\subsection{Sweep de $\lambda$}
+
+A Tabela~\ref{tab:lambda} mostra o sweep de $\lambda$ com arquitetura
+fixa (4,3M, sem separadores). O padr\~ao U-invertido motiva
+$\lambda{=}0{,}20$: muito baixo deixa a CE indiferenciada; muito alto
+compete com a CE.
+
+\begin{table}[ht]
+\centering
+\caption{Sweep de $\lambda$, arquitetura 4,3M, sem separadores.}
+\label{tab:lambda}
+\begin{tabular}{cccc}
+\toprule
+$\lambda$ & PER & WER & Comportamento \\
+\midrule
+0,05 & 0,62\% & 5,36\% & Sinal fraco \\
+0,10 & 0,63\% & 5,35\% & Melhoria moderada \\
+\textbf{0,20} & \textbf{0,60\%} & \textbf{5,14\%} & \textbf{\'Otimo} \\
+0,50 & 0,65\% & 5,57\% & Sobre-penaliza\c{c}\~ao \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Dist\^ancias Customizadas}
+
+O PanPhon atribui vetor zero a tokens n\~ao-fon\'eticos (separador
+sil\'abico ``.'', marcador de acento ``\stressmark''), resultando em
+$d(.{,}\text{\stressmark}) = 0{,}0$. \emph{Override}
+p\'os-normaliza\c{c}\~ao seta $d{=}1{,}0$ para pares envolvendo
+s\'{\i}mbolos estruturais, corrigindo o problema.
+
+\section{Experimentos e Resultados}
+
+\subsection{Progress\~ao dos Experimentos}
+
+A Tabela~\ref{tab:experiments} sintetiza a progress\~ao experimental.
+
+\begin{table}[ht]
+\centering
+\caption{Progress\~ao dos experimentos. Sep = separadores sil\'abicos.}
+\label{tab:experiments}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Exp} & \textbf{Params} & \textbf{Loss} & \textbf{Sep}
+  & \textbf{PER} & \textbf{WER} & \textbf{Insight} \\
+\midrule
+Exp0  & 4,3M  & CE       & n\~ao & 1,12\% & 9,37\% & Baseline \\
+Exp1  & 4,3M  & CE       & n\~ao & 0,66\% & 5,65\% & $-$41\% PER \\
+Exp5  & 9,7M  & CE       & n\~ao & 0,63\% & 5,38\% & Sweet spot \\
+Exp7  & 4,3M  & DA 0,2   & n\~ao & 0,60\% & 5,14\% & $\lambda$ \'otimo \\
+\textbf{Exp9}  & \textbf{9,7M}  & \textbf{DA 0,2}   & \textbf{n\~ao}
+  & \textbf{0,58\%} & \textbf{4,96\%} & \textbf{Melhor WER} \\
+Exp102 & 9,7M & CE       & sim   & 0,52\% & 5,79\% & Sep: PER$\downarrow$ WER$\uparrow$ \\
+Exp103 & 9,7M & DA 0,2   & sim   & 0,53\% & 5,73\% & N\~ao-aditivos \\
+\textbf{Exp104d} & \textbf{17,2M} & \textbf{DA+dist} & \textbf{sim}
+  & \textbf{0,48\%} & \textbf{5,33\%} & \textbf{Ref.\ PER} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{An\'alise Fatorial: Separadores $\times$ DA Loss}
+
+Fatorial 2$\times$2 limpo (9,7M params, split 60/10/30), na
+Tabela~\ref{tab:factorial}.
+
+\begin{table}[ht]
+\centering
+\caption{Fatorial Separadores $\times$ DA Loss (PER / WER, 9,7M params).}
+\label{tab:factorial}
+\begin{tabular}{lcc}
+\toprule
+ & \textbf{CE} & \textbf{DA $\lambda{=}0{,}2$} \\
+\midrule
+Sem sep & 0,63\% / 5,38\% & \textbf{0,58\% / 4,96\%} \\
+Com sep & 0,52\% / 5,79\% & 0,53\% / 5,73\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Separadores melhoram PER ($-$17\% a $-$20\%) mas pioram WER (+6\% a
++8\%). DA Loss melhora tanto PER quanto WER sem separadores. Com
+separadores, o efeito da DA Loss \'e atenuado.
+
+\subsection{Redistribui\c{c}\~ao Graduada dos Erros}
+
+A Tabela~\ref{tab:classes} mostra a redistribui\c{c}\~ao das classes de
+erro.
+
+\begin{table}[ht]
+\centering
+\caption{Redistribui\c{c}\~ao das classes de erro com DA Loss.}
+\label{tab:classes}
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Exp} & \textbf{T\'ecnica} & \textbf{PER}
+  & \textbf{Cls~B} & \textbf{Cls~D} & \textbf{D/erros} \\
+\midrule
+Exp1 & CE baseline  & 0,66\% & 0,39\% & 0,54\% & 50,9\% \\
+Exp6 & DA 0,1       & 0,63\% & 0,39\% & 0,47\% & 48,0\% \\
+\textbf{Exp9} & \textbf{DA 0,2 (9,7M)} & \textbf{0,58\%}
+  & \textbf{0,36\%} & \textbf{0,44\%} & \textbf{48,4\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Classe~D (catastr\'ofica) cai de 0,54\% para 0,44\% ($-$19\%) enquanto
+Classe~B se mant\'em. A DA Loss redistribui sistematicamente os erros.
+Em aplica\c{c}\~oes TTS \emph{downstream}, erros Classe~B
+(e.g., /e/$\leftrightarrow$/\ipaE{}/) s\~ao perceptualmente menos
+salientes que erros Classe~D (e.g., vogal$\leftrightarrow$oclusiva);
+valida\c{c}\~ao perceptual formal (MOS/ABX) permanece como trabalho
+futuro.
+
+\subsection{Evolu\c{c}\~ao das M\'etricas Graduadas}
+
+Al\'em do PER cl\'assico, o \textbf{PER$_w$} (PER ponderado pela
+dist\^ancia PanPhon) captura a \emph{qualidade} dos erros, n\~ao
+apenas sua quantidade. A Tabela~\ref{tab:graduated} mostra a
+evolu\c{c}\~ao.
+
+\begin{table}[ht]
+\centering
+\caption{Evolu\c{c}\~ao das m\'etricas graduadas (sem separadores).}
+\label{tab:graduated}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Exp} & \textbf{T\'ecnica} & \textbf{PER}
+  & \textbf{PER$_w$} & \textbf{WER$_g$} \\
+\midrule
+Exp1 & CE baseline  & 0,66\% & 0,34\% & 0,69\% \\
+Exp2 & CE, +capacidade & 0,60\% & 0,29\% & 0,62\% \\
+Exp3 & CE + PanPhon$_T$ & 0,66\% & 0,33\% & 0,67\% \\
+Exp6 & DA $\lambda{=}0{,}1$ & 0,63\% & 0,27\% & 0,60\% \\
+\textbf{Exp9} & \textbf{DA $\lambda{=}0{,}2$ + 9,7M}
+  & \textbf{0,58\%} & \textbf{0,27\%} & \textbf{0,58\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A DA Loss reduz o PER$_w$ em $-$21\% (0,34\%$\to$0,27\%) em rela\c{c}\~ao
+ao baseline, enquanto capacidade isolada (Exp2, 17,2M) reduz apenas
+$-$15\%. Isto confirma que a DA Loss melhora a \emph{qualidade} dos erros
+de forma desproporcional \`a redu\c{c}\~ao de quantidade.
+
+\subsection{Compara\c{c}\~ao com LatPhon}
+
+A refer\^encia mais pr\'oxima \'e o LatPhon \cite{chary2025latphon},
+um Transformer multil\'{\i}ngue de 4 camadas (7,5M par\^ametros) que
+reporta PER de 0,86\% (IC Wilson 95\% [0,56\%; 1,16\%]) em ${\sim}$500
+palavras PT-BR do mesmo recurso lexical (ipa-dict). Ambos os sistemas
+reportam ICs de Wilson; os intervalos n\~ao se sobrep\~oem --- o limite
+superior do nosso sistema (0,51\%) fica abaixo do limite inferior do
+LatPhon (0,56\%), diferen\c{c}a estatisticamente significativa a 95\%
+de confian\c{c}a.
+
+A diferen\c{c}a de 57$\times$ em escala de teste confere ICs
+10$\times$ mais precisos \`a nossa avalia\c{c}\~ao ($\pm$0,03 p.p.\
+vs.\ $\pm$0,30 p.p.). Diferen\c{c}as metodol\'ogicas impedem
+compara\c{c}\~ao arquitetural direta: o LatPhon \'e um Transformer
+multil\'{\i}ngue com NLL padr\~ao; nosso sistema \'e um BiLSTM
+monol\'{\i}ngue com DA Loss. O resultado \'e consistente com a
+hip\'otese de que desenho metodol\'ogico (fun\c{c}\~ao de custo +
+protocolo de avalia\c{c}\~ao) pode compensar diferen\c{c}as
+arquiteturais, sem estabelecer hierarquia universal entre fam\'{\i}lias
+de modelo.
+
+\section{An\'alise de Erros}
+
+\subsection{Padr\~oes de Confus\~ao Dominantes}
+
+A Tabela~\ref{tab:confusions} mostra as confus\~oes dominantes.
+Mais de 60\% dos erros s\~ao neutraliza\c{c}\~oes voc\'alicas ---
+substitui\c{c}\~oes entre vogais m\'edias abertas e fechadas
+(/\ipaE{}/$\leftrightarrow$/e/,
+/\ipaO{}/$\leftrightarrow$/o/). Estas refletem ambiguidade
+fonol\'ogica genu\'{\i}na do PT-BR \cite{barbosa2004brazilian}: em
+posi\c{c}\~ao \'atona, vogais m\'edias neutralizam-se.
+
+\begin{table}[ht]
+\centering
+\caption{Principais confus\~oes fon\^emicas (Exp104d, 17,2M DA+dist).}
+\label{tab:confusions}
+\begin{tabular}{lrl}
+\toprule
+\textbf{Substitui\c{c}\~ao} & \textbf{Contagem} & \textbf{Mecanismo} \\
+\midrule
+\ipaE{}$\to$e & 255 & Neutraliza\c{c}\~ao \'atona \\
+e$\to$\ipaE{} & 197 & Mesmo (dire\c{c}\~ao inversa) \\
+\ipaO{}$\to$o & 131 & Neutraliza\c{c}\~ao posterior \\
+i$\to$e      & 121 & Redu\c{c}\~ao voc\'alica \\
+o$\to$\ipaO{} & 95 & Neutraliza\c{c}\~ao posterior \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A distribui\c{c}\~ao no corpus revela a causa estrutural: /e/ tem
+raz\~ao 24,9:1 vs.\ /\ipaE{}/ em posi\c{c}\~ao pr\'e-t\^onica, mas
+/\ipaE{}/ \'e dominante em posi\c{c}\~ao t\^onica (raz\~ao 0,33:1).
+O modelo aprende o vi\'es pr\'e-t\^onico forte e o sobregeneraliza
+para s\'{\i}labas t\^onicas --- artefato distribucional do corpus que
+requer features pros\'odicos expl\'{\i}citos para ser resolvido.
+
+\subsection{Regra Alof\^onica r-coda}
+
+Durante a avalia\c{c}\~ao OOV, o modelo produziu /\ipaG{}/ em coda
+antes de consoante vozeada (e.g., \emph{borboleta} $\to$
+b~o~\ipaG{}~.~b~o\ldots). Auditoria do corpus revelou que o modelo
+estava \textbf{correto}: a regra de assimila\c{c}\~ao de vozeamento do
+PT-BR \cite{barbosa2004brazilian} exige /\ipaG{}/ antes de vozeada e
+/x/ em coda final --- distribui\c{c}\~ao complementar perfeita no corpus
+de 95.937 entradas.
+
+\subsection{Avalia\c{c}\~ao de Generaliza\c{c}\~ao OOV}
+
+Banco diagn\'ostico de 31 palavras em 6 categorias
+(Tabela~\ref{tab:oov}).
+
+\begin{table}[ht]
+\centering
+\caption{Avalia\c{c}\~ao de generaliza\c{c}\~ao OOV (Exp104d).}
+\label{tab:oov}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Categoria} & \textbf{Corretas} & \textbf{Score} & \textbf{Insight} \\
+\midrule
+Generaliza\c{c}\~ao PT-BR & 6/9 (67\%) & 97\% & Near-misses \\
+Consoantes Duplas   & 1/5 (20\%) & 81\% & Geminadas n\~ao vistas \\
+Anglicismos         & 1/5 (20\%) & 71\% & Fonologia EN OOV \\
+Chars OOV (k/w/y)   & 0/3 (0\%)  & 68\% & Falha esperada \\
+\textbf{PT-BR Reais (OOV)} & \textbf{5/5 (100\%)} & \textbf{100\%}
+  & \textbf{Generaliza\c{c}\~ao} \\
+Controles           & 4/4 (100\%) & 100\% & Sanidade \\
+\midrule
+\textbf{Total} & \textbf{17/31 (55\%)} & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O resultado 5/5 em palavras reais in\'editas --- \emph{puxadinho},
+\emph{abacatada}, \emph{zunido}, \emph{malcriado}, \emph{arrombado} ---
+todas transcritas corretamente, \'e evid\^encia de que o modelo aprendeu
+regras fonol\'ogicas produtivas do PT-BR (palataliza\c{c}\~ao,
+redu\c{c}\~ao de coda, nasaliza\c{c}\~ao).
+
+O banco de $N{=}31$ \'e uma \textbf{sonda diagn\'ostica}, n\~ao
+substituto do test set principal de 28.782 palavras. Seu prop\'osito
+\'e qualitativo: demonstrar que regras fonol\'ogicas espec\'{\i}ficas
+transferem para palavras n\~ao vistas. Um conjunto adicional de 35
+neolog\'{\i}smos (5 categorias: anglicismos, verbos emprestados,
+neolog\'{\i}smos nativos, nomes pr\'oprios, palavras inventadas)
+fornece evid\^encia complementar ao longo do mesmo eixo.
+
+\textbf{Modos de falha definidos}: (1)~consoantes geminadas de
+empr\'estimos italianos/ingleses, ausentes do corpus de treino;
+(2)~anglicismos com fonologia inglesa, genuinamente OOV
+fonol\'ogico; (3)~caracteres k, w, y --- OOV hard de charset.
+
+\section{Discuss\~ao}
+
+\textbf{Trade-off PER/WER com separadores.}
+Separadores sil\'abicos melhoram PER ($-$17\% a $-$20\%) mas pioram WER
+(+6\% a +8\%). O mecanismo \'e estrutural: cada token separador
+mal-posicionado conta como erro de palavra inteira. A escolha depende da
+aplica\c{c}\~ao: TTS prioriza PER; NLP/lookup prioriza WER.
+
+\textbf{Limites da DA Loss.}
+S\'{\i}mbolos n\~ao-fon\'eticos recebem vetor zero no PanPhon. O
+\emph{override} corrige parcialmente, mas confus\~oes posicionais
+persistem. Al\'em disso, DA \'e bounded por $\lambda \times 1{,}0 \times
+1{,}0 = 0{,}20$, enquanto CE pode atingir ${\sim}$16 --- DA representa
+$<$5\% do sinal quando o modelo est\'a muito errado, sendo efetiva na
+zona de transi\c{c}\~ao.
+
+\textbf{Memoriza\c{c}\~ao vs.\ aprendizado.}
+O split 60/10/30 prioriza test set grande sobre treino m\'aximo.
+Com 17,2M par\^ametros e 57.562 palavras de treino, o modelo
+\emph{poderia} memorizar --- uma tabela hash seria mais compacta.
+Contudo, o acerto de 100\% em palavras reais in\'editas (com
+palataliza\c{c}\~ao d+i$\to$d\textipa{Z}, redu\c{c}\~ao de coda
+l$\to$w, nasaliza\c{c}\~ao om$\to$\~{o} corretos) \'e consistente
+com aquisi\c{c}\~ao de regras fonol\'ogicas produtivas.
+Al\'em disso, reduzir os dados de treino de 60\% para 50\% (Exp105)
+degrada o PER em apenas 10\% relativo (0,49\%$\to$0,54\%), sugerindo
+que o corpus est\'a bem acima do limiar de satura\c{c}\~ao para esta
+arquitetura.
+
+\textbf{Intera\c{c}\~ao de capacidade.}
+Em 17,2M par\^ametros \emph{sem} separadores (Exp10), a DA Loss n\~ao
+melhora o PER em rela\c{c}\~ao \`a CE (0,61\% vs.\ 0,60\%).
+Contudo, em 17,2M \emph{com} separadores e dist\^ancias corrigidas
+(Exp104d), a DA atinge o melhor PER observado (0,48\%). Isto refuta a
+hip\'otese simples de que ``modelos grandes memorizam e a DA
+atrapalha'' --- a vari\'avel relevante \'e a \emph{intera\c{c}\~ao}
+entre capacidade, representa\c{c}\~ao estrutural e corre\c{c}\~ao de
+dist\^ancia.
+
+\subsection{Trabalhos Futuros}
+
+Tr\^es dire\c{c}\~oes promissoras:
+(1)~\textbf{Restri\c{c}\~oes fonot\'aticas}: O PT-BR restringe codas
+a 4 consoantes (/s/, /\textipa{R}/, /l/, /N/) e ${\sim}$78\% das
+s\'{\i}labas s\~ao abertas (CV). Um aut\^omato de estados finitos
+codificando a estrutura sil\'abica (ONSET$\to$NUCLEUS$\to$CODA)
+poderia reduzir erros de posicionamento de separadores.
+(2)~\textbf{Espa\c{c}o articulat\'orio cont\'{\i}nuo 7D}: Substituir
+os 24 features bin\'arios do PanPhon por um espa\c{c}o vocal cont\'{\i}nuo
+de 7 dimens\~oes atribuiria coordenadas distintas aos tokens
+estruturais, eliminando a necessidade de \emph{override} de
+dist\^ancias.
+(3)~\textbf{Contexto morfossint\'atico}: Hom\'ografos heter\'ofonos
+(e.g., \emph{jogo} substantivo /\ipaO{}/ vs.\ verbo /o/)
+requerem contexto sentencial al\'em do G2P no n\'{\i}vel de
+palavra.
+
+\section{Limita\c{c}\~oes}
+
+\begin{enumerate}
+\item \textbf{Conjunto OOV pequeno}: O banco de 31 palavras \'e sonda
+  diagn\'ostica, n\~ao avalia\c{c}\~ao exaustiva.
+\item \textbf{Monolinguismo}: Sistema treinado e avaliado apenas em PT-BR.
+\item \textbf{Valida\c{c}\~ao perceptual ausente}: Hip\'otese de que erros
+  pr\'oximos s\~ao menos sal\'{\i}veis em TTS n\~ao validada (MOS/ABX).
+\item \textbf{Corpus \'unico}: Generaliza\c{c}\~ao para outros corpora
+  PT-BR n\~ao testada.
+\item \textbf{Arquitetura \'unica}: DA Loss avaliada apenas com BiLSTM.
+\end{enumerate}
+
+\section{Declara\c{c}\~ao de \'Etica}
+
+Este trabalho utiliza um dicion\'ario fon\'etico publicamente
+dispon\'{\i}vel sem informa\c{c}\~oes pessoais identific\'aveis.
+N\~ao foram realizados experimentos com participantes humanos.
+Os modelos treinados convertem texto em representa\c{c}\~ao fon\'etica e
+n\~ao geram conte\'udo potencialmente prejudicial.
+
+\section{Uso de IA Generativa}
+
+Ferramentas de IA generativa (Claude, Anthropic) foram utilizadas
+exclusivamente como assist\^encia editorial: revis\~ao gramatical e
+ortogr\'afica, pesquisa de refer\^encias bibliogr\'aficas, gest\~ao de
+cita\c{c}\~oes, verifica\c{c}\~ao de consist\^encia terminol\'ogica entre
+se\c{c}\~oes e formata\c{c}\~ao \LaTeX. A ferramenta n\~ao gerou texto
+novo, hip\'oteses, figuras, c\'odigo nem interpreta\c{c}\~oes de dados.
+Todo o conte\'udo cient\'{\i}fico --- design experimental,
+implementa\c{c}\~ao, execu\c{c}\~ao dos experimentos, an\'alise dos
+resultados e conclus\~oes --- \'e de autoria exclusiva dos autores.
+
+\bibliographystyle{sbc}
+\bibliography{stil_refs}
+
+\end{document}

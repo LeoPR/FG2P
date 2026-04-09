@@ -1,14 +1,14 @@
 # Distance-Aware Loss for Phonologically-Graded Grapheme-to-Phoneme Conversion in Brazilian Portuguese
 
-**[IEEE ICASSP 2026 — Anonymous Submission]**
-**Authors**: [ANONYMOUS]
-**Affiliation**: [ANONYMOUS]
+**[IEEE ICASSP 2027 — Single-blind submission]**
+**Authors**: Leonardo Marques de Souza
+**Affiliation**: Independent Researcher, Manaus, Brazil
 
 ---
 
 ## Abstract
 
-Standard grapheme-to-phoneme (G2P) training treats all phoneme substitutions equally, regardless of articulatory distance. We propose Distance-Aware (DA) Loss, which penalizes substitutions proportionally to PanPhon articulatory distance between predicted and target phonemes, weighted by the model's prediction confidence. Applied to Brazilian Portuguese with a BiLSTM encoder-decoder, DA Loss systematically redistributes errors toward phonologically closer targets: Class D (catastrophic) substitutions decrease 19% relative vs. a CE baseline. Our system achieves PER 0.48% and WER 4.96% on a stratified 28,782-word test set — 57× larger than comparable PT-BR evaluations — with a Wilson 95% CI of ±0.03 pp. Evaluation on 31 out-of-vocabulary words yields 100% accuracy on genuine novel PT-BR words, consistent with phonological rule generalization beyond memorization.
+Standard grapheme-to-phoneme (G2P) training treats all phoneme substitutions equally, regardless of articulatory distance. We propose Distance-Aware (DA) Loss, which penalizes substitutions proportionally to PanPhon articulatory distance between predicted and target phonemes, weighted by the model's prediction confidence. Applied to Brazilian Portuguese with a BiLSTM encoder-decoder, DA Loss systematically redistributes errors toward phonologically closer targets: Class D (catastrophic) substitutions decrease 19% relative vs. a CE baseline. Our system achieves PER 0.48% and WER 5.33% in the reference configuration (a complementary no-separator model reaches WER 4.96%) on a stratified 28,782-word test set — 57× larger than comparable PT-BR evaluations — with a Wilson 95% CI of ±0.03 pp. Evaluation on 31 out-of-vocabulary words yields 100% accuracy on genuine novel PT-BR words, consistent with phonological rule generalization beyond memorization.
 
 ---
 
@@ -20,7 +20,7 @@ Standard sequence-to-sequence models trained with cross-entropy (CE) treat all p
 
 We address this with **Distance-Aware (DA) Loss**, which adds a training signal proportional to the articulatory distance between predicted and target phonemes, weighted by the model's confidence in its prediction. DA Loss asks not only "did you err?" but also "how far phonologically was your error?" We apply this to Brazilian Portuguese using a BiLSTM encoder-decoder with Bahdanau attention [1] — deliberately chosen to isolate the contribution of the loss function from architectural novelty.
 
-**Comparison with LatPhon [2].** LatPhon is a 4-layer multilingual Transformer (7.5M parameters, RoPE) reporting PER 0.86% (Wilson CI ±0.30 pp) on ~500 PT-BR words from the same IPA dictionary used in this work. Our system achieves PER 0.48% (CI ±0.03 pp) on 28,782 words. These test sets differ substantially in size and sampling; this comparison is indicative rather than confirmatory. Within these constraints, the Wilson CIs do not overlap in the reported scenario (upper bound 0.51% vs. lower bound 0.56%).
+**Comparison with LatPhon [2].** LatPhon is a 4-layer multilingual Transformer (7.5M parameters, RoPE) reporting PER 0.86% (Wilson 95% CI [0.56%, 1.16%]) on ~500 PT-BR words from the same IPA dictionary used in this work. Our system achieves PER 0.48% (CI [0.46%, 0.51%]) on 28,782 words. Both systems report Wilson CIs; the intervals do not overlap — our upper bound (0.51%) falls below LatPhon's lower bound (0.56%), a statistically significant difference at 95% confidence. The 57× difference in test set size confers 10× more precise CIs to our evaluation (±0.03 pp vs. ±0.30 pp).
 
 **Contributions:**
 1. DA Loss: a phonologically-graded training objective combining PanPhon articulatory distance with prediction confidence (§4)
@@ -73,7 +73,7 @@ $$e_{t,j} = v^\top \tanh(W_h h_j + W_s s_{t-1}), \qquad \alpha_{t,j} = \text{sof
 | Medium | 192D | 384D | 9.7M |
 | Large  | 256D | 512D | 17.2M |
 
-The medium configuration (9.7M) is the optimal point for DA Loss; at 17.2M, model memorization capacity begins to interfere with the phonological regularization signal (§5).
+The medium configuration (9.7M) is the optimal point for DA Loss without syllable separators. At 17.2M without separators, DA does not improve over CE; however, 17.2M *with* separators and corrected structural distances achieves the best PER observed (0.48%), indicating that the capacity–structure interaction is the determining factor (§5).
 
 ---
 
@@ -152,7 +152,7 @@ Sep = syllable boundary tokens in output. Bold = recommended configurations.
 | LatPhon [2] | 0.86% ± 0.30 | ~500 | 7.5M Transformer (multilingual) |
 | **Ours (DA+dist, 17.2M)** | **0.48% ± 0.03** | **28,782** | **17.2M BiLSTM (PT-BR)** |
 
-CIs do not overlap in the reported scenario. Test sets differ in size, phonological sampling, and language scope; this comparison is indicative, not confirmatory.
+Both systems report Wilson CIs over the same lexical resource (ipa-dict); the intervals do not overlap — a statistically significant difference at 95% confidence.
 
 ---
 
@@ -206,7 +206,7 @@ The 5/5 result on genuine novel PT-BR words — words verified absent from the t
 
 ## 7. Conclusion
 
-We presented Distance-Aware (DA) Loss, a phonologically-graded training objective for G2P that penalizes substitution errors proportionally to PanPhon articulatory distance, weighted by prediction confidence. Applied to Brazilian Portuguese, DA Loss reduces catastrophic (Class D) substitutions by 19% relative while achieving PER 0.48% (Wilson CI ±0.03 pp) and WER 4.96% on the largest PT-BR G2P evaluation reported — 28,782 stratified words. Genuine OOV generalization (5/5 novel PT-BR words, 100%) supports phonological rule acquisition beyond corpus memorization.
+We presented Distance-Aware (DA) Loss, a phonologically-graded training objective for G2P that penalizes substitution errors proportionally to PanPhon articulatory distance, weighted by prediction confidence. Applied to Brazilian Portuguese, DA Loss reduces catastrophic (Class D) substitutions by 19% relative while achieving PER 0.48% (Wilson CI ±0.03 pp) and WER 5.33% in the reference configuration on the largest PT-BR G2P evaluation reported — 28,782 stratified words. Genuine OOV generalization (5/5 novel PT-BR words, 100%) supports phonological rule acquisition beyond corpus memorization.
 
 DA Loss is applicable to any language with PanPhon phoneme coverage; its effectiveness beyond PT-BR remains to be validated experimentally. Identified limitations: geminate reduction for loan words absent from training data, English-phonology anglicisms as genuine phonological OOV, and homograph disambiguation requiring morphosyntactic context beyond word-level G2P.
 

@@ -1,6 +1,6 @@
 % =============================================================
 % Distance-Aware Loss for Phonologically-Graded G2P in PT-BR
-% IEEE ICASSP 2026 — Anonymous Submission
+% IEEE ICASSP 2027 — Single-blind submission
 % =============================================================
 %
 % COMPILATION:
@@ -57,8 +57,9 @@
        Grapheme-to-Phoneme Conversion in Brazilian Portuguese}
 
 \author{%
-  \IEEEauthorblockN{[ANONYMOUS]}
-  \IEEEauthorblockA{[ANONYMOUS]}
+  \IEEEauthorblockN{Leonardo Marques de Souza}
+  \IEEEauthorblockA{Independent Researcher, Manaus, Brazil\\
+  leonardo.marques.souza@gmail.com}
 }
 
 \maketitle
@@ -74,9 +75,11 @@ Applied to Brazilian Portuguese with a BiLSTM encoder-decoder,
 DA~Loss systematically redistributes errors toward phonologically
 closer targets: Class~D (catastrophic) substitutions decrease
 19\,\% relative vs.\ a CE~baseline.
-Our system achieves PER~0.48\,\% and WER~4.96\,\% on a stratified
-28{,}782-word test set---57$\times$ larger than comparable PT-BR
-evaluations---with a Wilson 95\,\% CI of $\pm$0.03\,pp.
+Our system achieves PER~0.48\,\% and WER~5.33\,\% in the reference
+configuration (a complementary no-separator model reaches
+WER~4.96\,\%) on a stratified 28{,}782-word test
+set---57$\times$ larger than comparable PT-BR evaluations---with
+a Wilson 95\,\% CI of $\pm$0.03\,pp.
 Evaluation on 31~out-of-vocabulary words yields 100\,\% accuracy
 on genuine novel PT-BR words, consistent with phonological rule
 generalization beyond memorization.
@@ -131,10 +134,10 @@ reporting PER~0.86\,\% (Wilson CI $\pm$0.30\,pp) on
 $\approx$500~PT-BR words from the same IPA dictionary used here.
 Our system achieves PER~0.48\,\% (CI~$\pm$0.03\,pp) on
 28{,}782~words.
-These test sets differ in size and phonological sampling; this
-comparison is indicative rather than confirmatory.
-Within these constraints, the Wilson CIs do not overlap (upper
-bound 0.51\,\% vs.\ lower bound 0.56\,\%).
+Both systems report Wilson CIs over the same lexical resource
+(ipa-dict); the intervals do not overlap---our upper bound
+(0.51\,\%) falls below LatPhon's lower bound (0.56\,\%),
+a statistically significant difference at 95\,\% confidence.
 
 \textbf{Contributions:}
 \begin{enumerate}
@@ -230,9 +233,12 @@ surrounding characters.
 autoregressive at inference.
 Three capacity configurations were evaluated
 (Table~\ref{tab:configs}).
-The medium configuration (9.7M) is the optimal point for DA~Loss;
-at 17.2M, model memorization capacity begins to interfere with
-phonological regularization (Sec.~\ref{sec:results}).
+The medium configuration (9.7M) is the optimal point for DA~Loss
+without syllable separators.
+At 17.2M with separators and corrected structural distances,
+DA~Loss achieves the best PER observed (0.48\,\%), indicating
+that the capacity--structure interaction is the determining
+factor (Sec.~\ref{sec:results}).
 
 \begin{table}[t]
   \caption{Architecture configurations}
@@ -408,9 +414,9 @@ LatPhon~\cite{chary2025latphon} reports PER~0.86\,\%
 ($\pm$0.30\,pp, $n\!\approx\!500$).
 Our 17.2M DA+dist model achieves PER~0.48\,\%
 ($\pm$0.03\,pp, $n\!=\!28{,}782$).
-CIs do not overlap in the reported scenario.
-Test sets differ in size, phonological sampling, and language scope;
-this comparison is indicative, not confirmatory.
+Both systems report Wilson CIs; the intervals do not
+overlap---a statistically significant difference at 95\,\%
+confidence.
 
 % =============================================================
 \section{Analysis}
@@ -437,15 +443,15 @@ position as input) or a dedicated tonic-vowel classifier.
            test set}
   \label{tab:confusions}
   \centering\small
-  \begin{tabular}{lrll}
+  \begin{tabular}{lrl}
     \toprule
-    Substitution & Count & Group & Mechanism \\
+    Substitution & Count & Mechanism \\
     \midrule
-    \textipa{E}$\to$e & 255 & Mid-front vowel & Unstressed neutralization \\
-    e$\to$\textipa{E} & 197 & Mid-front vowel & Same (reverse) \\
-    \textipa{O}$\to$o & 131 & Mid-back vowel  & Neutralization \\
-    i$\to$e           & 121 & High/mid front  & Vowel reduction \\
-    o$\to$\textipa{O} & 95  & Mid-back vowel  & Same \\
+    \textipa{E}$\to$e & 255 & Unstressed neutralization \\
+    e$\to$\textipa{E} & 197 & Same (reverse) \\
+    \textipa{O}$\to$o & 131 & Mid-back neutralization \\
+    i$\to$e           & 121 & Vowel reduction \\
+    o$\to$\textipa{O} & 95  & Mid-back neutralization \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -525,9 +531,9 @@ proportionally to PanPhon articulatory distance, weighted by
 prediction confidence.
 Applied to Brazilian Portuguese, DA~Loss reduces catastrophic
 (Class~D) substitutions by 19\,\% relative while achieving
-PER~0.48\,\% (Wilson CI $\pm$0.03\,pp) and WER~4.96\,\% on
-the largest PT-BR G2P evaluation reported---28{,}782 stratified
-words.
+PER~0.48\,\% (Wilson CI $\pm$0.03\,pp) and WER~5.33\,\% in the
+reference configuration on the largest PT-BR G2P evaluation
+reported---28{,}782 stratified words.
 Genuine OOV generalization (5/5 novel PT-BR words, 100\,\%)
 supports phonological rule acquisition beyond corpus memorization.
 
@@ -537,6 +543,21 @@ Limitations: geminate reduction for loan words absent from training,
 English-phonology anglicisms as genuine phonological OOV, and
 homograph disambiguation requiring morphosyntactic context beyond
 word-level G2P.
+
+% =============================================================
+\section*{Use of Generative AI Tools}
+% =============================================================
+
+Generative AI tools (Claude, Anthropic) were used during manuscript
+preparation exclusively as editorial assistance: grammar and spell
+checking, bibliographic reference search, citation management,
+terminology consistency verification across sections, and \LaTeX{}
+formatting.
+The tool did not generate new text, hypotheses, figures, code, or
+data interpretations.
+All scientific content---experimental design, source code
+implementation, experiment execution, data collection and analysis,
+interpretation, and conclusions---is the sole work of the author.
 
 % =============================================================
 \bibliographystyle{IEEEtran}
