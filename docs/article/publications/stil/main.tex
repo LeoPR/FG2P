@@ -272,12 +272,28 @@ principalmente na zona de transi\c{c}\~ao (CE entre 0,3--1,5), quando
 o modelo est\'a resolvendo ambiguidades entre fonemas candidatos.
 
 \textbf{Exemplo num\'erico.} Considere dois erros com CE id\^entica
-($p_\text{correto}{=}0{,}40$, CE${=}0{,}916$): (a) near-miss
-e$\to$\ipaE{} ($d{=}0{,}10$, $p(\hat{y}){=}0{,}45$) adiciona
-DA${=}0{,}009$, total $L{=}0{,}925$; (b) catastr\'ofico a$\to$k
-($d{=}0{,}90$, $p(\hat{y}){=}0{,}45$) adiciona DA${=}0{,}081$, total
-$L{=}0{,}997$. A CE sozinha \'e id\^entica (0,916) em ambos os casos.
-A DA fornece uma diferen\c{c}a de 9$\times$ na penalidade fonol\'ogica.
+($p_\text{correto}{=}0{,}40$, CE${=}0{,}916$, $p(\hat{y}){=}0{,}45$),
+sintetizados na Tabela~\ref{tab:example}.
+
+\begin{table}[ht]
+\centering
+\caption{Exemplo num\'erico: dois erros com CE id\^entica mas
+         dist\^ancia articulat\'oria distinta.}
+\label{tab:example}
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Caso} & \textbf{Erro} & $d$ & \textbf{CE} & \textbf{DA} & $L$ total \\
+\midrule
+Near-miss      & e$\to$\ipaE{} & 0,10 & 0,916 & 0,009 & \textbf{0,925} \\
+Catastr\'ofico & a$\to$k       & 0,90 & 0,916 & 0,081 & \textbf{0,997} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A CE sozinha \'e id\^entica (0,916) em ambos os casos. A DA fornece
+uma diferen\c{c}a de 9$\times$ na penalidade fonol\'ogica, permitindo
+ao modelo distinguir um erro leve de um catastr\'ofico no mesmo passo
+de gradiente.
 
 \subsection{Sweep de $\lambda$}
 

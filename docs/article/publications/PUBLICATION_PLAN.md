@@ -1,8 +1,13 @@
 # Plano de Publicacoes — FG2P
 
-**Ultima atualizacao**: 2026-04-09
+**Ultima atualizacao**: 2026-04-10
 **Fonte canonica**: docs/article/ARTICLE.md (meta-artigo) → derivados herdam correcoes
 **Politicas de double-blind e repos**: ver DOUBLE_BLIND_POLICIES.md
+**Visao de longo prazo (trilogia de papers)**: ver [docs/ROADMAP.md](../../ROADMAP.md)
+
+**Escopo deste documento**: tickets de publicacao **imediata** (v1.x, abril-junho 2026).
+Para papers futuros (v2.0 multilingue, v2.x Transformer), ver ROADMAP.md e
+tickets 033/034/035 em `docs/evaluations/open/`.
 
 ---
 
@@ -265,6 +270,7 @@ Todos os 5 papers tem secao de AI disclosure consistente e dentro das politicas.
 | 075 | ~~Revisao final pre-submissao arXiv (ASAP)~~ | ~~High~~ | **FECHADO 2026-04-09** |
 | 076 | ~~Revisao final pre-submissao ICASSP (deadline ~out 2026)~~ | ~~Medium~~ | **FECHADO 2026-04-09** |
 | 077 | ~~Pesquisa: nivel de detalhe exigido na declaracao de IA por venue~~ | ~~High~~ | **FECHADO 2026-04-09** |
+| 078 | Ligar termos "near-miss"/"catastrofico" a taxonomia Classe A-D explicitamente | Low | Cosmetico — apos feedback de reviewers |
 
 **Ticket 065 — Material complementar para subpasta**:
 Mover DA_LOSS_ANALYSIS.md, EXPERIMENTS.md, FORMULAS.md, ORIGINALITY_ANALYSIS.md, PIPELINE.md
@@ -340,6 +346,20 @@ Mesmo checklist adaptado para preprint: autor visivel, sem limite de paginas.
 
 **Ticket 076 — Revisao final ICASSP** (deadline ~out 2026):
 Mesmo checklist adaptado para IEEE single-blind, 4+1pp ref, ingles.
+
+**Ticket 078 — Ligar near-miss/catastrofico a Classe A-D** (baixa prioridade):
+Os termos "near-miss" e "catastrofico" usados no exemplo numerico sao
+tecnicamente defensaveis (estabelecidos na literatura ML: catastrophic
+forgetting/interference, near-miss pairs em metric learning) mas nao
+estao explicitamente ligados a taxonomia Classe A-D definida na secao
+de Metricas. Um reviewer pedante pode pedir essa ligacao explicita.
+Solucao proposta (se necessario apos feedback): adicionar coluna "Classe"
+na Tabela de exemplo numerico OU contextualizar no texto introdutorio
+com algo como "...um erro Classe B (near-miss, par minimo) e um erro
+Classe D (catastrofico, classes articulatorias distantes)".
+Aplicar apenas se vier comentario de reviewer OU antes de camera-ready.
+Todos os 5 papers (arXiv, STIL, SLT, ICASSP, MLSP) teriam a mesma
+correcao propagada.
 
 **Ordem recomendada**: **072** (STIL) → 073 (MLSP) → 074 (SLT) → 075 (arXiv) → 057 → 062 → 067 → tag v1.3 → 069 → 076 → 060+063+066 para TASLP
 
