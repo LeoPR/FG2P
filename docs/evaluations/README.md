@@ -43,6 +43,15 @@ Regra da pasta:
 | 030 | Auditoria: 'y' como glide / representação de 'j' | Open | [open/030_ipa_y_glide_and_j_representation.md](open/030_ipa_y_glide_and_j_representation.md) |
 | 031 | Auditoria: ditongos nasais (`ỹ`, `ʊ̃`) | Open | [open/031_nasal_diphthongs_ỹ_ʊ̃_audit.md](open/031_nasal_diphthongs_ỹ_ʊ̃_audit.md) |
 | 032 | Organizar fontes originais (`ipa-dict`) e scripts de mapeamento | Open | [open/032_dicts_sources_and_mapping_scripts.md](open/032_dicts_sources_and_mapping_scripts.md) |
+| 033 | [v1.x→v2.x] Estrategia de publicacao de longo prazo (trilogia de papers) | Open | [open/033_publication_strategy_long_term.md](open/033_publication_strategy_long_term.md) |
+| 034 | [v2.x] Melhoria da formula de gradiente (balanceamento DA Loss) | Open | [open/034_gradient_formula_improvement.md](open/034_gradient_formula_improvement.md) |
+| 035 | [v2.x] Arquitetura Transformer como substituto do BiLSTM | Open | [open/035_transformer_architecture_v2.md](open/035_transformer_architecture_v2.md) |
+
+## Roadmap consolidado
+
+Para a visao de longo prazo consolidando desenvolvimento + publicacao, ver
+[docs/ROADMAP.md](../ROADMAP.md). Os tickets 033, 034 e 035 detalham
+pontos especificos da estrategia descrita la.
 
 ## Uso rapido
 

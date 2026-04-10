@@ -642,13 +642,15 @@ See [docs/article/REFERENCES.bib](docs/article/REFERENCES.bib) for the complete 
 
 | Document | Purpose |
 |----------|---------|
+| [docs/ROADMAP.md](docs/ROADMAP.md) | **Long-term vision**: publication strategy (3-paper trilogy) and v1/v2/v2.x development plan |
 | [QUICKSTART.md](QUICKSTART.md) | 2-minute Docker setup guide |
 | [docs/INTEGRATION.md](docs/INTEGRATION.md) | Integration guide for using FG2P in your project |
 | [docs/article/ARTICLE.md](docs/article/ARTICLE.md) | Scientific article (IMRaD, §1–§6) |
-| [docs/article/EXPERIMENTS.md](docs/article/EXPERIMENTS.md) | Experiment log (Exp0–107) |
+| [docs/article/supplementary/EXPERIMENTS.md](docs/article/supplementary/EXPERIMENTS.md) | Experiment log (Exp0–107) |
 | [docs/article/REFERENCES.bib](docs/article/REFERENCES.bib) | Bibliography (BibTeX) |
 | [IPA_REFERENCE.md](IPA_REFERENCE.md) | IPA symbol reference for PT-BR phonemes |
 | [docs/linguistics/PHONOLOGICAL_ANALYSIS.md](docs/linguistics/PHONOLOGICAL_ANALYSIS.md) | PT-BR phonological rules and IPA validation |
+| [docs/evaluations/README.md](docs/evaluations/README.md) | Research question tracker (tickets system) |
 
 ---
 
