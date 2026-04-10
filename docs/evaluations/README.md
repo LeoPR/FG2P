@@ -46,6 +46,7 @@ Regra da pasta:
 | 033 | [v1.x→v2.x] Estrategia de publicacao de longo prazo (trilogia de papers) | Open | [open/033_publication_strategy_long_term.md](open/033_publication_strategy_long_term.md) |
 | 034 | [v2.x] Melhoria da formula de gradiente (balanceamento DA Loss) | Open | [open/034_gradient_formula_improvement.md](open/034_gradient_formula_improvement.md) |
 | 035 | [v2.x] Arquitetura Transformer como substituto do BiLSTM | Open | [open/035_transformer_architecture_v2.md](open/035_transformer_architecture_v2.md) |
+| 079 | Reorganizacao de branches para inicio limpo da v2.0 (Fase 1) | In progress | [open/079_branch_reorganization_2026_04_10.md](open/079_branch_reorganization_2026_04_10.md) |
 
 ## Roadmap consolidado
 
