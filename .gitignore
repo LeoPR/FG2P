@@ -1,3 +1,13 @@
+# === DICTS-WORKBENCH (v2) ===
+# Pipeline declarativo de normalizacao multi-idioma.
+# Os .rules.tsv, scripts, README e .gitmodules sao versionados.
+# As fontes (ipa-dict) vem como submodulo git formal — git cuida.
+# Apenas o output gerado pelo pipeline nao e versionado.
+
+# Output gerado pelo pipeline normalize_dicts.py
+# Pode ser regenerado: python dicts-workbench/scripts/normalize_dicts.py --group <id>
+dicts-workbench/output/
+
 # === PUBLICATION DRAFTS ===
 # Os .tex, .bib e .md sao versionados normalmente.
 # Double-blind: pesquisado — preprints publicos nao impedem avaliacao

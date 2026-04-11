@@ -47,6 +47,7 @@ Regra da pasta:
 | 034 | [v2.x] Melhoria da formula de gradiente (balanceamento DA Loss) | Open | [open/034_gradient_formula_improvement.md](open/034_gradient_formula_improvement.md) |
 | 035 | [v2.x] Arquitetura Transformer como substituto do BiLSTM | Open | [open/035_transformer_architecture_v2.md](open/035_transformer_architecture_v2.md) |
 | 079 | Reorganizacao de branches para inicio limpo da v2.0 (Fase 1) | In progress | [open/079_branch_reorganization_2026_04_10.md](open/079_branch_reorganization_2026_04_10.md) |
+| 080 | [v2.0 Fase 2.5] Meta-ticket — decisoes arquiteturais adiadas | Open | [open/080_phase2_deferred_decisions.md](open/080_phase2_deferred_decisions.md) |
 
 ## Roadmap consolidado
 

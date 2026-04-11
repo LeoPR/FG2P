@@ -1,0 +1,3 @@
+[submodule "dicts-workbench/sources/ipa-dict"]
+	path = dicts-workbench/sources/ipa-dict
+	url = https://github.com/open-dict-data/ipa-dict.git
