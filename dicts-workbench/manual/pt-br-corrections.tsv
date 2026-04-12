@@ -1,0 +1,8 @@
+# Correcoes manuais: palavras que existem no ipa-dict mas com IPA errado.
+# Formato: palavra<TAB>ipa_correto
+# Estas entradas devem SUBSTITUIR as geradas pelo pipeline.
+# Mecanismo de substituicao: a implementar (ticket futuro).
+# Por enquanto, documentadas aqui para rastreabilidade.
+# Fonte da correcao: canonical v1.x (dicts/pt-br.tsv), verificado manualmente.
+uden	ˈ u . d ɛ n
+uder	ˈ u . d a

@@ -1,10 +1,28 @@
 #!/usr/bin/env python3
-"""Apply sequential normalization rules from TSV files."""
+"""Apply sequential normalization rules from TSV files.
+
+Escape sequences in regex value1/value2:
+    \\s  -> literal space  (avoids invisible trailing whitespace in TSV)
+    \\t  -> literal tab
+    \\n  -> literal newline
+
+Regex backreferences (\\1, \\2, etc.) are preserved for re.sub().
+"""
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
+
+
+_ESCAPE_MAP = {"\\s": " ", "\\t": "\t", "\\n": "\n"}
+
+
+def _expand_escapes(value: str) -> str:
+    """Expand \\s, \\t, \\n in rule values while preserving regex backrefs."""
+    for seq, char in _ESCAPE_MAP.items():
+        value = value.replace(seq, char)
+    return value
 
 
 def load_groups(rule_files: list[Path]) -> dict[str, dict[str, object]]:
@@ -32,7 +50,9 @@ def load_groups(rule_files: list[Path]) -> dict[str, dict[str, object]]:
             elif action == "dst":
                 rules["dst"] = (rule_file.parent / value1).resolve()
             elif action == "regex":
-                rules["regex"].append((value1, value2))
+                rules["regex"].append((_expand_escapes(value1), _expand_escapes(value2)))
+            elif action == "append":
+                rules.setdefault("append", []).append((rule_file.parent / value1).resolve())
             else:
                 raise ValueError(f"{rule_file}:{lineno}: unknown action '{action}'")
 
@@ -43,6 +63,7 @@ def apply_group(name: str, rules: dict[str, object]) -> None:
     src = rules.get("src")
     dst = rules.get("dst")
     regex_rules = rules.get("regex", [])
+    append_files = rules.get("append", [])
 
     if not src:
         raise ValueError(f"group '{name}' missing src")
@@ -60,11 +81,12 @@ def apply_group(name: str, rules: dict[str, object]) -> None:
     total_lines = 0
     changed_lines = 0
     substitutions = 0
+    appended_lines = 0
 
     with src.open("r", encoding="utf-8", newline="") as fin, dst.open("w", encoding="utf-8", newline="") as fout:
         for raw_line in fin:
             total_lines += 1
-            line = raw_line.rstrip("\n")
+            line = raw_line.rstrip("\r\n")
             if "\t" not in line:
                 fout.write(raw_line)
                 continue
@@ -79,10 +101,26 @@ def apply_group(name: str, rules: dict[str, object]) -> None:
             changed_lines += normalized != text
             fout.write(f"{word}\t{normalized}\n")
 
-    print(
-        f"[{name}] src={src} dst={dst} lines={total_lines} "
-        f"changed_lines={changed_lines} substitutions={substitutions}"
-    )
+        # Append manual files (already in final format, no regex applied)
+        for append_path in append_files:
+            if not append_path.exists():
+                print(f"  [warn] append file not found: {append_path}")
+                continue
+            for raw_line in Path(append_path).read_text(encoding="utf-8").splitlines():
+                if not raw_line.strip() or raw_line.startswith("#"):
+                    continue
+                if "\t" not in raw_line:
+                    continue
+                fout.write(f"{raw_line}\n")
+                appended_lines += 1
+
+    parts = [
+        f"[{name}] src={src} dst={dst} lines={total_lines}",
+        f"changed_lines={changed_lines} substitutions={substitutions}",
+    ]
+    if appended_lines:
+        parts.append(f"appended={appended_lines}")
+    print(" ".join(parts))
 
 
 def main() -> None:
