@@ -6,9 +6,14 @@ from __future__ import annotations
 import argparse
 import csv
 import re
+import sys
 import unicodedata
 from collections import Counter
 from pathlib import Path
+
+# Cross-OS: garante que stdout imprime UTF-8 mesmo em Windows (cp1252 default).
+# Padrao usado em varios scripts do projeto (ver src/analysis/, src/inference_light.py).
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 
 def read_entries(path: Path) -> dict[str, str]:

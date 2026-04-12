@@ -2,7 +2,7 @@ ID: 080
 Title: [v2.0 Fase 2.5] Meta-ticket — decisoes arquiteturais adiadas
 Type: meta-research
 Priority: Medium
-Status: Open
+Status: Open (atualizado 2026-04-12)
 Created: 2026-04-11
 
 ## Contexto
@@ -14,6 +14,94 @@ agora, mas precisam ser registradas para nao esquecer.
 A Fase 2 core foi deliberadamente **minima** — so infraestrutura basica
 que funciona sem codigo novo. A Fase 2.5 (este ticket) e quando as
 decisoes tomadas nesta conversa viram implementacao.
+
+## Atualizacao 2026-04-12: ciclo de diagnostico do pipeline
+
+Apos rodar o pipeline e comparar com o canonical, fechamos algumas
+decisoes que estavam abertas. Ver secao "Decisoes fechadas" abaixo.
+
+Novas questoes criticas sobre tokenizacao foram levantadas e registradas
+em documento dedicado: `docs/linguistics/TOKENIZATION_LAYERS.md`. Este
+documento mapeia 7 camadas entre arquivo fisico e gradiente da DA Loss,
+cada uma com perguntas abertas. **Nao confundir com este ticket** — o
+TOKENIZATION_LAYERS e pesquisa linguistica/arquitetural profunda;
+este ticket 080 e sobre implementacao incremental do pipeline.
+
+---
+
+## Decisoes FECHADAS (2026-04-12)
+
+Estas decisoes foram tomadas apos o ciclo de diagnostico e **nao
+precisam mais de discussao**. Quando a Fase 2.5 for implementada,
+elas servem de guia direto.
+
+### F1. Acao `append` — Variante 1 (manuais ja formatadas)
+
+**Decidido**: a acao `append` no `.rules.tsv` concatena um TSV manual
+ao **fim do output**, sem reprocessar com os regex. As palavras manuais
+ja devem estar no formato final canonical.
+
+**Motivacao**: simplicidade. Se um dia precisarmos de Variante 2
+(manuais cruas reprocessadas), evoluimos depois.
+
+**Sintaxe proposta**:
+```
+pt-br    src       ../sources/ipa-dict/data/pt_BR.txt
+pt-br    dst       ../output/pt-br.tsv
+pt-br    regex     ...
+pt-br    append    ../manual/pt-br-additions.tsv
+```
+
+**Arquivo manual ja criado**: `dicts-workbench/manual/pt-br-additions.tsv`
+com 4 palavras (`hars`, `porte`, `portes`, `teve`). Nao e consumido ainda.
+
+### F2. Funcao `_expand_escapes` no script
+
+**Decidido**: adicionar suporte a escape sequences `\s`, `\t`, `\n` nos
+valores das regras regex. Isso permite representar caracteres whitespace
+de forma visivel no `.rules.tsv`, sem depender de trailing whitespace
+que editores removem.
+
+**Motivacao**: descoberto que a regra de tokenizacao atual
+`(\S)(?=[^\s\u0300-\u036f])	\1` tem `\1` sem espaco, entao nao tokeniza.
+Historicamente o espaco trailing deve ter sido removido por algum editor.
+Usar `\1\s` resolve de forma explicita e robusta.
+
+**Escopo da mudanca**: ~10 linhas em `normalize_dicts.py`. Funcao
+auxiliar `_expand_escapes(value)` chamada antes de usar value1/value2
+em acao `regex`.
+
+**Preserva**: regex backreferences (`\1`, `\2`, etc.) devem passar
+intactas para `re.sub()`. Apenas `\s`, `\t`, `\n` sao expandidos.
+
+### F3. Fix de encoding no `audit_dict_diff.py`
+
+**Decidido**: adicionar `sys.stdout.reconfigure(encoding='utf-8',
+errors='replace')` no topo do script para funcionar no Windows (cp1252
+default). E padrao do projeto — 4 outros scripts em `src/` ja usam.
+
+**Escopo**: 2 linhas. Cross-OS seguro.
+
+### F4. Convencao de tokenizacao: token = segmento IPA atomico
+
+**Decidido**: o FG2P usa 1 token por segmento IPA. Digrafos como `tʃ`,
+`dʒ` sao **2 tokens** separados. Precomposed como `ã` sao 1 token.
+Diacriticos combinantes (NFD) ficam agrupados via regra regex com
+lookahead `[^\s\u0300-\u036f]`.
+
+**Motivacao**:
+- PanPhon mede vetores de features por segmento atomico — e a base
+  do embedding e da DA Loss
+- Gestos articulatorios (composicoes) sao responsabilidade de TTS/ASR,
+  nao de G2P
+- Canonical v1.x ja usa essa convencao (`abadia` -> `a . b a . ˈ d ʒ i . ə`)
+
+**Referencia linguistica**: ver `docs/linguistics/TOKENIZATION_LAYERS.md`
+secao H1 para discussao mais profunda sobre gesto vs segmento atomico.
+
+**Nao confundir**: esta e a decisao operacional para Fase 2.5. Discussoes
+mais profundas sobre camadas, formatos de arquivo, Unicode normalization,
+etc. ficam no TOKENIZATION_LAYERS.md — aquilo e pesquisa de longo prazo.
 
 ## Decisoes registradas
 
@@ -189,16 +277,44 @@ aqui para nao esquecer.
 
 ## Criterios de aceite (Fase 2.5)
 
-Para fechar este ticket, implementar (na ordem):
+Para fechar este ticket, implementar (na ordem sugerida):
 
-1. [ ] Manifest YAML (decisao 1)
-2. [ ] Acao `tag` (decisao 2)
-3. [ ] Acao `mode full`/`overlay` (decisao 3)
-4. [ ] Dependencia implicita entre grupos (decisao 6, opcao A)
-5. [ ] Validar com caso sintetico: 2 arquivos `.rules.tsv` encadeados
+### Prioridade 1 — Desbloqueio do diagnostico (fechadas em 2026-04-12)
 
-Decisoes 4, 5, 8, 9 sao **adiadas alem da Fase 2.5** — cada uma vira
-seu proprio ticket quando chegar a hora.
+1. [ ] **F2**: funcao `_expand_escapes` no `normalize_dicts.py`
+   - Expande `\s`, `\t`, `\n` em value1/value2 de acoes `regex`
+   - Preserva backreferences regex (`\1`, `\2`, etc.) intactas
+2. [ ] **F2 (continuacao)**: ajustar `dicts-workbench/rules/pt-br.rules.tsv`
+   - Trocar `\1` por `\1\s` na regra de tokenizacao
+3. [ ] **F3**: fix encoding `sys.stdout.reconfigure` em `audit_dict_diff.py`
+4. [ ] **Validacao P1**: rerodar o pipeline pt-br e comparar com canonical
+   - Esperado: cair de 95.933 linhas `real_content` para valor pequeno
+   - Numero esperado: 0 linhas divergentes em conteudo real, 4 `only_in_right`
+
+### Prioridade 2 — Acao append (decisao fechada 2026-04-12)
+
+5. [ ] **F1**: acao `append` no `normalize_dicts.py`
+   - Variante 1: concatena TSV manual ao fim do output, sem regex
+6. [ ] **F1 (continuacao)**: adicionar linha `append ../manual/pt-br-additions.tsv`
+   ao `pt-br.rules.tsv`
+7. [ ] **Validacao P2**: rerodar pipeline e verificar que as 4 palavras
+   aparecem no output; `only_in_right` cai para 0
+
+### Prioridade 3 — Manifest e tags (decisoes originais, ainda validas)
+
+8. [ ] Manifest YAML gerado (decisao original 1)
+9. [ ] Acao `tag` (decisao original 2)
+10. [ ] Acao `mode full`/`overlay` (decisao original 3)
+11. [ ] Dependencia implicita entre grupos (decisao original 6, opcao A)
+12. [ ] Validar com caso sintetico: 2 arquivos `.rules.tsv` encadeados
+
+### Fora da Fase 2.5 (ticket proprio quando chegar)
+
+Decisoes originais 4, 5, 8, 9 permanecem adiadas para apos Fase 2.5:
+- Estrutura hierarquica de dicts (decisao 4)
+- Correcoes via lookup (decisao 5)
+- Substituicao do canonical v1.x pelo gerado (decisao 8)
+- Experimentos mono vs multi-idioma (decisao 9)
 
 ## Dependencias
 
