@@ -274,15 +274,59 @@ Pergunta central: qual formato permite metadata extensivel, multi-idioma,
 versionamento, auditoria, e interoperabilidade com ferramentas padrao de
 NLP?
 
-### H3. Normalizacao Unicode
-NFC vs NFD vs NFKC vs NFKD — decisao nao deve ser arbitraria. Ha trade-offs:
-- **NFC** (composed): `ã` como 1 char. Menos tokens, mas precisa lookup
-  preciso em PanPhon.
-- **NFD** (decomposed): `a + U+0303`. Mais uniforme para scripts que fazem
-  split char-por-char. PanPhon aceita ambas com cuidado.
+### H3. Normalizacao Unicode — PARCIALMENTE RESOLVIDA (2026-04-13)
 
-Decisao do v1.x: NFC (a confirmar empiricamente). Razao: nao documentada
-formalmente, veio de `phonetic_features.py` comportamento observado.
+**Decisao operacional (v2.0)**: NFC como formato padrao no pipeline e
+nos arquivos em disco. Implementado via action `nfc true` no `.rules.tsv`.
+
+**Achados empiricos com PanPhon (2026-04-13)**:
+
+1. PanPhon internamente converte para **NFD** (usa `unicodedata.normalize('NFD')`
+   na sua funcao `normalize()`). Mas aceita **tanto NFC quanto NFD** como input
+   e produz vetores 24D **identicos** em ambos os casos.
+
+2. Teste empírico com 6 segmentos (nasais PT-BR):
+
+```
+Segmento              NFC?  NFD?  PanPhon segs  nas  Vetores iguais?
+NFC a-tilde (U+00E3)  sim   nao   1             +1   referencia
+NFD a-tilde (a+0303)  nao   sim   1             +1   SIM (24/24 features)
+NFC e-tilde (U+1EBD)  sim   nao   1             +1   —
+NFD e-tilde (e+0303)  nao   sim   1             +1   —
+epsilon puro (U+025B) —     —     1             -1   —
+epsilon-nasal (ɛ+0303)nao   nao*  1             +1   diff: apenas nas (-1→+1)
+```
+
+*ɛ̃ NAO tem forma precomposed NFC — `NFC('ɛ'+U+0303)` continua como
+2 chars. PanPhon reconhece como 1 segmento mesmo assim.
+
+3. A nasalizacao **ja e uma dimensao do PanPhon 24D** (feature `nas`).
+   Nao e necessario criar dimensao 25D para nasais. A diferenca entre
+   vogal oral e nasal e **1 feature de 24** (distancia PanPhon minima).
+
+4. Total de segmentos nasais reconhecidos pelo PanPhon: **725** (incluindo
+   combinacoes com diacriticos combinantes).
+
+**Fluxo de normalizacao confirmado no codigo**:
+
+```
+Arquivo disco     g2p.py L410     PhonemeVocab     PanPhon interno
+NFC ou NFD   -->  NFC (forcado) -->  NFC tokens  -->  NFD (transparente)
+```
+
+O `g2p.py` L410 forca NFC na carga. PanPhon converte internamente para
+NFD. A action `nfc` no pipeline alinha o arquivo em disco com o que o
+modelo espera. Resultado: menos uma transformacao implicita.
+
+**Perguntas que permanecem abertas**:
+- NFKC e NFKD: nao avaliados. Poderiam ser relevantes para scripts
+  exoticos (ex: meia-largura katakana). Nao e prioridade para PT-BR.
+- Idiomas com segmentos que nao tem forma NFC precomposed: o pipeline
+  aceita mixed (NFC onde possivel, NFD onde nao). PanPhon e agnostico.
+- Parametrizacao do encode: hoje o `g2p.py` L410 e hardcoded NFC.
+  Idealmente seria parametro do manifest (v2.x).
+- Pos-filtro de saida: na inferencia, se o consumer espera NFD,
+  precisa de filtro configuravel (v2.x).
 
 ### H4. Simbolos estruturais como tokens
 Hoje `.` e `ˈ` sao tokens no vocab. Isso e pragmatico (o modelo aprende
@@ -367,6 +411,10 @@ a hora.
 
 ## Historico
 
+- **2026-04-13** — Fase 3: achados empiricos do PanPhon e NFC/NFD
+  adicionados a H3. Confirmado que PanPhon e agnostico a NFC/NFD
+  (produz vetores identicos). NFC adotado como padrao operacional via
+  action `nfc true` no pipeline. 42.293 diferencas Unicode eliminadas.
 - **2026-04-12** — criacao inicial (skeleton) apos conversa sobre
   tokenizacao, espacos no arquivo, e relacao com DA Loss. Status:
   em construcao.

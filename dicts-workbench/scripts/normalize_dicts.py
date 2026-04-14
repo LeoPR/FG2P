@@ -53,6 +53,8 @@ def load_groups(rule_files: list[Path]) -> dict[str, dict[str, object]]:
                 rules["regex"].append((_expand_escapes(value1), _expand_escapes(value2)))
             elif action == "append":
                 rules.setdefault("append", []).append((rule_file.parent / value1).resolve())
+            elif action == "nfc":
+                rules["nfc"] = value1.strip().lower() == "true"
             else:
                 raise ValueError(f"{rule_file}:{lineno}: unknown action '{action}'")
 
@@ -60,10 +62,13 @@ def load_groups(rule_files: list[Path]) -> dict[str, dict[str, object]]:
 
 
 def apply_group(name: str, rules: dict[str, object]) -> None:
+    import unicodedata
+
     src = rules.get("src")
     dst = rules.get("dst")
     regex_rules = rules.get("regex", [])
     append_files = rules.get("append", [])
+    apply_nfc = rules.get("nfc", False)
 
     if not src:
         raise ValueError(f"group '{name}' missing src")
@@ -97,6 +102,9 @@ def apply_group(name: str, rules: dict[str, object]) -> None:
             for pattern, replacement in regex_rules:
                 normalized, count = re.subn(pattern, replacement, normalized)
                 substitutions += count
+
+            if apply_nfc:
+                normalized = unicodedata.normalize("NFC", normalized)
 
             changed_lines += normalized != text
             fout.write(f"{word}\t{normalized}\n")

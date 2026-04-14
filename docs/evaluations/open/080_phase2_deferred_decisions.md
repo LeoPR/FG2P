@@ -103,6 +103,28 @@ secao H1 para discussao mais profunda sobre gesto vs segmento atomico.
 mais profundas sobre camadas, formatos de arquivo, Unicode normalization,
 etc. ficam no TOKENIZATION_LAYERS.md — aquilo e pesquisa de longo prazo.
 
+### F5. Normalizacao NFC no pipeline (Fase 3, implementada 2026-04-13)
+
+**Decidido**: action `nfc true` no `.rules.tsv` normaliza o campo IPA
+para NFC apos os regex, antes de escrever o output.
+
+**Motivacao**: a fonte ipa-dict usa NFD (decomposed), o canonical v1.x
+e o `g2p.py` usam NFC. Alinhar o arquivo em disco com o modelo elimina
+uma transformacao implicita e fecha 42.293 diferencas de auditoria.
+
+**Achados empiricos**:
+- PanPhon aceita NFC e NFD e produz vetores 24D **identicos**
+- PanPhon internamente converte para NFD (transparente ao codigo)
+- Nasalizacao ja e feature `nas` no PanPhon 24D (nao precisa de 25D)
+- `ɛ̃` (sem precomposed NFC) e reconhecido como 1 segmento pelo PanPhon
+
+**Implementacao**: 3 linhas em `normalize_dicts.py`:
+- `load_groups`: nova action `nfc` → `rules["nfc"] = True`
+- `apply_group`: `if apply_nfc: normalized = unicodedata.normalize("NFC")`
+
+**Resultado**: auditoria pipeline vs canonical: `unicode_equivalent = 0`,
+`real_content = 2` (uden/uder, correcoes documentadas).
+
 ## Decisoes registradas
 
 ### 1. Manifest global para mapeamento path → tag BCP 47
