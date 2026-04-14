@@ -322,13 +322,13 @@ Para fechar este ticket, implementar (na ordem sugerida):
 7. [ ] **Validacao P2**: rerodar pipeline e verificar que as 4 palavras
    aparecem no output; `only_in_right` cai para 0
 
-### Prioridade 3 — Manifest e tags (decisoes originais, ainda validas)
+### Prioridade 3 — Manifest e tags (Fase 4, implementada 2026-04-14)
 
-8. [ ] Manifest YAML gerado (decisao original 1)
-9. [ ] Acao `tag` (decisao original 2)
-10. [ ] Acao `mode full`/`overlay` (decisao original 3)
-11. [ ] Dependencia implicita entre grupos (decisao original 6, opcao A)
-12. [ ] Validar com caso sintetico: 2 arquivos `.rules.tsv` encadeados
+8. [x] Manifest YAML gerado (`dicts/manifest.yaml`)
+9. [x] Acao `tag` (BCP 47 por grupo)
+10. [x] Acao `mode full`/`overlay`
+11. [x] Dependencia implicita entre grupos (topological sort)
+12. [ ] Validar com caso sintetico: 2 arquivos `.rules.tsv` encadeados (Fase 6)
 
 ### Fora da Fase 2.5 (ticket proprio quando chegar)
 
