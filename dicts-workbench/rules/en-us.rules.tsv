@@ -1,0 +1,15 @@
+# group	action	value1	value2
+# English (American) — ipa-dict/en_US.txt
+# BCP 47: en-US
+en-us	tag	en-US
+en-us	src	../sources/ipa-dict/data/en_US.txt
+en-us	dst	../output/en-us.tsv
+# Remove segunda pronuncia (pega so a primeira antes de ", /")
+en-us	regex	,\s*/.*
+# Remove barras delimitadoras do IPA
+en-us	regex	/
+# Tokeniza IPA por espacos sem separar diacriticos combinantes (U+0300-U+036F)
+# \s no value2 = espaco literal (ver _expand_escapes em normalize_dicts.py)
+en-us	regex	(\S)(?=[^\s\u0300-\u036f])	\1\s
+# Normaliza Unicode NFC (idempotente para EN-US — nao tem combining marks)
+en-us	nfc	true
