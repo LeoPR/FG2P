@@ -1,0 +1,50 @@
+{
+  "description": "Exp205: Primeiro modelo EN-US completo — mesma arquitetura e hiperparametros do Exp104d (SOTA PT-BR) aplicados ao ingles americano. Baseline para comparacao futura.",
+  "data": {
+    "source": "dicts/en-us.tsv",
+    "train_ratio": 0.6,
+    "val_ratio": 0.1,
+    "test_ratio": 0.3,
+    "split_seed": 42,
+    "stratify": true,
+    "grapheme_encoding": "raw",
+    "keep_syllable_separators": false,
+    "note": "EN-US sem separadores silabicos (fonte ipa-dict nao tem). 125.927 palavras, 31 chars input, 40 fonemas output."
+  },
+  "model": {
+    "embedding_type": "learned",
+    "emb_dim": 256,
+    "hidden_dim": 512,
+    "num_layers": 2,
+    "dropout": 0.50,
+    "note": "17M params. Identico ao Exp104d PT-BR."
+  },
+  "training": {
+    "fit_method": "adam",
+    "epochs": 120,
+    "warmup_epochs": 80,
+    "batch_size": 96,
+    "lr": 0.001,
+    "early_stopping_patience": 10,
+    "weight_decay": 1e-05,
+    "loss": {
+      "type": "distance_aware",
+      "config": {
+        "distance_lambda": 0.2,
+        "distance_metric": "euclidean",
+        "normalize_distance": true
+      },
+      "note": "DA Loss com lambda=0.2. PanPhon 35/37 fonemas reconhecidos (2 suprassegmentais como vetor zero). Rhotacized schwa corrigido no pipeline (U+025D -> schwa+U+02DE)."
+    }
+  },
+  "experiment": {
+    "name": "exp205_en_us_baseline",
+    "purpose": "Baseline EN-US com DA Loss. Mesma config do Exp104d para comparacao direta cross-lingual. Expectativa: PER mais alto que PT-BR (ingles mais irregular) mas convergencia com early stopping.",
+    "hypothesis": "DA Loss funciona para EN-US apesar da maior irregularidade ortografica. A distancia articulatoria PanPhon e universal (nao depende do idioma). Erros devem ser near-misses fonologicos (Class B) em vez de catastroficos (Class D).",
+    "compared_with": [
+      "Exp104d PT-BR: val_loss 0.013, PER 0.48%, WER 5.33% — 17M + DA lambda=0.2",
+      "Exp205 smoke: val_loss 0.265 em 5 epochs — EN-US converge mais devagar"
+    ],
+    "note": "Primeiro modelo formal EN-US do projeto. Nao e volatil — manter para comparacao."
+  }
+}
