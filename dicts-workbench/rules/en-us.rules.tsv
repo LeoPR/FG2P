@@ -1,9 +1,9 @@
 # group	action	value1	value2
 # English (American) — ipa-dict/en_US.txt
-# BCP 47: en-US
+# dst aponta direto para dicts/ (canonical, versionado).
 en-us	tag	en-US
 en-us	src	../sources/ipa-dict/data/en_US.txt
-en-us	dst	../output/en-us.tsv
+en-us	dst	../../dicts/en-us.tsv
 # Remove segunda pronuncia (pega so a primeira antes de ", /")
 en-us	regex	,\s*/.*
 # Remove barras delimitadoras do IPA

@@ -1,9 +1,9 @@
 # group	action	value1	value2
 # Paths sao relativos a este arquivo (dicts-workbench/rules/pt-br.rules.tsv).
-# Estrutura: dicts-workbench/{rules, scripts, sources, output}
+# dst aponta direto para dicts/ (canonical, versionado, visivel no VSCode).
 pt-br	tag	pt-BR
 pt-br	src	../sources/ipa-dict/data/pt_BR.txt
-pt-br	dst	../output/pt-br.tsv
+pt-br	dst	../../dicts/pt-br.tsv
 pt-br	regex	/
 # Normalização IPA: preferir U+0261 (LATIN SMALL LETTER SCRIPT G) em vez de U+0067
 pt-br	regex	g	ɡ
