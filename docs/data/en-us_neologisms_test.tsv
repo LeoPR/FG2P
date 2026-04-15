@@ -1,0 +1,36 @@
+# EN-US Neologisms Test — novel/invented words for phonological rule testing
+# Same structure as PT-BR neologisms_test.tsv
+# Format: word<TAB>expected_ipa
+# Categories: blends, backformations, tech_compounds, borrowed_verbs, invented
+#
+# Purpose: test if model applies English phonological rules to truly novel words
+# that could not have been memorized.
+#
+# category: blends (portmanteau words)
+brunch	ˈ b ɹ ə n t ʃ
+hangry	ˈ h æ ŋ ɡ ɹ i
+situationship	ˌ s ɪ t ʃ u ˈ e ɪ ʃ ə n ˌ ʃ ɪ p
+edutainment	ˌ ɛ d ʒ u ˈ t e ɪ n m ə n t
+#
+# category: backformations (words derived by removing affixes)
+enthuse	ɪ n ˈ θ u z
+liaise	ɫ i ˈ e ɪ z
+surveil	s ə˞ ˈ v e ɪ ɫ
+#
+# category: tech_compounds (compound words from tech)
+livestream	ˈ ɫ a ɪ v s t ɹ i m
+smartwatch	ˈ s m ɑ ɹ t w ɑ t ʃ
+blockchain	ˈ b ɫ ɑ k t ʃ e ɪ n
+screenshot	ˈ s k ɹ i n ʃ ɑ t
+#
+# category: borrowed_verbs (verbs from other languages used in English)
+uber	ˈ u b ə˞
+google	ˈ ɡ u ɡ ə ɫ
+skype	ˈ s k a ɪ p
+#
+# category: invented (fully invented, test pure phonotactics)
+blurfish	ˈ b ɫ ə˞ f ɪ ʃ
+crunchify	ˈ k ɹ ə n t ʃ ɪ f a ɪ
+thinkable	ˈ θ ɪ ŋ k ə b ə ɫ
+glitchproof	ˈ ɡ ɫ ɪ t ʃ p ɹ u f
+snarkiness	ˈ s n ɑ ɹ k i n ə s

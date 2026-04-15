@@ -8,8 +8,14 @@ en-us	dst	../../dicts/en-us.tsv
 en-us	regex	,\s*/.*
 # Remove barras delimitadoras do IPA
 en-us	regex	/
+# Rhotacized schwa: ɝ (U+025D) nao e reconhecido pelo PanPhon.
+# Converte para ə + ˞ (U+0259 + U+02DE) que PanPhon reconhece como 1 segmento
+# com features corretas (ant, hi, round diferem do schwa puro).
+# Nota: deve vir ANTES da tokenizacao para que ə˞ fique como 1 token.
+en-us	regex	ɝ	ə˞
 # Tokeniza IPA por espacos sem separar diacriticos combinantes (U+0300-U+036F)
+# nem o rhotic hook (U+02DE) que forma par com schwa em ə˞
 # \s no value2 = espaco literal (ver _expand_escapes em normalize_dicts.py)
-en-us	regex	(\S)(?=[^\s\u0300-\u036f])	\1\s
+en-us	regex	(\S)(?=[^\s\u0300-\u036f\u02DE])	\1\s
 # Normaliza Unicode NFC (idempotente para EN-US — nao tem combining marks)
 en-us	nfc	true

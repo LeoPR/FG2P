@@ -1,0 +1,44 @@
+# EN-US Generalization Test — OOV words for diagnostic probing
+# Same structure as PT-BR generalization_test.tsv
+# Format: word<TAB>expected_ipa
+# Categories: real_english_oov, loanwords, tech_neologisms, phonological_edge_cases, char_patterns, controls
+#
+# Purpose: evaluate if the model learned productive English phonological rules
+# beyond memorization. Each category tests a different generalization axis.
+#
+# category: real_english_oov (common words likely absent from training)
+ungooglable	ə n ˈ ɡ u ɡ ə ɫ ə b ə ɫ
+adulting	ə ˈ d ə ɫ t ɪ ŋ
+doomscrolling	ˈ d u m s k ɹ o ʊ ɫ ɪ ŋ
+truthiness	ˈ t ɹ u θ i n ə s
+bingeable	ˈ b ɪ n d ʒ ə b ə ɫ
+#
+# category: loanwords_adapted (foreign words with English phonology)
+schadenfreude	ˈ ʃ ɑ d ə n f ɹ ɔ ɪ d ə
+zeitgeist	ˈ z a ɪ t ɡ a ɪ s t
+uber	ˈ u b ə˞
+karaoke	ˌ k ɛ ɹ i ˈ o ʊ k i
+#
+# category: tech_neologisms (tech/internet terms)
+bitcoin	ˈ b ɪ t k ɔ ɪ n
+emoji	ɪ ˈ m o ʊ d ʒ i
+chatbot	ˈ t ʃ æ t b ɑ t
+deepfake	ˈ d i p f e ɪ k
+#
+# category: phonological_edge_cases
+strengths	ˈ s t ɹ ɛ ŋ k θ s
+sixths	ˈ s ɪ k s θ s
+rhythm	ˈ ɹ ɪ ð ə m
+queue	ˈ k j u
+colonel	ˈ k ɝ n ə ɫ
+#
+# category: morphological_patterns (productive affixes)
+unhappiness	ə n ˈ h æ p i n ə s
+redownloadable	ˌ ɹ i ˌ d a ʊ n ˈ ɫ o ʊ d ə b ə ɫ
+overcaffeinated	ˌ o ʊ v ə˞ ˈ k æ f ɪ ˌ n e ɪ t ɪ d
+#
+# category: controls (should be in training data)
+beautiful	ˈ b j u t ə f ə ɫ
+information	ˌ ɪ n f ə˞ ˈ m e ɪ ʃ ə n
+language	ˈ ɫ æ ŋ ɡ w ə d ʒ
+computer	k ə m ˈ p j u t ə˞

@@ -184,7 +184,7 @@ class PhoneticSpace:
         # '.' e 'ˈ' são símbolos estruturais (separador silábico e stress),
         # não segmentos fonéticos. PanPhon não os reconhece e imprimiria avisos
         # internos (print nu) se passados para word_fts(). Early-return evita isso.
-        if phoneme in ('<PAD>', '<UNK>', '<EOS>', 'ˈ', '.'):
+        if phoneme in ('<PAD>', '<UNK>', '<EOS>', 'ˈ', 'ˌ', '.'):
             logger.debug("Símbolo estrutural '%s' → vetor zero (comportamento esperado).", phoneme)
             return np.zeros(self.feature_dim, dtype=np.int8)
         
@@ -257,7 +257,7 @@ class PhoneticSpace:
         # --- Post-hoc: distâncias customizadas para símbolos estruturais ---
         # Justificativa: '.' e 'ˈ' têm vetor zero em _get_panphon_vector(), então
         # hamming(., ˈ) = 0 → distance = 0.0. Override para distância máxima (1.0).
-        structural_phonemes = {'.', 'ˈ'}
+        structural_phonemes = {'.', 'ˈ', 'ˌ'}
         for idx in range(V):
             phoneme = self._phoneme_vocab.i2p.get(idx, '<UNK>')
             if phoneme not in structural_phonemes:
