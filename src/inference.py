@@ -168,8 +168,17 @@ def run_inference_for_model(model_path, verbose=False):
         grapheme_encoding = data_config.get('grapheme_encoding', 'raw')
         keep_syllable_separators = data_config.get('keep_syllable_separators', False)
 
+    # Resolve dict_path: usa o mesmo dicionario do treino (dos metadados),
+    # com fallback para o DICT_PATH global (compat v1.x).
+    dict_path = DICT_PATH
+    if metadata and 'config' in metadata:
+        source = metadata['config'].get('data', {}).get('source', '')
+        if source and Path(source).exists():
+            dict_path = Path(source)
+            logger.info("Dict do modelo: %s", dict_path)
+
     corpus = G2PCorpus(
-        DICT_PATH,
+        dict_path,
         grapheme_encoding=grapheme_encoding,
         keep_syllable_separators=keep_syllable_separators,
     )

@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-04-15 06:40:40",
+  "experiment_name": "exp205_en_us_baseline",
+  "inference_time_s": 1350.996,
+  "samples_per_sec": 28.0,
+  "total_words": 37779,
+  "predictions_file": "predictions_exp205_en_us_baseline__20260415_000811.tsv"
+}

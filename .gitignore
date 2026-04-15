@@ -38,6 +38,7 @@ docs/article/publications/**/.build/
 models/*/*.pt
 !models/exp104d_structural_tokens_correct/*.pt
 !models/exp9_intermediate_distance_aware/*.pt
+!models/exp205_en_us_baseline/*.pt
 FG2P.7z
 docs/*.pdf
 
